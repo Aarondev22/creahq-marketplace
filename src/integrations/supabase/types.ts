@@ -14,16 +14,237 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      listings: {
+        Row: {
+          category: string | null
+          cover_url: string | null
+          created_at: string
+          currency: string
+          description: string | null
+          id: string
+          kind: Database["public"]["Enums"]["listing_kind"]
+          price_cents: number
+          seller_id: string
+          slug: string | null
+          status: Database["public"]["Enums"]["listing_status"]
+          tags: string[]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          cover_url?: string | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          id?: string
+          kind?: Database["public"]["Enums"]["listing_kind"]
+          price_cents: number
+          seller_id: string
+          slug?: string | null
+          status?: Database["public"]["Enums"]["listing_status"]
+          tags?: string[]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          cover_url?: string | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          id?: string
+          kind?: Database["public"]["Enums"]["listing_kind"]
+          price_cents?: number
+          seller_id?: string
+          slug?: string | null
+          status?: Database["public"]["Enums"]["listing_status"]
+          tags?: string[]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          id: string
+          read_at: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          read_at?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          read_at?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      order_items: {
+        Row: {
+          created_at: string
+          fulfilled_at: string | null
+          id: string
+          listing_id: string
+          order_id: string
+          qty: number
+          seller_id: string
+          unit_price_cents: number
+        }
+        Insert: {
+          created_at?: string
+          fulfilled_at?: string | null
+          id?: string
+          listing_id: string
+          order_id: string
+          qty?: number
+          seller_id: string
+          unit_price_cents: number
+        }
+        Update: {
+          created_at?: string
+          fulfilled_at?: string | null
+          id?: string
+          listing_id?: string
+          order_id?: string
+          qty?: number
+          seller_id?: string
+          unit_price_cents?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_items_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          buyer_id: string
+          created_at: string
+          currency: string
+          id: string
+          status: Database["public"]["Enums"]["order_status"]
+          stripe_session_id: string | null
+          total_cents: number
+          updated_at: string
+        }
+        Insert: {
+          buyer_id: string
+          created_at?: string
+          currency?: string
+          id?: string
+          status?: Database["public"]["Enums"]["order_status"]
+          stripe_session_id?: string | null
+          total_cents?: number
+          updated_at?: string
+        }
+        Update: {
+          buyer_id?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          status?: Database["public"]["Enums"]["order_status"]
+          stripe_session_id?: string | null
+          total_cents?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string
+          display_name: string | null
+          handle: string | null
+          id: string
+          theme_color: string | null
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          display_name?: string | null
+          handle?: string | null
+          id: string
+          theme_color?: string | null
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          display_name?: string | null
+          handle?: string | null
+          id?: string
+          theme_color?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "buyer" | "seller" | "admin"
+      listing_kind: "digital" | "service"
+      listing_status: "draft" | "published" | "archived"
+      order_status: "pending" | "paid" | "fulfilled" | "cancelled" | "refunded"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +371,11 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["buyer", "seller", "admin"],
+      listing_kind: ["digital", "service"],
+      listing_status: ["draft", "published", "archived"],
+      order_status: ["pending", "paid", "fulfilled", "cancelled", "refunded"],
+    },
   },
 } as const
