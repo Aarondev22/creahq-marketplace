@@ -90,15 +90,17 @@ export const fetchListingById = createServerFn({ method: "GET" })
     const supa = serverPublic();
     const { data: row } = await supa
       .from("listings")
-      .select(`${SAFE_COLS},description,tags,profiles:seller_id(handle,display_name,avatar_url)`)
+      .select(`${SAFE_COLS},description,tags`)
       .eq("id", data.id)
       .eq("status", "published")
       .maybeSingle();
     if (!row) return null;
-    const seller = Array.isArray((row as { profiles?: unknown }).profiles)
-      ? (row as { profiles: unknown[] }).profiles[0]
-      : (row as { profiles?: unknown }).profiles;
-    return { ...(row as ListingCard & { description: string | null; tags: string[] }), seller: (seller as ListingDetail["seller"]) ?? null };
+    const { data: seller } = await supa
+      .from("profiles")
+      .select("handle,display_name,avatar_url")
+      .eq("id", row.seller_id)
+      .maybeSingle();
+    return { ...(row as ListingCard & { description: string | null; tags: string[] }), seller: seller ?? null };
   });
 
 export const fetchShopByHandle = createServerFn({ method: "GET" })
