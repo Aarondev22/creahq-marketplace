@@ -1,5 +1,6 @@
 import { motion } from "motion/react";
 import { Store, ArrowRight } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 
 export function SellerInvite() {
   return (
@@ -29,13 +30,13 @@ export function SellerInvite() {
               In ~2 Minuten ist dein Shop online: Profil gestalten, Produkte hochladen, Stripe verbinden. Du bestimmst Preis, Stil und Versand.
             </p>
             <div className="mt-6 flex flex-wrap items-center gap-3">
-              <a
-                href="#"
+              <Link
+                to="/auth"
                 className="group inline-flex items-center gap-2 rounded-full bg-brand-ink px-6 py-3 text-sm font-bold text-primary-foreground transition-transform hover:scale-105"
               >
                 Shop eröffnen
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-              </a>
+              </Link>
               <span className="text-xs font-medium text-muted-foreground">
                 Aktuell 0 € Plattformgebühr ✨
               </span>
