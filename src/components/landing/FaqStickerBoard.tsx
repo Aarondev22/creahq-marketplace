@@ -33,7 +33,7 @@ const faqs: Faq[] = [
   },
   {
     q: "Was kostet das Verkaufen?",
-    a: "Im MVP: nichts. Wir nehmen aktuell keine Plattformgebühr, du behältst (abzüglich Stripe-Gebühren) alles. Später kommt fair gestaffelte Provision dazu.",
+    a: "Keine monatliche Gebühr. Pro Verkauf 17 % bei digitalen, 12 % bei physischen Produkten. Alle 25 Verkäufe pro Monat sinkt deine Provision um 1 % — am 1. des Monats startet die Zählung neu. Details auf der Gebührenseite.",
     color: "bg-sky-200", ink: "text-sky-950",
     rotate: 5, size: "sm", emoji: "💸",
   },
@@ -64,7 +64,7 @@ export function FaqStickerBoard() {
   const [open, setOpen] = useState<number | null>(null);
 
   return (
-    <section className="mx-auto max-w-7xl px-6 py-20">
+    <section className="mx-auto max-w-7xl px-4 sm:px-6 py-20">
       <div className="mb-10 text-center">
         <div className="inline-flex items-center gap-2 rounded-full bg-brand-soft px-3 py-1 text-xs font-bold uppercase tracking-widest text-brand">
           Häufig gefragt

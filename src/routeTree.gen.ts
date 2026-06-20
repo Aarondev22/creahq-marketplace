@@ -9,14 +9,63 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as UeberRouteImport } from './routes/ueber'
+import { Route as KontaktRouteImport } from './routes/kontakt'
+import { Route as KategorienRouteImport } from './routes/kategorien'
+import { Route as ImpressumRouteImport } from './routes/impressum'
+import { Route as HilfeRouteImport } from './routes/hilfe'
+import { Route as GebuehrenRouteImport } from './routes/gebuehren'
+import { Route as DatenschutzRouteImport } from './routes/datenschutz'
+import { Route as CookiesRouteImport } from './routes/cookies'
 import { Route as BrowseRouteImport } from './routes/browse'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AgbRouteImport } from './routes/agb'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ShopHandleRouteImport } from './routes/shop.$handle'
 import { Route as ListingIdRouteImport } from './routes/listing.$id'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 
+const UeberRoute = UeberRouteImport.update({
+  id: '/ueber',
+  path: '/ueber',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KontaktRoute = KontaktRouteImport.update({
+  id: '/kontakt',
+  path: '/kontakt',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KategorienRoute = KategorienRouteImport.update({
+  id: '/kategorien',
+  path: '/kategorien',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ImpressumRoute = ImpressumRouteImport.update({
+  id: '/impressum',
+  path: '/impressum',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HilfeRoute = HilfeRouteImport.update({
+  id: '/hilfe',
+  path: '/hilfe',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GebuehrenRoute = GebuehrenRouteImport.update({
+  id: '/gebuehren',
+  path: '/gebuehren',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DatenschutzRoute = DatenschutzRouteImport.update({
+  id: '/datenschutz',
+  path: '/datenschutz',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CookiesRoute = CookiesRouteImport.update({
+  id: '/cookies',
+  path: '/cookies',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BrowseRoute = BrowseRouteImport.update({
   id: '/browse',
   path: '/browse',
@@ -25,6 +74,11 @@ const BrowseRoute = BrowseRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AgbRoute = AgbRouteImport.update({
+  id: '/agb',
+  path: '/agb',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
@@ -54,16 +108,34 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/agb': typeof AgbRoute
   '/auth': typeof AuthRoute
   '/browse': typeof BrowseRoute
+  '/cookies': typeof CookiesRoute
+  '/datenschutz': typeof DatenschutzRoute
+  '/gebuehren': typeof GebuehrenRoute
+  '/hilfe': typeof HilfeRoute
+  '/impressum': typeof ImpressumRoute
+  '/kategorien': typeof KategorienRoute
+  '/kontakt': typeof KontaktRoute
+  '/ueber': typeof UeberRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/listing/$id': typeof ListingIdRoute
   '/shop/$handle': typeof ShopHandleRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/agb': typeof AgbRoute
   '/auth': typeof AuthRoute
   '/browse': typeof BrowseRoute
+  '/cookies': typeof CookiesRoute
+  '/datenschutz': typeof DatenschutzRoute
+  '/gebuehren': typeof GebuehrenRoute
+  '/hilfe': typeof HilfeRoute
+  '/impressum': typeof ImpressumRoute
+  '/kategorien': typeof KategorienRoute
+  '/kontakt': typeof KontaktRoute
+  '/ueber': typeof UeberRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/listing/$id': typeof ListingIdRoute
   '/shop/$handle': typeof ShopHandleRoute
@@ -72,8 +144,17 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/agb': typeof AgbRoute
   '/auth': typeof AuthRoute
   '/browse': typeof BrowseRoute
+  '/cookies': typeof CookiesRoute
+  '/datenschutz': typeof DatenschutzRoute
+  '/gebuehren': typeof GebuehrenRoute
+  '/hilfe': typeof HilfeRoute
+  '/impressum': typeof ImpressumRoute
+  '/kategorien': typeof KategorienRoute
+  '/kontakt': typeof KontaktRoute
+  '/ueber': typeof UeberRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/listing/$id': typeof ListingIdRoute
   '/shop/$handle': typeof ShopHandleRoute
@@ -82,16 +163,34 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/agb'
     | '/auth'
     | '/browse'
+    | '/cookies'
+    | '/datenschutz'
+    | '/gebuehren'
+    | '/hilfe'
+    | '/impressum'
+    | '/kategorien'
+    | '/kontakt'
+    | '/ueber'
     | '/dashboard'
     | '/listing/$id'
     | '/shop/$handle'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/agb'
     | '/auth'
     | '/browse'
+    | '/cookies'
+    | '/datenschutz'
+    | '/gebuehren'
+    | '/hilfe'
+    | '/impressum'
+    | '/kategorien'
+    | '/kontakt'
+    | '/ueber'
     | '/dashboard'
     | '/listing/$id'
     | '/shop/$handle'
@@ -99,8 +198,17 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/agb'
     | '/auth'
     | '/browse'
+    | '/cookies'
+    | '/datenschutz'
+    | '/gebuehren'
+    | '/hilfe'
+    | '/impressum'
+    | '/kategorien'
+    | '/kontakt'
+    | '/ueber'
     | '/_authenticated/dashboard'
     | '/listing/$id'
     | '/shop/$handle'
@@ -109,14 +217,79 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AgbRoute: typeof AgbRoute
   AuthRoute: typeof AuthRoute
   BrowseRoute: typeof BrowseRoute
+  CookiesRoute: typeof CookiesRoute
+  DatenschutzRoute: typeof DatenschutzRoute
+  GebuehrenRoute: typeof GebuehrenRoute
+  HilfeRoute: typeof HilfeRoute
+  ImpressumRoute: typeof ImpressumRoute
+  KategorienRoute: typeof KategorienRoute
+  KontaktRoute: typeof KontaktRoute
+  UeberRoute: typeof UeberRoute
   ListingIdRoute: typeof ListingIdRoute
   ShopHandleRoute: typeof ShopHandleRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/ueber': {
+      id: '/ueber'
+      path: '/ueber'
+      fullPath: '/ueber'
+      preLoaderRoute: typeof UeberRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/kontakt': {
+      id: '/kontakt'
+      path: '/kontakt'
+      fullPath: '/kontakt'
+      preLoaderRoute: typeof KontaktRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/kategorien': {
+      id: '/kategorien'
+      path: '/kategorien'
+      fullPath: '/kategorien'
+      preLoaderRoute: typeof KategorienRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/impressum': {
+      id: '/impressum'
+      path: '/impressum'
+      fullPath: '/impressum'
+      preLoaderRoute: typeof ImpressumRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/hilfe': {
+      id: '/hilfe'
+      path: '/hilfe'
+      fullPath: '/hilfe'
+      preLoaderRoute: typeof HilfeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/gebuehren': {
+      id: '/gebuehren'
+      path: '/gebuehren'
+      fullPath: '/gebuehren'
+      preLoaderRoute: typeof GebuehrenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/datenschutz': {
+      id: '/datenschutz'
+      path: '/datenschutz'
+      fullPath: '/datenschutz'
+      preLoaderRoute: typeof DatenschutzRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cookies': {
+      id: '/cookies'
+      path: '/cookies'
+      fullPath: '/cookies'
+      preLoaderRoute: typeof CookiesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/browse': {
       id: '/browse'
       path: '/browse'
@@ -129,6 +302,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/agb': {
+      id: '/agb'
+      path: '/agb'
+      fullPath: '/agb'
+      preLoaderRoute: typeof AgbRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -183,8 +363,17 @@ const AuthenticatedRouteRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AgbRoute: AgbRoute,
   AuthRoute: AuthRoute,
   BrowseRoute: BrowseRoute,
+  CookiesRoute: CookiesRoute,
+  DatenschutzRoute: DatenschutzRoute,
+  GebuehrenRoute: GebuehrenRoute,
+  HilfeRoute: HilfeRoute,
+  ImpressumRoute: ImpressumRoute,
+  KategorienRoute: KategorienRoute,
+  KontaktRoute: KontaktRoute,
+  UeberRoute: UeberRoute,
   ListingIdRoute: ListingIdRoute,
   ShopHandleRoute: ShopHandleRoute,
 }

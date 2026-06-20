@@ -14,7 +14,7 @@ type Props = {
 export function DiscoverRail({ title, subtitle, emoji, emptyMessage, items }: Props) {
   const hasItems = items && items.length > 0;
   return (
-    <section className="mx-auto max-w-7xl px-6 py-10">
+    <section className="mx-auto max-w-7xl px-4 sm:px-6 py-10">
       <div className="mb-5 flex items-end justify-between gap-4">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
