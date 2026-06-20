@@ -33,7 +33,7 @@ const faqs: Faq[] = [
   },
   {
     q: "Was kostet das Verkaufen?",
-    a: "Im MVP: nichts. Wir nehmen aktuell keine Plattformgebühr, du behältst (abzüglich Stripe-Gebühren) alles. Später kommt fair gestaffelte Provision dazu.",
+    a: "Keine monatliche Gebühr. Pro Verkauf 17 % bei digitalen, 12 % bei physischen Produkten. Alle 25 Verkäufe pro Monat sinkt deine Provision um 1 % — am 1. des Monats startet die Zählung neu. Details auf der Gebührenseite.",
     color: "bg-sky-200", ink: "text-sky-950",
     rotate: 5, size: "sm", emoji: "💸",
   },

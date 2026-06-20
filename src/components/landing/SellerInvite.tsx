@@ -29,6 +29,21 @@ export function SellerInvite() {
             <p className="mt-4 max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-base">
               In ~2 Minuten ist dein Shop online: Profil gestalten, Produkte hochladen, Stripe verbinden. Du bestimmst Preis, Stil und Versand.
             </p>
+
+            <div className="mt-5 grid gap-2 sm:grid-cols-2">
+              <div className="rounded-2xl border border-brand/30 bg-card/70 p-3">
+                <div className="text-[10px] font-bold uppercase tracking-widest text-brand">Digital</div>
+                <div className="font-display text-2xl font-black text-brand-ink">17 %<span className="text-xs font-bold text-muted-foreground"> pro Verkauf</span></div>
+              </div>
+              <div className="rounded-2xl border border-amber-300/60 bg-card/70 p-3">
+                <div className="text-[10px] font-bold uppercase tracking-widest text-amber-700">Physisch</div>
+                <div className="font-display text-2xl font-black text-brand-ink">12 %<span className="text-xs font-bold text-muted-foreground"> pro Verkauf</span></div>
+              </div>
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">
+              Keine monatliche Gebühr. Alle 25 Verkäufe im Monat sinkt deine Provision um 1 % — am 1. des Monats geht's wieder bei vorne los.
+            </p>
+
             <div className="mt-6 flex flex-wrap items-center gap-3">
               <Link
                 to="/auth"
@@ -37,9 +52,9 @@ export function SellerInvite() {
                 Shop eröffnen
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Link>
-              <span className="text-xs font-medium text-muted-foreground">
-                Aktuell 0 € Plattformgebühr ✨
-              </span>
+              <Link to="/gebuehren" className="text-xs font-semibold text-brand hover:underline">
+                So funktioniert die Gebühr →
+              </Link>
             </div>
           </div>
 
