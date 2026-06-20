@@ -64,7 +64,7 @@ export function FaqStickerBoard() {
   const [open, setOpen] = useState<number | null>(null);
 
   return (
-    <section className="mx-auto max-w-7xl px-6 py-20">
+    <section className="mx-auto max-w-7xl px-4 sm:px-6 py-20">
       <div className="mb-10 text-center">
         <div className="inline-flex items-center gap-2 rounded-full bg-brand-soft px-3 py-1 text-xs font-bold uppercase tracking-widest text-brand">
           Häufig gefragt

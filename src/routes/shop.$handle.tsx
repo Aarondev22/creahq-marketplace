@@ -24,7 +24,7 @@ function ShopPage() {
   if (!data) return null;
   const { profile, listings } = data;
   return (
-    <div className="mx-auto max-w-7xl px-6 py-12">
+    <div className="mx-auto max-w-7xl px-4 sm:px-6 py-12">
       <header className="mb-10 flex items-center gap-5">
         <div className="grid h-20 w-20 place-items-center rounded-3xl bg-gradient-to-br from-brand to-brand-ink text-3xl font-black text-primary-foreground">
           {(profile.display_name ?? "?").slice(0, 1).toUpperCase()}

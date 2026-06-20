@@ -4,7 +4,7 @@ import { Link } from "@tanstack/react-router";
 
 export function SellerInvite() {
   return (
-    <section id="verkaufen" className="mx-auto max-w-7xl px-6 py-14">
+    <section id="verkaufen" className="mx-auto max-w-7xl px-4 sm:px-6 py-14">
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}
