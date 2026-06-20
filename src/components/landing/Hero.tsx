@@ -43,7 +43,7 @@ export function Hero() {
         transition={{ duration: 80, repeat: Infinity, ease: "linear" }}
       />
 
-      <div className="relative mx-auto grid max-w-7xl gap-10 px-6 pb-20 pt-14 md:grid-cols-[1.15fr_1fr] md:pt-20">
+      <div className="relative mx-auto grid max-w-7xl gap-10 px-4 pb-16 pt-10 sm:px-6 sm:pb-20 sm:pt-14 md:grid-cols-[1.15fr_1fr] md:pt-20">
         <div className="flex flex-col justify-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
