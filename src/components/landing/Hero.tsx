@@ -55,7 +55,7 @@ export function Hero() {
             Marktplatz für Creator-Sachen
           </motion.div>
 
-          <h1 className="mt-5 font-display text-5xl font-black leading-[0.95] tracking-tight text-brand-ink sm:text-6xl md:text-7xl">
+          <h1 className="mt-5 font-display text-[2.5rem] font-black leading-[0.95] tracking-tight text-brand-ink sm:text-6xl md:text-7xl">
             Mach{" "}
             <span className="relative inline-block">
               <span className="relative z-10 text-brand">deins.</span>
