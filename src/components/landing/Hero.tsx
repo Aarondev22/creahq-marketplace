@@ -161,14 +161,15 @@ export function Hero() {
           >
             ✦
           </motion.div>
-          <motion.div
-            aria-hidden
-            className="absolute -bottom-4 -left-4 grid h-14 w-14 place-items-center rounded-full bg-amber-300 text-xl"
+          <motion.a
+            href="#entdecken"
+            aria-label="Zu den Top 20 scrollen"
+            className="absolute -bottom-4 -left-4 grid h-14 w-14 cursor-pointer place-items-center rounded-full bg-amber-300 text-xl text-amber-900 transition-transform hover:scale-110"
             animate={{ rotate: [0, 360] }}
             transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
           >
             ★
-          </motion.div>
+          </motion.a>
         </motion.div>
       </div>
     </section>
