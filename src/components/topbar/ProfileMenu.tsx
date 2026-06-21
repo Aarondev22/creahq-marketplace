@@ -59,6 +59,15 @@ export function ProfileMenu() {
               <Link to="/dashboard"><Store className="mr-2 h-4 w-4" /> Verkaufen</Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
+            <DropdownMenuItem asChild>
+              <Link to="/redeem"><Sparkles className="mr-2 h-4 w-4" /> Code einlösen</Link>
+            </DropdownMenuItem>
+            {isAdmin && (
+              <DropdownMenuItem asChild>
+                <Link to="/redeem"><Sparkles className="mr-2 h-4 w-4" /> Admin: Menü → Founder-Tools</Link>
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuSeparator />
             <DropdownMenuItem onSelect={handleSignOut}>
               <LogOut className="mr-2 h-4 w-4" /> Abmelden
             </DropdownMenuItem>
