@@ -29,7 +29,7 @@ export function DiscoverRail({ title, subtitle, emoji, emptyMessage, items }: Pr
         <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
           {hasItems
             ? items!.map((l) => <ListingCard key={l.id} l={l} />)
-            : Array.from({ length: 6 }).map((_, i) => <PlaceholderCard key={i} index={i} message={emptyMessage} />)}
+            : Array.from({ length: 10 }).map((_, i) => <PlaceholderCard key={i} index={i} message={emptyMessage} />)}
         </div>
         <div className="pointer-events-none absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-surface to-transparent" />
       </div>
