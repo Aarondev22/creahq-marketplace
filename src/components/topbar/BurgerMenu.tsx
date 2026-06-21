@@ -129,10 +129,24 @@ export function BurgerMenu() {
             <li><Link to="/gebuehren" onClick={close} className="block rounded-lg px-3 py-1.5 text-muted-foreground hover:bg-card hover:text-brand-ink">Gebühren</Link></li>
             <li><Link to="/hilfe" onClick={close} className="block rounded-lg px-3 py-1.5 text-muted-foreground hover:bg-card hover:text-brand-ink">Hilfe & FAQ</Link></li>
             <li><Link to="/kontakt" onClick={close} className="block rounded-lg px-3 py-1.5 text-muted-foreground hover:bg-card hover:text-brand-ink">Kontakt</Link></li>
+            <li><Link to="/verkaufen/guide" onClick={close} className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-muted-foreground hover:bg-card hover:text-brand-ink"><Store className="h-3.5 w-3.5" />Verkäufer-Guide</Link></li>
           </ul>
         </Section>
+
+        {isAdmin && (
+          <Section icon={<Shield className="h-4 w-4" />} title={isFounder ? "Founder-Tools" : "Admin-Tools"}>
+            <button
+              onClick={() => { setAdminOpen(true); close(); }}
+              className="w-full rounded-xl bg-gradient-to-r from-brand to-fuchsia-600 px-4 py-3 text-left text-sm font-bold text-white shadow-sm hover:scale-[1.02] transition-transform"
+            >
+              🛠️ Admin-Panel öffnen
+            </button>
+          </Section>
+        )}
       </SheetContent>
     </Sheet>
+    <AdminPanel open={adminOpen} onClose={() => setAdminOpen(false)} />
+    </>
   );
 }
 
