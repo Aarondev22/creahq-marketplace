@@ -1,8 +1,10 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Menu, Palette, Languages, Moon, Sun, FileText, Tag } from "lucide-react";
+import { Menu, Palette, Languages, Moon, Sun, FileText, Tag, Shield, Store } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
+import { AdminPanel } from "@/components/admin/AdminPanel";
 
 const categories = [
   { label: "Illustration", slug: "illustration" },
