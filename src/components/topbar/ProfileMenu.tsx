@@ -12,8 +12,11 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 
+import { FounderBadge } from "@/components/FounderBadge";
+import { Sparkles } from "lucide-react";
+
 export function ProfileMenu() {
-  const { user, loading } = useAuth();
+  const { user, loading, isFounder, isAdmin } = useAuth();
   const navigate = useNavigate();
   const router = useRouter();
   const qc = useQueryClient();
@@ -33,17 +36,21 @@ export function ProfileMenu() {
       <DropdownMenuTrigger asChild>
         <button
           aria-label="Profil"
-          className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-gradient-to-br from-brand to-brand-ink text-sm font-black text-primary-foreground transition-transform hover:scale-105"
+          className={`relative grid h-10 w-10 shrink-0 place-items-center rounded-full text-sm font-black text-primary-foreground transition-transform hover:scale-105 ${isFounder ? "bg-gradient-to-br from-brand to-fuchsia-600 ring-2 ring-amber-300" : "bg-gradient-to-br from-brand to-brand-ink"}`}
         >
           {user ? initial : <User className="h-5 w-5" />}
+          {isFounder && <span className="absolute -bottom-1 -right-1 grid h-4 w-4 place-items-center rounded-full bg-amber-300 text-[8px]">👑</span>}
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
+      <DropdownMenuContent align="end" className="w-60">
         {loading ? (
           <DropdownMenuLabel>Lade …</DropdownMenuLabel>
         ) : user ? (
           <>
-            <DropdownMenuLabel className="truncate">{user.email}</DropdownMenuLabel>
+            <DropdownMenuLabel className="flex flex-col gap-1">
+              <span className="truncate text-sm">{user.email}</span>
+              {isFounder && <FounderBadge />}
+            </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
               <Link to="/dashboard"><LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard</Link>
