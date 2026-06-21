@@ -46,7 +46,7 @@ function RedeemPage() {
   }
 
   return (
-    <PageShell title="Code einlösen" subtitle="Founder-Code, Beta-Zugang, Aktions-Codes — hier rein.">
+    <PageShell title="Code einlösen" lead="Founder-Code, Beta-Zugang, Aktions-Codes — hier rein.">
       <div className="mx-auto max-w-lg">
         {isFounder ? (
           <div className="rounded-3xl border-2 border-brand bg-brand-soft p-8 text-center">

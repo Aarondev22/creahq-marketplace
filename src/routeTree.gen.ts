@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as UeberRouteImport } from './routes/ueber'
+import { Route as RedeemRouteImport } from './routes/redeem'
 import { Route as KontaktRouteImport } from './routes/kontakt'
 import { Route as KategorienRouteImport } from './routes/kategorien'
 import { Route as ImpressumRouteImport } from './routes/impressum'
@@ -29,6 +30,11 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 const UeberRoute = UeberRouteImport.update({
   id: '/ueber',
   path: '/ueber',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RedeemRoute = RedeemRouteImport.update({
+  id: '/redeem',
+  path: '/redeem',
   getParentRoute: () => rootRouteImport,
 } as any)
 const KontaktRoute = KontaktRouteImport.update({
@@ -118,6 +124,7 @@ export interface FileRoutesByFullPath {
   '/impressum': typeof ImpressumRoute
   '/kategorien': typeof KategorienRoute
   '/kontakt': typeof KontaktRoute
+  '/redeem': typeof RedeemRoute
   '/ueber': typeof UeberRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/listing/$id': typeof ListingIdRoute
@@ -135,6 +142,7 @@ export interface FileRoutesByTo {
   '/impressum': typeof ImpressumRoute
   '/kategorien': typeof KategorienRoute
   '/kontakt': typeof KontaktRoute
+  '/redeem': typeof RedeemRoute
   '/ueber': typeof UeberRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/listing/$id': typeof ListingIdRoute
@@ -154,6 +162,7 @@ export interface FileRoutesById {
   '/impressum': typeof ImpressumRoute
   '/kategorien': typeof KategorienRoute
   '/kontakt': typeof KontaktRoute
+  '/redeem': typeof RedeemRoute
   '/ueber': typeof UeberRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/listing/$id': typeof ListingIdRoute
@@ -173,6 +182,7 @@ export interface FileRouteTypes {
     | '/impressum'
     | '/kategorien'
     | '/kontakt'
+    | '/redeem'
     | '/ueber'
     | '/dashboard'
     | '/listing/$id'
@@ -190,6 +200,7 @@ export interface FileRouteTypes {
     | '/impressum'
     | '/kategorien'
     | '/kontakt'
+    | '/redeem'
     | '/ueber'
     | '/dashboard'
     | '/listing/$id'
@@ -208,6 +219,7 @@ export interface FileRouteTypes {
     | '/impressum'
     | '/kategorien'
     | '/kontakt'
+    | '/redeem'
     | '/ueber'
     | '/_authenticated/dashboard'
     | '/listing/$id'
@@ -227,6 +239,7 @@ export interface RootRouteChildren {
   ImpressumRoute: typeof ImpressumRoute
   KategorienRoute: typeof KategorienRoute
   KontaktRoute: typeof KontaktRoute
+  RedeemRoute: typeof RedeemRoute
   UeberRoute: typeof UeberRoute
   ListingIdRoute: typeof ListingIdRoute
   ShopHandleRoute: typeof ShopHandleRoute
@@ -239,6 +252,13 @@ declare module '@tanstack/react-router' {
       path: '/ueber'
       fullPath: '/ueber'
       preLoaderRoute: typeof UeberRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/redeem': {
+      id: '/redeem'
+      path: '/redeem'
+      fullPath: '/redeem'
+      preLoaderRoute: typeof RedeemRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/kontakt': {
@@ -373,6 +393,7 @@ const rootRouteChildren: RootRouteChildren = {
   ImpressumRoute: ImpressumRoute,
   KategorienRoute: KategorienRoute,
   KontaktRoute: KontaktRoute,
+  RedeemRoute: RedeemRoute,
   UeberRoute: UeberRoute,
   ListingIdRoute: ListingIdRoute,
   ShopHandleRoute: ShopHandleRoute,
