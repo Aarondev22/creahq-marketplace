@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as UeberRouteImport } from './routes/ueber'
+import { Route as RedeemRouteImport } from './routes/redeem'
 import { Route as KontaktRouteImport } from './routes/kontakt'
 import { Route as KategorienRouteImport } from './routes/kategorien'
 import { Route as ImpressumRouteImport } from './routes/impressum'
@@ -22,6 +23,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AgbRouteImport } from './routes/agb'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as VerkaufenGuideRouteImport } from './routes/verkaufen.guide'
 import { Route as ShopHandleRouteImport } from './routes/shop.$handle'
 import { Route as ListingIdRouteImport } from './routes/listing.$id'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -29,6 +31,11 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 const UeberRoute = UeberRouteImport.update({
   id: '/ueber',
   path: '/ueber',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RedeemRoute = RedeemRouteImport.update({
+  id: '/redeem',
+  path: '/redeem',
   getParentRoute: () => rootRouteImport,
 } as any)
 const KontaktRoute = KontaktRouteImport.update({
@@ -90,6 +97,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const VerkaufenGuideRoute = VerkaufenGuideRouteImport.update({
+  id: '/verkaufen/guide',
+  path: '/verkaufen/guide',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ShopHandleRoute = ShopHandleRouteImport.update({
   id: '/shop/$handle',
   path: '/shop/$handle',
@@ -118,10 +130,12 @@ export interface FileRoutesByFullPath {
   '/impressum': typeof ImpressumRoute
   '/kategorien': typeof KategorienRoute
   '/kontakt': typeof KontaktRoute
+  '/redeem': typeof RedeemRoute
   '/ueber': typeof UeberRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/listing/$id': typeof ListingIdRoute
   '/shop/$handle': typeof ShopHandleRoute
+  '/verkaufen/guide': typeof VerkaufenGuideRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -135,10 +149,12 @@ export interface FileRoutesByTo {
   '/impressum': typeof ImpressumRoute
   '/kategorien': typeof KategorienRoute
   '/kontakt': typeof KontaktRoute
+  '/redeem': typeof RedeemRoute
   '/ueber': typeof UeberRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/listing/$id': typeof ListingIdRoute
   '/shop/$handle': typeof ShopHandleRoute
+  '/verkaufen/guide': typeof VerkaufenGuideRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -154,10 +170,12 @@ export interface FileRoutesById {
   '/impressum': typeof ImpressumRoute
   '/kategorien': typeof KategorienRoute
   '/kontakt': typeof KontaktRoute
+  '/redeem': typeof RedeemRoute
   '/ueber': typeof UeberRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/listing/$id': typeof ListingIdRoute
   '/shop/$handle': typeof ShopHandleRoute
+  '/verkaufen/guide': typeof VerkaufenGuideRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -173,10 +191,12 @@ export interface FileRouteTypes {
     | '/impressum'
     | '/kategorien'
     | '/kontakt'
+    | '/redeem'
     | '/ueber'
     | '/dashboard'
     | '/listing/$id'
     | '/shop/$handle'
+    | '/verkaufen/guide'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -190,10 +210,12 @@ export interface FileRouteTypes {
     | '/impressum'
     | '/kategorien'
     | '/kontakt'
+    | '/redeem'
     | '/ueber'
     | '/dashboard'
     | '/listing/$id'
     | '/shop/$handle'
+    | '/verkaufen/guide'
   id:
     | '__root__'
     | '/'
@@ -208,10 +230,12 @@ export interface FileRouteTypes {
     | '/impressum'
     | '/kategorien'
     | '/kontakt'
+    | '/redeem'
     | '/ueber'
     | '/_authenticated/dashboard'
     | '/listing/$id'
     | '/shop/$handle'
+    | '/verkaufen/guide'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -227,9 +251,11 @@ export interface RootRouteChildren {
   ImpressumRoute: typeof ImpressumRoute
   KategorienRoute: typeof KategorienRoute
   KontaktRoute: typeof KontaktRoute
+  RedeemRoute: typeof RedeemRoute
   UeberRoute: typeof UeberRoute
   ListingIdRoute: typeof ListingIdRoute
   ShopHandleRoute: typeof ShopHandleRoute
+  VerkaufenGuideRoute: typeof VerkaufenGuideRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -239,6 +265,13 @@ declare module '@tanstack/react-router' {
       path: '/ueber'
       fullPath: '/ueber'
       preLoaderRoute: typeof UeberRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/redeem': {
+      id: '/redeem'
+      path: '/redeem'
+      fullPath: '/redeem'
+      preLoaderRoute: typeof RedeemRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/kontakt': {
@@ -325,6 +358,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/verkaufen/guide': {
+      id: '/verkaufen/guide'
+      path: '/verkaufen/guide'
+      fullPath: '/verkaufen/guide'
+      preLoaderRoute: typeof VerkaufenGuideRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/shop/$handle': {
       id: '/shop/$handle'
       path: '/shop/$handle'
@@ -373,20 +413,12 @@ const rootRouteChildren: RootRouteChildren = {
   ImpressumRoute: ImpressumRoute,
   KategorienRoute: KategorienRoute,
   KontaktRoute: KontaktRoute,
+  RedeemRoute: RedeemRoute,
   UeberRoute: UeberRoute,
   ListingIdRoute: ListingIdRoute,
   ShopHandleRoute: ShopHandleRoute,
+  VerkaufenGuideRoute: VerkaufenGuideRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

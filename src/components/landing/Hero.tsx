@@ -117,10 +117,10 @@ export function Hero() {
           <div className={`relative overflow-hidden rounded-[2.5rem] border border-border bg-gradient-to-br ${active.bg} p-6 brand-glow transition-all duration-500 sm:p-8`}>
             <div className="flex items-start justify-between">
               <div className={`text-xs font-bold uppercase tracking-widest ${active.ink}`}>
-                Hero-Theme
+                Vorschau-Stil
               </div>
               <div className="rounded-full bg-white/70 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-brand-ink backdrop-blur">
-                Drag zum Mixen
+                Nur diese Box
               </div>
             </div>
             <div className={`mt-8 font-display text-5xl font-black leading-none ${active.ink}`}>
@@ -128,8 +128,9 @@ export function Hero() {
               <span className="ml-2 inline-block [animation:wiggle_3s_ease-in-out_infinite]">{active.emoji}</span>
             </div>
             <div className={`mt-2 text-sm ${active.ink} opacity-75`}>
-              Schiebe die Plättchen — die Startseite wechselt die Stimmung.
+              Plättchen schieben = Stimmung mixen. Ändert nichts an der Website.
             </div>
+
 
             <Reorder.Group
               axis="x"
@@ -160,14 +161,15 @@ export function Hero() {
           >
             ✦
           </motion.div>
-          <motion.div
-            aria-hidden
-            className="absolute -bottom-4 -left-4 grid h-14 w-14 place-items-center rounded-full bg-amber-300 text-xl"
+          <motion.a
+            href="#entdecken"
+            aria-label="Zu den Top 20 scrollen"
+            className="absolute -bottom-4 -left-4 grid h-14 w-14 cursor-pointer place-items-center rounded-full bg-amber-300 text-xl text-amber-900 transition-transform hover:scale-110"
             animate={{ rotate: [0, 360] }}
             transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
           >
             ★
-          </motion.div>
+          </motion.a>
         </motion.div>
       </div>
     </section>

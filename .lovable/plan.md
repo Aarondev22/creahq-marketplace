@@ -1,170 +1,91 @@
+# Großer Ausbau — alles am Stück
 
-# CreaHQ — Lean MVP mit verspielter Interaktion
+## Was du jetzt schon kannst
+Ja, du kannst dich **schon hier im Preview** anmelden — Profil-Icon oben rechts → "Anmelden". Veröffentlichen ist nicht nötig. Sobald du deine E-Mail nennst, hängt die DB an: dieses Konto = Founder + Admin, ab Login automatisch.
 
-Multi-Vendor-Marktplatz für digitale Produkte & Services. Helles Off-White mit **Lila als Markenfarbe**, stark interaktive Oberfläche mit Mini-Games und KI-Spielereien. Verkäufer regeln Versand/Erfüllung selbst.
+---
 
-## Topbar (global, sticky)
+## 1. Founder-Badge & Admin-Panel
 
-```text
-[☰ Burger]  [🟣 CreaHQ]   [────── Suchleiste ──────]   [🔔]  [👤]
-```
+- Neue Rolle `founder` in der `app_role`-Enum. Trigger: wenn sich jemand mit **deiner E-Mail** registriert, kriegt das Konto sofort `founder` + `admin`.
+- **Founder-Badge** überall wo dein Name auftaucht (Chat, Shop-Profil, Listing-Kommentare): kleines lila Abzeichen "Founder" über dem Namen.
+- **Admin-Panel als Floating Window**: für dich erscheint im Burger-Menü unter "Kategorien" ein neuer Eintrag **"Admin"**. Klick öffnet ein draggable/resizable Fenster (oben Titelbar mit Minimieren/Schließen, drag via Header, resize via Ecke, minimiert dockt unten rechts an).
+- Panel-Tabs: **Übersicht** (Live-Zahlen: Nutzer, Shops, Listings, Orders, GMV), **Nutzer** (suchen, Rolle ändern, sperren), **Shops/Listings** (entfernen, featuren), **Codes** (globale Rabattcodes anlegen: Prozent/Festbetrag, Gültigkeit, Limit), **Featured** (welche Shops auf der Startseite priorisiert werden).
 
-- **Burger links**: Slide-in Panel mit Kategorien, Themenwelten, Sprache (öffnet Flag-Draw), Light/Dark, Legal-Links.
-- **CreaHQ-Logo**: lila Wortmarke + Symbol; Klick → Startseite, leichtes Hover-Wiggle.
-- **Suche mittig**: Volltext, Live-Vorschläge, Icon-Button öffnet **Doodle-Search**. Mobile: Icon, das ein Vollbild-Overlay öffnet.
-- **Glocke**: Notifications (neue Bestellung / Download bereit), ungelesen-Badge.
-- **Profil**: Avatar-Dropdown — eingeloggt: Dashboard, Käufe, Verkaufen, Profil, Logout. Ausgeloggt: Anmelden / Registrieren.
+## 2. Seller-Onboarding (Guide vor erstem Listing)
 
-## Landing Page (`/`)
+Beim ersten Klick auf "Shop erstellen" läuft ein 5-Schritt-Wizard:
+1. **Shop-Basics** (Handle, Name, Beschreibung, Avatar)
+2. **Versand-Modell**: pro Listing wählbar "Versand extra" (Käufer zahlt obendrauf, Zonen/Pauschale) oder "inklusive" (im Preis drin) — gilt nur für physische Produkte
+3. **Gebühren-Erklärung** (17% digital / 12% physisch, Staffel-Rabatt pro 25 Sales/Monat)
+4. **Payouts**: alle 2 Wochen automatisch via Stripe Connect; Verkäufer hinterlegt IBAN über Stripe
+5. **Pflichten**: bei Versand **Tracking-Nummer eingeben** (Pflicht für Streitfälle), Käufer kann bei Schaden Reklamation öffnen, Founder-Team prüft anhand Tracking + Chat
 
-Tonfall: **~70 % „Werde Käufer / entdecke Sachen", ~30 % „Mach deinen eigenen Shop auf"**. Reihenfolge von oben nach unten:
+Dazu permanente Hilfe-Seite `/verkaufen/guide` mit:
+- **Marketing-Sektion**: Tipps für Instagram/TikTok/Pinterest (Hashtag-Vorschläge je Kategorie, Posting-Zeiten, Story-Templates, Crosspost-Checkliste), UTM-Link-Generator für eigene Posts
+- Versand-Best-Practices, Verpackung, Rücksendungen
+- Streitfall-Ablauf
 
-### 1. Hero mit Kurz-Erklärer + Theme-Shuffle
+## 3. Käufer ↔ Verkäufer Chat
 
-- Große verspielte Headline, daneben/dadurch verlaufende Theme-Plättchen (Drag-and-Drop, Farben/Schrift ändern sich live).
-- 2–3 Zeilen Subtext, der erklärt, **was CreaHQ ist**: „Marktplatz von Creatorn für digitale Produkte und Services — entdecken, sammeln, weitermachen."
-- **Primary CTA: „Jetzt entdecken"** → springt zu den Sektionen / Browse.
-- **Sekundär klein: „Eigenen Shop eröffnen"** → führt zu Sign-up mit Seller-Flag.
+- Neue Tabellen `conversations` und `messages`. Jeder Käufer kann pro Shop **einen** Thread öffnen.
+- Aufruf über Button "Verkäufer kontaktieren" auf Listing- und Shop-Seite.
+- **Persönliche Preisangebote**: Verkäufer kann im Chat ein **privates Angebot** schicken (gilt nur für diesen einen Käufer, mit Ablaufdatum, Einlöse-Button → preisgesenkter Checkout-Link, der nur für diesen User funktioniert).
+- Realtime via Supabase Channel; ungelesene Nachrichten triggern Notification.
+- Founder (du) kann jeden Thread einsehen (für Streitfälle, im Admin-Panel).
 
-### 2. Entdecker-Sektionen (Etsy-Style)
+## 4. Stripe Checkout + echte Orders
 
-Mehrere horizontal scrollbare Schienen, jede mit eigener Stimmung. **Im aktuellen leeren Zustand** zeigt jede Schiene einen freundlichen, leicht augenzwinkernden Empty-State an der Stelle, wo später Produkte stehen — z. B. „Hier wohnen bald die 20 beliebtesten Sachen. Aktuell ist es noch ganz still." mit einem kleinen animierten Platzhalter (z. B. wackelnde leere Kiste, oder gestrichelte Produktkarten mit „bald hier").
+- Lovable's eingebautes Stripe (kein API-Key nötig) — `enable_stripe_payments`.
+- Pro Listing wird beim Anlegen automatisch ein Stripe-Produkt + Preis erzeugt.
+- Checkout-Button auf Listing-Seite → Stripe Checkout Session (mit Versandkosten falls "extra", mit Rabattcode falls eingegeben oder über privates Angebot).
+- Webhook unter `/api/public/webhooks/stripe` validiert Signatur und schreibt:
+  - `orders` + `order_items` (Käufer, Verkäufer, Menge, Preis, Versand, Founder-Anteil = Gebühr nach Staffel)
+  - Notification an Verkäufer ("Du hast verkauft!")
+  - **Tracking-Pflicht-Task** im Seller-Dashboard
+- **Top-20 wird real**: sobald Orders reinkommen, sortiert die Query nach Stückzahl der letzten 7 Tage.
+- Payouts: Stripe Connect Express-Konto pro Verkäufer, 14-Tage-Auszahlungszyklus, Gebühren-Abzug automatisch.
 
-Geplante Schienen (alle vorbereitet, Empty-State aktiv):
+## 5. Notifications (Glocke live + sortiert)
 
-- **Top 20 gerade beliebt**
-- **Perfekt für daheim**
-- **Frisch reingekommen**
-- **Versteckte Perlen**
-- **Von der Community kuratiert**
+Glocke oben rechts bekommt einen Dropdown mit Gruppierungen statt flacher Liste:
+- **Nachrichten** (neue Chat-Messages)
+- **Refill — Lieblingsshop** (Shop, bei dem du schon gekauft hast, hat neue Listings)
+- **Refill — Lieblingsprodukt** (Listing das du favorisiert hast ist wieder verfügbar)
+- **Bestellungen** (Status: bezahlt, versandt, geliefert, Reklamation)
+- **Founder-News** (das ist dein Kanal: du kannst aus dem Admin-Panel an alle/Segment/einzelne Shops Push-Nachrichten schicken — z.B. "Hey, ich will mit deinem Shop was zusammen machen, schreib mir hier:")
+- **System** (Gebühren-Update, AGB-Änderung)
 
-Jede Sektion hat eine Überschrift, einen Untertitel und einen „Alle ansehen"-Link nach `/browse?section=...`.
+Realtime via Supabase Channels. Ungelesen-Badge mit Anzahl pro Gruppe.
 
-### 3. Verkäufer-Einladung (~30 % Block)
+## 6. Slides: 10 statt 6
 
-Schmaleres Band weiter unten: „Du machst selbst Sachen? Öffne in 2 Minuten deinen Shop." Mit Mini-Illustration und CTA → Sign-up (Seller). Bewusst kleiner und weiter unten als die Käufer-Reise.
+In `DiscoverRail` (Top 20 + Perfekt für daheim + alle weiteren Rails) zeigt jede Slide 10 Karten statt 6. Karten werden etwas kompakter, Grid passt sich responsive an (Handy 2 pro Reihe → 10 in 5 Reihen pro Slide).
 
-### 4. FAQ — verstreut, nicht gestapelt
+## 7. Hero-Mixer-Klarstellung
 
-5 Fragen, die als **gestreute, leicht rotierte Karten** auf einer Fläche schweben (Sticker-Board-Look): unterschiedliche Größen, Drehwinkel, Lila-Schattierungen. Hover hebt die Karte an. Beim Klick fährt sie groß in die Mitte und zeigt die Antwort.
+Beschriftung am Mixer ergänzen: "Vorschau-Stil — nur diese Box, ändert nicht die Seite". Plus kleiner ⓘ-Tooltip. Optional: Reset-Button.
 
-Beispielfragen (final-redigieren wir später, hier als Platzhalter):
+## 8. Stern im gelben Kreis
 
-1. Was ist CreaHQ überhaupt?
-2. Wer verkauft hier?
-3. Wie bekomme ich meine gekauften Sachen?
-4. Was kostet das Verkaufen?
-5. Wie sicher ist der Kauf?
+Aktuell nur Deko ("Trending"-Badge in Hero). Ich mache ihn klickbar → scrollt zur Top-20-Rail. Falls dir das immer noch nicht passt, kann er auch raus.
 
-### 5. Footer
+## 9. Mobile-Feinschliff
 
-- Linke Seite: kleine lila Wortmarke + ein-Satz-Claim.
-- Mittig: Link-Spalten **Entdecken / Verkaufen / Hilfe / Über uns** — Links sind **Platzhalter (`href="#"`) ohne Ziel**, wie gewünscht.
-- Rechts: **Rechtliches** (Impressum, AGB, Datenschutz, Cookies) — ebenfalls Platzhalter, vorerst ohne echte Zielseiten.
-- Untere Linie: Copyright + Social-Icons (auch Platzhalter).
+Während ich eh überall ran muss: Topbar-Suche auf Handy in Bottom-Sheet, Admin-Panel auf Handy fullscreen statt floating.
 
-## Was den Marktplatz besonders macht
+---
 
-Statt langweiliger Settings hat CreaHQ einen „Playful Layer": kleine Spiele und Gesten ersetzen Standard-Interaktionen. Klassischer Fallback ist immer einen Klick entfernt.
+## Technisches (nur für Doku)
 
-### Mini-Game-Katalog
+- **DB-Migrationen**: `app_role` += `founder`; `shops`-Felder (handle, shipping_default, stripe_account_id); `listings` += shipping_mode/shipping_price/stripe_price_id/favorites_count; `conversations`, `messages`, `private_offers`, `discount_codes`, `tracking`, `disputes`, `featured_shops`, `notification_groups`-Spalte; RLS + GRANTs überall.
+- **Server-Functions** (`src/lib/`): `shop.functions.ts`, `chat.functions.ts`, `offers.functions.ts`, `codes.functions.ts`, `admin.functions.ts`, `notifications.functions.ts`, `stripe.functions.ts`.
+- **Public Routes**: `/api/public/webhooks/stripe` (Signaturprüfung + DB-Schreib).
+- **AI Minigames** (Lovable AI Gateway, `google/gemini-3-flash-preview` für Logik + `google/gemini-2.5-flash-image` für Visuals): **Flag-Draw** (Spieler zeichnet Flagge → KI rät Land), **Doodle-Search** (Spieler kritzelt Produkt → KI macht Vision-Embedding → Suche im Listings-Bestand). Eigene Route `/spielen`, im Burger verlinkt.
+- **Realtime**: `messages`, `notifications`, `orders` per Postgres Changes.
+- **Tracking**: einfaches Feld + Carrier-Dropdown (DHL/Hermes/DPD/UPS/Post), Statusabfrage später optional.
 
-1. **Flag-Draw Sprachwahl** — Canvas-Modal aus dem Burger. Gemini Vision erkennt die gemalte Flagge → schlägt Sprache vor → User bestätigt. Fallback: Dropdown im selben Modal.
-2. **Theme-Shuffle Hero** — Drag-and-Drop von Theme-Plättchen verändert Hero live; State in localStorage.
-3. **Kategorie-Karussell als Regal** — Karten zum Wegschnipsen (Spring-Animation), Auswahl springt in Browse.
-4. **Doodle-Search** — Icon in der Suche öffnet Sketch-Pad, KI extrahiert Keywords.
-5. **Profil-Avatar-Stempel** — Avatar aus Formen/Farben stempeln (Foto-Upload bleibt parallel).
+## Was ich dich noch brauche
 
-(1)–(3) MVP-Pflicht, (4)–(5) „if time".
-
-### Animations-Layer
-
-Framer Motion: Page-Transitions, hover-scale, parallax-Cursor-Trails auf Landing, Spring-Easing, Scroll-Reveals. `prefers-reduced-motion` respektieren; alle Mini-Games haben Button-Fallback.
-
-## Scope (drin)
-
-- Auth (Email/Passwort + Google), Rollen `buyer`/`seller` kombinierbar.
-- Creator-Profile mit Branding-Anpassung (Akzentfarbe, Cover, Banner, Hero-Theme).
-- Listings: digital (Download nach Kauf) und Services (Erfüllung außerhalb, Email-Kontakt).
-- Browsing: Landing wie oben, Browse/Suche, Listing-Detail, Creator-Shop.
-- Checkout via Lovable Stripe Payments + Webhook. Single-Account, manuelle Auszahlung.
-- Dashboard: Listings-CRUD, eingegangene Bestellungen mit Fulfill-Status, eigene Käufe + signierte Downloads, Profil/Branding, Notifications.
-- KI-Endpunkte server-side: `recognizeFlag`, `classifyDoodle`.
-- Footer-Platzhalterlinks ohne Ziel, **keine** echten Rechtsseiten im ersten Wurf.
-
-## Out of Scope
-
-- Physische Produkte, Versand, Shopify
-- Stripe Connect, Auto-Payouts, Provisionsabrechnung
-- Reviews, Käufer↔Verkäufer-Chat, Admin-Moderation, Analytics
-- Voll ausgebaute Mehrsprachigkeit (MVP: DE/EN umschaltbar)
-- Tatsächliche Rechtstexte (nur Platzhalter-Links)
-
-## Technische Architektur
-
-Stack: TanStack Start, Lovable Cloud (Supabase), Lovable Stripe Payments, Lovable AI Gateway (Gemini Flash), Framer Motion.
-
-### Routes
-
-```text
-src/routes/
-  __root.tsx                       Topbar + Footer + Outlet
-  index.tsx                        Landing (Hero, Sektionen, Seller-Block, FAQ)
-  browse.tsx                       Suche/Filter (?section=, ?q=, ?cat=)
-  listing.$id.tsx
-  shop.$handle.tsx
-  auth.tsx
-  checkout.success.tsx
-  _authenticated/
-    route.tsx                      (integration-managed)
-    dashboard.tsx
-    dashboard.listings.tsx
-    dashboard.listings.new.tsx
-    dashboard.listings.$id.edit.tsx
-    dashboard.orders.tsx
-    dashboard.purchases.tsx
-    dashboard.profile.tsx
-    notifications.tsx
-  api/public/webhooks/stripe.ts
-```
-
-### Komponenten
-
-```text
-src/components/
-  topbar/  Topbar, BurgerMenu, SearchBar, NotificationsBell, ProfileMenu, Logo
-  landing/ Hero, ExplainerCopy, DiscoverRail (mit EmptyState), SellerInvite, FaqStickerBoard, FaqCard
-  footer/  Footer, FooterLinks (Platzhalter)
-  playful/ FlagDrawModal, ThemeShuffle, CategoryShelf, DoodleSearch?, AvatarStamp?
-```
-
-### Design-Tokens (`src/styles.css`, Tailwind v4 `@theme`)
-
-- `--brand-purple`, `--brand-purple-soft`, `--brand-ink`, `--surface` (Off-White), `--surface-warm`.
-- Custom Display-Font für Headlines + cleane Sans für Body via `<link>` im `__root.tsx`.
-
-### Datenmodell (Supabase)
-
-- `profiles`, `app_role` + `user_roles` + `has_role`, `listings`, `orders`, `order_items`, `notifications`. Storage: `avatars`, `covers`, `listing-images` (public), `digital-files` (private). Explizite GRANTs + RLS wie zuvor.
-
-### Server-Funktionen
-
-- `recognizeFlag`, `classifyDoodle`, `createCheckoutSession`, Stripe-Webhook, `upsertListing`, `deleteListing`, `getMyPurchases`, `getMySalesOrders`, `signDigitalDownloadUrl`, `getMyNotifications`, `markNotificationRead`. Public: `getPublicShop`, `getListing`, `searchListings` über Server-Publishable-Client. Sektions-Endpunkt `getDiscoverSection(name)` mit konsistenter Empty-State-Antwort, damit das UI immer dieselbe Logik fährt.
-
-## Reihenfolge der Umsetzung
-
-1. Lovable Cloud aktivieren; Auth (Email + Google); Profile + Trigger; Rollen.
-2. Design-Tokens (Lila + Off-White), Topbar im `__root.tsx`, Footer mit Platzhalter-Links. Framer Motion aufsetzen.
-3. Landing: Hero mit Erklärer + Theme-Shuffle, Discover-Rails mit Empty-States, Seller-Invite-Block, FAQ-Sticker-Board.
-4. Listings-CRUD im Dashboard + Storage.
-5. Browse/Search verdrahtet mit Topbar-Suche; Listing-Detail; Creator-Shop.
-6. Stripe Payments aktivieren; Checkout + Webhook + Success + Käufer/Verkäufer-Ansichten + signierte Downloads.
-7. Notifications + Glocke verdrahten.
-8. Mini-Games: FlagDrawModal aus Burger, optional DoodleSearch + AvatarStamp.
-9. SEO/OG-Tags pro Route, Polish + `prefers-reduced-motion`-Pass.
-
-## Offene Punkte
-
-- Logo: hochgeladene Datei oder soll ich eine lila Wortmarke „CreaHQ" als SVG selbst bauen?
-- Plattformgebühr im MVP: 0 % + manuelle Auszahlung — bestätigt?
-- Sprachen: nur DE/EN umschaltbar — bestätigt?
+1. **Deine E-Mail** (damit Founder-Trigger sie hardcoded matcht). Falls du sie hier nicht reinschreiben willst, kann ich stattdessen einen einmaligen 24-Zeichen-Code generieren — den löst du nach Registrierung in `/redeem` ein und das Konto wird Founder.
+2. **Reihenfolge im Code**: ich baue in dieser Welle 1–9 durch. Migrations zuerst (du wirst eine Migration zum Bestätigen sehen), dann Code, dann Stripe-Enable (du klickst kurz im Stripe-Setup-Dialog Email/Name ein).
