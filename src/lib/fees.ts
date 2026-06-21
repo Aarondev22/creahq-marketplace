@@ -29,3 +29,13 @@ export function feeAmountCents(kind: ProductKind, salesThisMonth: number, priceC
 
 export const feeExplainerShort =
   "Keine monatliche Gebühr. Pro Verkauf: digital 17 %, physisch 12 % — alle 25 Verkäufe im Monat 1 % weniger, Reset jeden Monat.";
+
+export function feeForSale(args: { kind: ProductKind; priceCents: number; salesThisMonth: number }) {
+  const feeRatePct = feeRate(args.kind, args.salesThisMonth);
+  const feeCents = feeAmountCents(args.kind, args.salesThisMonth, args.priceCents);
+  return {
+    feeRate: feeRatePct,
+    feeCents,
+    payoutCents: args.priceCents - feeCents,
+  };
+}
