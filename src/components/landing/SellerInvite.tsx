@@ -53,7 +53,10 @@ export function SellerInvite() {
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Link>
               <Link to="/gebuehren" className="text-xs font-semibold text-brand hover:underline">
-                So funktioniert die Gebühr →
+                Gebühren →
+              </Link>
+              <Link to="/verkaufen/guide" className="text-xs font-semibold text-brand hover:underline">
+                Verkäufer-Guide (Marketing, Versand, Payouts) →
               </Link>
             </div>
           </div>
