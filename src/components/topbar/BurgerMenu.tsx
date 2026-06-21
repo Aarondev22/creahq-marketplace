@@ -36,10 +36,13 @@ const legal = [
 
 export function BurgerMenu() {
   const [open, setOpen] = useState(false);
+  const [adminOpen, setAdminOpen] = useState(false);
+  const { isAdmin, isFounder } = useAuth();
   const navigate = useNavigate();
   const close = () => setOpen(false);
 
   return (
+    <>
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <button
