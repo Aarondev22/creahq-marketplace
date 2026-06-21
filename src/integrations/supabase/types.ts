@@ -14,6 +14,255 @@ export type Database = {
   }
   public: {
     Tables: {
+      conversations: {
+        Row: {
+          buyer_id: string
+          created_at: string
+          id: string
+          last_message_at: string
+          listing_id: string | null
+          seller_id: string
+          updated_at: string
+        }
+        Insert: {
+          buyer_id: string
+          created_at?: string
+          id?: string
+          last_message_at?: string
+          listing_id?: string | null
+          seller_id: string
+          updated_at?: string
+        }
+        Update: {
+          buyer_id?: string
+          created_at?: string
+          id?: string
+          last_message_at?: string
+          listing_id?: string | null
+          seller_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversations_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      discount_codes: {
+        Row: {
+          active: boolean
+          amount: number
+          code: string
+          created_at: string
+          id: string
+          kind: string
+          max_uses: number | null
+          owner_id: string | null
+          scope: string
+          used_count: number
+          valid_from: string
+          valid_until: string | null
+        }
+        Insert: {
+          active?: boolean
+          amount: number
+          code: string
+          created_at?: string
+          id?: string
+          kind?: string
+          max_uses?: number | null
+          owner_id?: string | null
+          scope?: string
+          used_count?: number
+          valid_from?: string
+          valid_until?: string | null
+        }
+        Update: {
+          active?: boolean
+          amount?: number
+          code?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          max_uses?: number | null
+          owner_id?: string | null
+          scope?: string
+          used_count?: number
+          valid_from?: string
+          valid_until?: string | null
+        }
+        Relationships: []
+      }
+      disputes: {
+        Row: {
+          created_at: string
+          id: string
+          opened_by: string
+          order_id: string
+          reason: string
+          resolution_note: string | null
+          resolved_at: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          opened_by: string
+          order_id: string
+          reason: string
+          resolution_note?: string | null
+          resolved_at?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          opened_by?: string
+          order_id?: string
+          reason?: string
+          resolution_note?: string | null
+          resolved_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "disputes_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      favorites: {
+        Row: {
+          created_at: string
+          id: string
+          listing_id: string | null
+          shop_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          listing_id?: string | null
+          shop_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          listing_id?: string | null
+          shop_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "favorites_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "favorites_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      featured_shops: {
+        Row: {
+          created_at: string
+          id: string
+          position: number
+          shop_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          position?: number
+          shop_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          position?: number
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "featured_shops_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      founder_broadcasts: {
+        Row: {
+          body: string
+          created_at: string
+          founder_id: string
+          id: string
+          segment: string
+          target_user_ids: string[] | null
+          title: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          founder_id: string
+          id?: string
+          segment?: string
+          target_user_ids?: string[] | null
+          title: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          founder_id?: string
+          id?: string
+          segment?: string
+          target_user_ids?: string[] | null
+          title?: string
+        }
+        Relationships: []
+      }
+      founder_redeem_codes: {
+        Row: {
+          code: string
+          created_at: string
+          grants_role: Database["public"]["Enums"]["app_role"]
+          id: string
+          used_at: string | null
+          used_by: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          grants_role?: Database["public"]["Enums"]["app_role"]
+          id?: string
+          used_at?: string | null
+          used_by?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          grants_role?: Database["public"]["Enums"]["app_role"]
+          id?: string
+          used_at?: string | null
+          used_by?: string | null
+        }
+        Relationships: []
+      }
       listings: {
         Row: {
           category: string | null
@@ -21,12 +270,16 @@ export type Database = {
           created_at: string
           currency: string
           description: string | null
+          favorites_count: number
           id: string
           kind: Database["public"]["Enums"]["listing_kind"]
           price_cents: number
           seller_id: string
+          shipping_mode: string
+          shipping_price_cents: number
           slug: string | null
           status: Database["public"]["Enums"]["listing_status"]
+          stripe_price_id: string | null
           tags: string[]
           title: string
           updated_at: string
@@ -37,12 +290,16 @@ export type Database = {
           created_at?: string
           currency?: string
           description?: string | null
+          favorites_count?: number
           id?: string
           kind?: Database["public"]["Enums"]["listing_kind"]
           price_cents: number
           seller_id: string
+          shipping_mode?: string
+          shipping_price_cents?: number
           slug?: string | null
           status?: Database["public"]["Enums"]["listing_status"]
+          stripe_price_id?: string | null
           tags?: string[]
           title: string
           updated_at?: string
@@ -53,39 +310,93 @@ export type Database = {
           created_at?: string
           currency?: string
           description?: string | null
+          favorites_count?: number
           id?: string
           kind?: Database["public"]["Enums"]["listing_kind"]
           price_cents?: number
           seller_id?: string
+          shipping_mode?: string
+          shipping_price_cents?: number
           slug?: string | null
           status?: Database["public"]["Enums"]["listing_status"]
+          stripe_price_id?: string | null
           tags?: string[]
           title?: string
           updated_at?: string
         }
         Relationships: []
       }
+      messages: {
+        Row: {
+          body: string
+          conversation_id: string
+          created_at: string
+          id: string
+          kind: string
+          offer_id: string | null
+          read_at: string | null
+          sender_id: string
+        }
+        Insert: {
+          body: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          kind?: string
+          offer_id?: string | null
+          read_at?: string | null
+          sender_id: string
+        }
+        Update: {
+          body?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          offer_id?: string | null
+          read_at?: string | null
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           body: string | null
+          category: string
           created_at: string
           id: string
+          link: string | null
+          meta: Json | null
           read_at: string | null
           title: string
           user_id: string
         }
         Insert: {
           body?: string | null
+          category?: string
           created_at?: string
           id?: string
+          link?: string | null
+          meta?: Json | null
           read_at?: string | null
           title: string
           user_id: string
         }
         Update: {
           body?: string | null
+          category?: string
           created_at?: string
           id?: string
+          link?: string | null
+          meta?: Json | null
           read_at?: string | null
           title?: string
           user_id?: string
@@ -173,6 +484,57 @@ export type Database = {
         }
         Relationships: []
       }
+      private_offers: {
+        Row: {
+          buyer_id: string
+          conversation_id: string
+          created_at: string
+          expires_at: string
+          id: string
+          listing_id: string
+          price_cents: number
+          redeemed_at: string | null
+          seller_id: string
+        }
+        Insert: {
+          buyer_id: string
+          conversation_id: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          listing_id: string
+          price_cents: number
+          redeemed_at?: string | null
+          seller_id: string
+        }
+        Update: {
+          buyer_id?: string
+          conversation_id?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          listing_id?: string
+          price_cents?: number
+          redeemed_at?: string | null
+          seller_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "private_offers_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "private_offers_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -181,6 +543,9 @@ export type Database = {
           display_name: string | null
           handle: string | null
           id: string
+          onboarding_completed: boolean
+          shop_shipping_default: string | null
+          stripe_account_id: string | null
           theme_color: string | null
           updated_at: string
         }
@@ -191,6 +556,9 @@ export type Database = {
           display_name?: string | null
           handle?: string | null
           id: string
+          onboarding_completed?: boolean
+          shop_shipping_default?: string | null
+          stripe_account_id?: string | null
           theme_color?: string | null
           updated_at?: string
         }
@@ -201,10 +569,54 @@ export type Database = {
           display_name?: string | null
           handle?: string | null
           id?: string
+          onboarding_completed?: boolean
+          shop_shipping_default?: string | null
+          stripe_account_id?: string | null
           theme_color?: string | null
           updated_at?: string
         }
         Relationships: []
+      }
+      shipments: {
+        Row: {
+          carrier: string
+          delivered_at: string | null
+          id: string
+          order_id: string
+          seller_id: string
+          shipped_at: string
+          status: string
+          tracking_number: string
+        }
+        Insert: {
+          carrier: string
+          delivered_at?: string | null
+          id?: string
+          order_id: string
+          seller_id: string
+          shipped_at?: string
+          status?: string
+          tracking_number: string
+        }
+        Update: {
+          carrier?: string
+          delivered_at?: string | null
+          id?: string
+          order_id?: string
+          seller_id?: string
+          shipped_at?: string
+          status?: string
+          tracking_number?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shipments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
@@ -232,12 +644,23 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      current_user_roles: {
+        Args: never
+        Returns: Database["public"]["Enums"]["app_role"][]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
+      }
+      redeem_founder_code: {
+        Args: { _code: string }
+        Returns: {
+          message: string
+          success: boolean
+        }[]
       }
     }
     Enums: {
