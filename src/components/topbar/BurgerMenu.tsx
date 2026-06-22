@@ -1,9 +1,10 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Menu, Palette, Languages, Moon, Sun, FileText, Tag, Shield, Store } from "lucide-react";
+import { Menu, Palette, Languages, Moon, Sun, FileText, Tag, Shield, Store, Gamepad2, Ticket } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
+import { useTheme } from "@/hooks/useTheme";
 import { AdminPanel } from "@/components/admin/AdminPanel";
 
 const categories = [
@@ -38,6 +39,7 @@ export function BurgerMenu() {
   const [open, setOpen] = useState(false);
   const [adminOpen, setAdminOpen] = useState(false);
   const { isAdmin, isFounder } = useAuth();
+  const { mode, setMode } = useTheme();
   const navigate = useNavigate();
   const close = () => setOpen(false);
 
@@ -75,6 +77,27 @@ export function BurgerMenu() {
           </Link>
         </Section>
 
+        <Section icon={<Gamepad2 className="h-4 w-4" />} title="Spielen & Codes">
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={() => { close(); navigate({ to: "/spielen" }); }}
+              className="rounded-2xl border border-border bg-card p-3 text-left transition-all hover:-translate-y-0.5 hover:border-brand"
+            >
+              <Gamepad2 className="h-4 w-4 text-brand" />
+              <div className="mt-1.5 text-sm font-bold text-brand-ink">KI-Mini-Games</div>
+              <div className="text-[11px] text-muted-foreground">Flagge malen, Doodle-Search</div>
+            </button>
+            <button
+              onClick={() => { close(); navigate({ to: "/redeem" }); }}
+              className="rounded-2xl border border-border bg-card p-3 text-left transition-all hover:-translate-y-0.5 hover:border-brand"
+            >
+              <Ticket className="h-4 w-4 text-brand" />
+              <div className="mt-1.5 text-sm font-bold text-brand-ink">Code einlösen</div>
+              <div className="text-[11px] text-muted-foreground">Rabatte & Founder</div>
+            </button>
+          </div>
+        </Section>
+
         <Section icon={<Palette className="h-4 w-4" />} title="Themenwelten">
           <ul className="space-y-1.5">
             {themen.map((t) => (
@@ -92,29 +115,37 @@ export function BurgerMenu() {
 
         <Section icon={<Languages className="h-4 w-4" />} title="Sprache">
           <button
-            onClick={() => toast("Flagge-malen Sprache kommt mit dem nächsten KI-Update ✨")}
+            onClick={() => { close(); navigate({ to: "/spielen" }); }}
             className="group flex w-full items-center justify-between rounded-xl border-2 border-dashed border-brand/40 bg-card px-4 py-3 text-left transition-all hover:border-brand hover:bg-brand-soft"
           >
             <div>
               <div className="text-sm font-bold text-brand-ink">🇩🇪 Deutsch</div>
-              <div className="text-xs text-muted-foreground">Mal eine Flagge, wir erkennen die Sprache ✨</div>
+              <div className="text-xs text-muted-foreground">Mal eine Flagge im Mini-Game ✨</div>
             </div>
             <span className="rounded-full bg-brand px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-primary-foreground">Bald</span>
           </button>
         </Section>
 
-        <Section icon={<Sun className="h-4 w-4" />} title="Aussehen">
+        <Section icon={mode === "dark" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />} title="Aussehen">
           <div className="flex gap-2">
-            <button className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-brand bg-card px-3 py-2 text-sm font-semibold text-brand-ink">
+            <button
+              onClick={() => setMode("light")}
+              className={`flex flex-1 items-center justify-center gap-2 rounded-xl border px-3 py-2 text-sm font-semibold transition-colors ${
+                mode === "light" ? "border-brand bg-card text-brand-ink" : "border-border bg-card/60 text-muted-foreground hover:text-brand-ink"
+              }`}
+            >
               <Sun className="h-4 w-4" /> Hell
             </button>
             <button
-              onClick={() => toast("Dunkler Modus kommt bald 🌙")}
-              className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-card/60 px-3 py-2 text-sm font-medium text-muted-foreground hover:text-brand-ink"
+              onClick={() => setMode("dark")}
+              className={`flex flex-1 items-center justify-center gap-2 rounded-xl border px-3 py-2 text-sm font-semibold transition-colors ${
+                mode === "dark" ? "border-brand bg-card text-brand-ink" : "border-border bg-card/60 text-muted-foreground hover:text-brand-ink"
+              }`}
             >
               <Moon className="h-4 w-4" /> Dunkel
             </button>
           </div>
+          <p className="mt-2 text-[11px] text-muted-foreground">Wirkt auf alle Seiten und wird gespeichert.</p>
         </Section>
 
         <Section icon={<FileText className="h-4 w-4" />} title="Rechtliches">
@@ -137,7 +168,7 @@ export function BurgerMenu() {
           <Section icon={<Shield className="h-4 w-4" />} title={isFounder ? "Founder-Tools" : "Admin-Tools"}>
             <button
               onClick={() => { setAdminOpen(true); close(); }}
-              className="w-full rounded-xl bg-gradient-to-r from-brand to-fuchsia-600 px-4 py-3 text-left text-sm font-bold text-white shadow-sm hover:scale-[1.02] transition-transform"
+              className="w-full rounded-xl bg-gradient-to-r from-brand to-fuchsia-600 px-4 py-3 text-left text-sm font-bold text-white shadow-sm transition-transform hover:scale-[1.02]"
             >
               🛠️ Admin-Panel öffnen
             </button>
