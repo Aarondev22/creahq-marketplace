@@ -11,6 +11,10 @@ export function Hero() {
 
   const handleStar = () => {
     setSparkleBurst((n) => n + 1);
+    try {
+      const cur = Number(localStorage.getItem("creahq:star-found") ?? 0);
+      localStorage.setItem("creahq:star-found", String(cur + 1));
+    } catch { /* noop */ }
     toast("✨ Du hast den Glücksstern gefunden — viel Spaß beim Stöbern!");
     document.getElementById("entdecken")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
