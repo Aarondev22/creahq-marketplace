@@ -132,7 +132,7 @@ export function Hero() {
                     className={`grid h-14 place-items-center rounded-2xl text-2xl shadow-sm backdrop-blur transition-all sm:h-16 ${
                       isActive ? "scale-110 bg-white ring-2 ring-brand" : "bg-white/80 hover:scale-105"
                     }`}
-                    style={{ background: isActive ? undefined : `oklch(${t.brandSoft})` }}
+                    style={{ background: isActive ? undefined : `oklch(${t.softLight})` }}
                   >
                     {t.emoji}
                   </button>
