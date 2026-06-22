@@ -11,6 +11,10 @@ export function Hero() {
 
   const handleStar = () => {
     setSparkleBurst((n) => n + 1);
+    try {
+      const cur = Number(localStorage.getItem("creahq:star-found") ?? 0);
+      localStorage.setItem("creahq:star-found", String(cur + 1));
+    } catch { /* noop */ }
     toast("✨ Du hast den Glücksstern gefunden — viel Spaß beim Stöbern!");
     document.getElementById("entdecken")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
@@ -132,7 +136,7 @@ export function Hero() {
                     className={`grid h-14 place-items-center rounded-2xl text-2xl shadow-sm backdrop-blur transition-all sm:h-16 ${
                       isActive ? "scale-110 bg-white ring-2 ring-brand" : "bg-white/80 hover:scale-105"
                     }`}
-                    style={{ background: isActive ? undefined : `oklch(${t.brandSoft})` }}
+                    style={{ background: isActive ? undefined : `oklch(${t.softLight})` }}
                   >
                     {t.emoji}
                   </button>
