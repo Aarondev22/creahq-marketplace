@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as UeberRouteImport } from './routes/ueber'
+import { Route as SpielenRouteImport } from './routes/spielen'
 import { Route as RedeemRouteImport } from './routes/redeem'
 import { Route as KontaktRouteImport } from './routes/kontakt'
 import { Route as KategorienRouteImport } from './routes/kategorien'
@@ -31,6 +32,11 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 const UeberRoute = UeberRouteImport.update({
   id: '/ueber',
   path: '/ueber',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SpielenRoute = SpielenRouteImport.update({
+  id: '/spielen',
+  path: '/spielen',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RedeemRoute = RedeemRouteImport.update({
@@ -131,6 +137,7 @@ export interface FileRoutesByFullPath {
   '/kategorien': typeof KategorienRoute
   '/kontakt': typeof KontaktRoute
   '/redeem': typeof RedeemRoute
+  '/spielen': typeof SpielenRoute
   '/ueber': typeof UeberRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/listing/$id': typeof ListingIdRoute
@@ -150,6 +157,7 @@ export interface FileRoutesByTo {
   '/kategorien': typeof KategorienRoute
   '/kontakt': typeof KontaktRoute
   '/redeem': typeof RedeemRoute
+  '/spielen': typeof SpielenRoute
   '/ueber': typeof UeberRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/listing/$id': typeof ListingIdRoute
@@ -171,6 +179,7 @@ export interface FileRoutesById {
   '/kategorien': typeof KategorienRoute
   '/kontakt': typeof KontaktRoute
   '/redeem': typeof RedeemRoute
+  '/spielen': typeof SpielenRoute
   '/ueber': typeof UeberRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/listing/$id': typeof ListingIdRoute
@@ -192,6 +201,7 @@ export interface FileRouteTypes {
     | '/kategorien'
     | '/kontakt'
     | '/redeem'
+    | '/spielen'
     | '/ueber'
     | '/dashboard'
     | '/listing/$id'
@@ -211,6 +221,7 @@ export interface FileRouteTypes {
     | '/kategorien'
     | '/kontakt'
     | '/redeem'
+    | '/spielen'
     | '/ueber'
     | '/dashboard'
     | '/listing/$id'
@@ -231,6 +242,7 @@ export interface FileRouteTypes {
     | '/kategorien'
     | '/kontakt'
     | '/redeem'
+    | '/spielen'
     | '/ueber'
     | '/_authenticated/dashboard'
     | '/listing/$id'
@@ -252,6 +264,7 @@ export interface RootRouteChildren {
   KategorienRoute: typeof KategorienRoute
   KontaktRoute: typeof KontaktRoute
   RedeemRoute: typeof RedeemRoute
+  SpielenRoute: typeof SpielenRoute
   UeberRoute: typeof UeberRoute
   ListingIdRoute: typeof ListingIdRoute
   ShopHandleRoute: typeof ShopHandleRoute
@@ -265,6 +278,13 @@ declare module '@tanstack/react-router' {
       path: '/ueber'
       fullPath: '/ueber'
       preLoaderRoute: typeof UeberRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/spielen': {
+      id: '/spielen'
+      path: '/spielen'
+      fullPath: '/spielen'
+      preLoaderRoute: typeof SpielenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/redeem': {
@@ -414,6 +434,7 @@ const rootRouteChildren: RootRouteChildren = {
   KategorienRoute: KategorienRoute,
   KontaktRoute: KontaktRoute,
   RedeemRoute: RedeemRoute,
+  SpielenRoute: SpielenRoute,
   UeberRoute: UeberRoute,
   ListingIdRoute: ListingIdRoute,
   ShopHandleRoute: ShopHandleRoute,
