@@ -102,24 +102,27 @@ function GuidePage() {
           </div>
         </Block>
 
-        <Block icon={<ShieldCheck className="h-6 w-6" />} title="4. Streitfälle — fair und schnell">
+        <Block icon={<ShieldCheck className="h-6 w-6" />} title="4. Streitfälle & Schaden — wer haftet?">
           <p className="text-muted-foreground">
-            Wenn beim Käufer etwas kaputt ankommt oder nie ankommt, kann er innerhalb von 14 Tagen eine Reklamation öffnen. Wir prüfen anhand der Sendungsnummer und des Chat-Verlaufs.
+            Die Regel ist einfach: <strong className="text-brand-ink">Mit Tracking-Nummer haftet der Versanddienstleister</strong> (DHL, Hermes, DPD, UPS, Post). <strong className="text-brand-ink">Ohne Tracking-Nummer haftet der Verkäufer.</strong>
           </p>
           <div className="mt-4 grid gap-3 md:grid-cols-3">
-            <div className="rounded-2xl border border-border bg-card p-4 text-sm">
-              <strong className="text-brand-ink">Tracking sagt zugestellt</strong>
-              <p className="mt-1 text-muted-foreground">Beweislast beim Käufer.</p>
+            <div className="rounded-2xl border-2 border-emerald-300 bg-emerald-50 p-4 text-sm">
+              <strong className="text-emerald-900">✅ Mit Tracking + Schaden</strong>
+              <p className="mt-1 text-emerald-900/80">Käufer und Verkäufer wenden sich gemeinsam an den Carrier. CreaHQ moderiert. Versicherung des Carriers greift.</p>
             </div>
-            <div className="rounded-2xl border border-border bg-card p-4 text-sm">
-              <strong className="text-brand-ink">Tracking offen / verloren</strong>
-              <p className="mt-1 text-muted-foreground">Volle Rückerstattung an Käufer, du nimmst Kontakt mit dem Carrier auf.</p>
+            <div className="rounded-2xl border-2 border-amber-300 bg-amber-50 p-4 text-sm">
+              <strong className="text-amber-900">⚠️ Tracking offen / verloren</strong>
+              <p className="mt-1 text-amber-900/80">Käufer bekommt Rückerstattung. Verkäufer zieht Geld beim Carrier ein.</p>
             </div>
-            <div className="rounded-2xl border border-border bg-card p-4 text-sm">
-              <strong className="text-brand-ink">Schaden</strong>
-              <p className="mt-1 text-muted-foreground">Käufer sendet Fotos, wir entscheiden 50/50 oder volle Erstattung.</p>
+            <div className="rounded-2xl border-2 border-rose-300 bg-rose-50 p-4 text-sm">
+              <strong className="text-rose-900">❌ Ohne Tracking + Problem</strong>
+              <p className="mt-1 text-rose-900/80">Verkäufer haftet voll. Käufer bekommt volle Rückerstattung. Deshalb: <em>immer</em> Sendungsnummer eintragen.</p>
             </div>
           </div>
+          <p className="mt-4 text-sm text-muted-foreground">
+            Reklamationsfrist: 14 Tage ab Zustellung (oder erwartetem Liefertermin bei verlorenen Paketen). Beweismittel: Fotos, Chatverlauf, Tracking-Status.
+          </p>
         </Block>
 
         <Block icon={<MessageSquare className="h-6 w-6" />} title="5. Chat — direkt mit Käufern reden">
