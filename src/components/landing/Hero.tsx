@@ -1,26 +1,16 @@
 import { motion } from "motion/react";
-import { useState } from "react";
 import { ArrowRight, Sparkles, Store, RotateCcw } from "lucide-react";
 import { useTheme, HERO_THEMES } from "@/hooks/useTheme";
-import { toast } from "sonner";
+import { LuckyStar } from "@/components/LuckyStar";
 
 export function Hero() {
   const { themeId, setTheme, resetTheme } = useTheme();
   const active = HERO_THEMES.find((t) => t.id === themeId) ?? HERO_THEMES[HERO_THEMES.length - 1];
-  const [sparkleBurst, setSparkleBurst] = useState(0);
-
-  const handleStar = () => {
-    setSparkleBurst((n) => n + 1);
-    try {
-      const cur = Number(localStorage.getItem("creahq:star-found") ?? 0);
-      localStorage.setItem("creahq:star-found", String(cur + 1));
-    } catch { /* noop */ }
-    toast("✨ Du hast den Glücksstern gefunden — viel Spaß beim Stöbern!");
-    document.getElementById("entdecken")?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
 
   return (
     <section className="relative overflow-hidden">
+      <LuckyStar />
+
       <motion.div
         aria-hidden
         className="pointer-events-none absolute -left-32 top-10 h-80 w-80 bg-brand/25 [animation:blob_18s_ease-in-out_infinite]"
@@ -145,18 +135,8 @@ export function Hero() {
             </div>
           </div>
 
-          {/* Lucky star — actually does something */}
-          <motion.button
-            key={sparkleBurst}
-            onClick={handleStar}
-            aria-label="Glücksstern — scroll zu Top 20 und sammle ✨"
-            className="absolute -bottom-4 -left-4 grid h-14 w-14 cursor-pointer place-items-center rounded-full bg-amber-300 text-xl text-amber-900 shadow-lg transition-transform hover:scale-110"
-            animate={{ rotate: [0, 360] }}
-            transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
-            whileTap={{ scale: 1.3 }}
-          >
-            ★
-          </motion.button>
+          {/* Lucky star moved to <LuckyStar /> at section level — wandert über die Seite. */}
+
           <motion.div
             aria-hidden
             className="absolute -right-3 -top-3 grid h-16 w-16 place-items-center rounded-2xl bg-brand text-2xl text-primary-foreground brand-glow"

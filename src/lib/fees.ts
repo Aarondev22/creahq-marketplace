@@ -1,10 +1,9 @@
 // CreaHQ Gebührenmodell
 // - Keine monatliche Grundgebühr
-// - Digitale Produkte: Start 17 %
-// - Physische Produkte: Start 12 %
+// - Digitale Produkte: Start 17 % → min. 12 %
+// - Physische Produkte: Start 12 % → min. 7 %
 // - Pro Shop & Monat: alle 25 abgeschlossenen Verkäufe -1 %
 // - Reset jeden 1. des Monats (UTC)
-// - Mindestgebühr (Floor): 5 %
 
 export type ProductKind = "digital" | "physical";
 
@@ -13,13 +12,15 @@ export const FEES = {
   physicalStartPct: 12,
   tierSize: 25,
   reductionPerTier: 1,
-  floorPct: 5,
+  digitalFloorPct: 12,
+  physicalFloorPct: 7,
 };
 
 export function feeRate(kind: ProductKind, salesThisMonth: number): number {
   const start = kind === "digital" ? FEES.digitalStartPct : FEES.physicalStartPct;
+  const floor = kind === "digital" ? FEES.digitalFloorPct : FEES.physicalFloorPct;
   const tiers = Math.floor(Math.max(0, salesThisMonth) / FEES.tierSize);
-  return Math.max(FEES.floorPct, start - tiers * FEES.reductionPerTier);
+  return Math.max(floor, start - tiers * FEES.reductionPerTier);
 }
 
 export function feeAmountCents(kind: ProductKind, salesThisMonth: number, priceCents: number): number {
@@ -28,7 +29,7 @@ export function feeAmountCents(kind: ProductKind, salesThisMonth: number, priceC
 }
 
 export const feeExplainerShort =
-  "Keine monatliche Gebühr. Pro Verkauf: digital 17 %, physisch 12 % — alle 25 Verkäufe im Monat 1 % weniger, Reset jeden Monat.";
+  "Keine monatliche Gebühr. Digital: 17 % → min. 12 %. Physisch: 12 % → min. 7 %. Alle 25 Verkäufe/Monat: −1 %. Reset jeden Monat.";
 
 export function feeForSale(args: { kind: ProductKind; priceCents: number; salesThisMonth: number }) {
   const feeRatePct = feeRate(args.kind, args.salesThisMonth);
