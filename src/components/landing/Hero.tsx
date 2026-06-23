@@ -1,26 +1,16 @@
 import { motion } from "motion/react";
-import { useState } from "react";
 import { ArrowRight, Sparkles, Store, RotateCcw } from "lucide-react";
 import { useTheme, HERO_THEMES } from "@/hooks/useTheme";
-import { toast } from "sonner";
+import { LuckyStar } from "@/components/LuckyStar";
 
 export function Hero() {
   const { themeId, setTheme, resetTheme } = useTheme();
   const active = HERO_THEMES.find((t) => t.id === themeId) ?? HERO_THEMES[HERO_THEMES.length - 1];
-  const [sparkleBurst, setSparkleBurst] = useState(0);
-
-  const handleStar = () => {
-    setSparkleBurst((n) => n + 1);
-    try {
-      const cur = Number(localStorage.getItem("creahq:star-found") ?? 0);
-      localStorage.setItem("creahq:star-found", String(cur + 1));
-    } catch { /* noop */ }
-    toast("✨ Du hast den Glücksstern gefunden — viel Spaß beim Stöbern!");
-    document.getElementById("entdecken")?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
 
   return (
     <section className="relative overflow-hidden">
+      <LuckyStar />
+
       <motion.div
         aria-hidden
         className="pointer-events-none absolute -left-32 top-10 h-80 w-80 bg-brand/25 [animation:blob_18s_ease-in-out_infinite]"
