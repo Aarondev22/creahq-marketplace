@@ -57,7 +57,8 @@ export function SearchBar() {
         />
         <button
           type="button"
-          title="Lieber kritzeln statt tippen"
+          onClick={() => { setOpen(false); setDoodleOpen(true); }}
+          title="Lieber kritzeln statt tippen — KI erkennt's"
           className="hidden h-9 shrink-0 items-center gap-1.5 rounded-full bg-brand-soft px-3 text-xs font-semibold text-brand-ink transition-colors hover:bg-brand hover:text-primary-foreground sm:flex"
         >
           <Sparkles className="h-3.5 w-3.5" />
@@ -94,6 +95,8 @@ export function SearchBar() {
           )}
         </div>
       )}
+      <DoodleSearch open={doodleOpen} onClose={() => setDoodleOpen(false)} />
     </div>
   );
 }
+
