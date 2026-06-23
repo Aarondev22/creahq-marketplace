@@ -42,7 +42,7 @@ function FeesPage() {
 
       <h2>So sinkt deine Gebühr</h2>
       <p>
-        Pro Shop & Monat: alle <strong>{FEES.tierSize} abgeschlossenen Verkäufe</strong> verlierst du <strong>{FEES.reductionPerTier} %</strong>. Mindestgebühr: {FEES.floorPct} %. Am 1. jedes Monats startet die Zählung neu.
+        Pro Shop & Monat: alle <strong>{FEES.tierSize} abgeschlossenen Verkäufe</strong> verlierst du <strong>{FEES.reductionPerTier} %</strong>. Mindestgebühr: digital {FEES.digitalFloorPct} %, physisch {FEES.physicalFloorPct} %. Am 1. jedes Monats startet die Zählung neu.
       </p>
 
       <div className="not-prose rounded-3xl border border-border bg-card p-5">
@@ -85,7 +85,7 @@ function FeesPage() {
         <li>0–24 Verkäufe: 17 %</li>
         <li>25–49 Verkäufe: 16 %</li>
         <li>50–74 Verkäufe: 15 %</li>
-        <li>… alle 25 Verkäufe weiter -1 %, Minimum {FEES.floorPct} %.</li>
+        <li>… alle 25 Verkäufe weiter -1 %, Minimum digital {FEES.digitalFloorPct} %, physisch {FEES.physicalFloorPct} %.</li>
         <li>Am 1. des nächsten Monats: zurück auf 17 %.</li>
       </ul>
 
