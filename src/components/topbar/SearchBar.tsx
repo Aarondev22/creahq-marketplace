@@ -2,6 +2,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { Search, Sparkles } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { DoodleSearch } from "@/components/DoodleSearch";
 
 type Result = { id: string; title: string; price_cents: number; cover_url: string | null };
 
@@ -10,6 +11,7 @@ export function SearchBar() {
   const [q, setQ] = useState("");
   const [results, setResults] = useState<Result[]>([]);
   const [open, setOpen] = useState(false);
+  const [doodleOpen, setDoodleOpen] = useState(false);
   const wrap = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
