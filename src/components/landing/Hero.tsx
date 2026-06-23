@@ -135,18 +135,8 @@ export function Hero() {
             </div>
           </div>
 
-          {/* Lucky star — actually does something */}
-          <motion.button
-            key={sparkleBurst}
-            onClick={handleStar}
-            aria-label="Glücksstern — scroll zu Top 20 und sammle ✨"
-            className="absolute -bottom-4 -left-4 grid h-14 w-14 cursor-pointer place-items-center rounded-full bg-amber-300 text-xl text-amber-900 shadow-lg transition-transform hover:scale-110"
-            animate={{ rotate: [0, 360] }}
-            transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
-            whileTap={{ scale: 1.3 }}
-          >
-            ★
-          </motion.button>
+          {/* Lucky star moved to <LuckyStar /> at section level — wandert über die Seite. */}
+
           <motion.div
             aria-hidden
             className="absolute -right-3 -top-3 grid h-16 w-16 place-items-center rounded-2xl bg-brand text-2xl text-primary-foreground brand-glow"
