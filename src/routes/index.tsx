@@ -4,6 +4,7 @@ import { Hero } from "@/components/landing/Hero";
 import { DiscoverRail } from "@/components/landing/DiscoverRail";
 import { SellerInvite } from "@/components/landing/SellerInvite";
 import { FaqStickerBoard } from "@/components/landing/FaqStickerBoard";
+import { StarField } from "@/components/StarField";
 import { fetchTopWeek, fetchFresh } from "@/lib/listings.functions";
 
 const topQuery = queryOptions({ queryKey: ["top-week"], queryFn: () => fetchTopWeek() });
@@ -33,17 +34,20 @@ function Index() {
   const { data: top } = useSuspenseQuery(topQuery);
   const { data: fresh } = useSuspenseQuery(freshQuery);
   return (
-    <>
+    <div className="relative">
+      {/* Stars are scattered across the whole homepage container (absolute inset-0).
+          The floating toggle pill lives inside <StarField /> too. */}
+      <StarField count={7} />
       <Hero />
       <div id="entdecken" className="scroll-mt-24">
-        <DiscoverRail title="Top 20 gerade beliebt" subtitle="Was die Community diese Woche feiert." emoji="🔥" emptyMessage="Hier wohnen bald die 20 beliebtesten Sachen. Aktuell ist es noch ganz still." items={top} />
-        <DiscoverRail title="Perfekt für daheim" subtitle="Prints, Sounds & Templates, die das Zuhause besser machen." emoji="🏡" emptyMessage="Noch hängt nichts an der Wand. Wir suchen Creator, die das ändern." />
-        <DiscoverRail title="Frisch reingekommen" subtitle="Die neuesten Drops aus den Werkstätten." emoji="✨" emptyMessage="Brandneu, sobald die ersten Creator drücken auf 'Veröffentlichen'." items={fresh} />
-        <DiscoverRail title="Versteckte Perlen" subtitle="Untern Radar, aber liebenswert." emoji="💎" emptyMessage="Perlen brauchen erst Austern. Bald hier." />
-        <DiscoverRail title="Von der Community kuratiert" subtitle="Handverlesen von Leuten wie dir." emoji="🎀" emptyMessage="Kurator:innen gesucht — die Vitrine ist noch leer." />
+        <DiscoverRail slug="top-10"         title="Top 10 gerade beliebt"         subtitle="Was die Community diese Woche feiert." emoji="🔥" emptyMessage="Hier wohnen bald die 10 beliebtesten Sachen. Aktuell ist es noch ganz still." items={top?.slice(0, 10)} />
+        <DiscoverRail slug="perfekt-daheim" title="Perfekt für daheim"            subtitle="Prints, Sounds & Templates, die das Zuhause besser machen." emoji="🏡" emptyMessage="Noch hängt nichts an der Wand. Wir suchen Creator, die das ändern." />
+        <DiscoverRail slug="frisch"         title="Frisch reingekommen"           subtitle="Die neuesten Drops aus den Werkstätten." emoji="✨" emptyMessage="Brandneu, sobald die ersten Creator drücken auf 'Veröffentlichen'." items={fresh} />
+        <DiscoverRail slug="perlen"         title="Versteckte Perlen"             subtitle="Untern Radar, aber liebenswert." emoji="💎" emptyMessage="Perlen brauchen erst Austern. Bald hier." />
+        <DiscoverRail slug="kuratiert"      title="Von der Community kuratiert"   subtitle="Handverlesen von Leuten wie dir." emoji="🎀" emptyMessage="Kurator:innen gesucht — die Vitrine ist noch leer." />
       </div>
       <SellerInvite />
       <FaqStickerBoard />
-    </>
+    </div>
   );
 }

@@ -27,6 +27,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as VerkaufenGuideRouteImport } from './routes/verkaufen.guide'
 import { Route as ShopHandleRouteImport } from './routes/shop.$handle'
 import { Route as ListingIdRouteImport } from './routes/listing.$id'
+import { Route as KategorieSlugRouteImport } from './routes/kategorie.$slug'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 
 const UeberRoute = UeberRouteImport.update({
@@ -118,6 +119,11 @@ const ListingIdRoute = ListingIdRouteImport.update({
   path: '/listing/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const KategorieSlugRoute = KategorieSlugRouteImport.update({
+  id: '/kategorie/$slug',
+  path: '/kategorie/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -140,6 +146,7 @@ export interface FileRoutesByFullPath {
   '/spielen': typeof SpielenRoute
   '/ueber': typeof UeberRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/kategorie/$slug': typeof KategorieSlugRoute
   '/listing/$id': typeof ListingIdRoute
   '/shop/$handle': typeof ShopHandleRoute
   '/verkaufen/guide': typeof VerkaufenGuideRoute
@@ -160,6 +167,7 @@ export interface FileRoutesByTo {
   '/spielen': typeof SpielenRoute
   '/ueber': typeof UeberRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/kategorie/$slug': typeof KategorieSlugRoute
   '/listing/$id': typeof ListingIdRoute
   '/shop/$handle': typeof ShopHandleRoute
   '/verkaufen/guide': typeof VerkaufenGuideRoute
@@ -182,6 +190,7 @@ export interface FileRoutesById {
   '/spielen': typeof SpielenRoute
   '/ueber': typeof UeberRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/kategorie/$slug': typeof KategorieSlugRoute
   '/listing/$id': typeof ListingIdRoute
   '/shop/$handle': typeof ShopHandleRoute
   '/verkaufen/guide': typeof VerkaufenGuideRoute
@@ -204,6 +213,7 @@ export interface FileRouteTypes {
     | '/spielen'
     | '/ueber'
     | '/dashboard'
+    | '/kategorie/$slug'
     | '/listing/$id'
     | '/shop/$handle'
     | '/verkaufen/guide'
@@ -224,6 +234,7 @@ export interface FileRouteTypes {
     | '/spielen'
     | '/ueber'
     | '/dashboard'
+    | '/kategorie/$slug'
     | '/listing/$id'
     | '/shop/$handle'
     | '/verkaufen/guide'
@@ -245,6 +256,7 @@ export interface FileRouteTypes {
     | '/spielen'
     | '/ueber'
     | '/_authenticated/dashboard'
+    | '/kategorie/$slug'
     | '/listing/$id'
     | '/shop/$handle'
     | '/verkaufen/guide'
@@ -266,6 +278,7 @@ export interface RootRouteChildren {
   RedeemRoute: typeof RedeemRoute
   SpielenRoute: typeof SpielenRoute
   UeberRoute: typeof UeberRoute
+  KategorieSlugRoute: typeof KategorieSlugRoute
   ListingIdRoute: typeof ListingIdRoute
   ShopHandleRoute: typeof ShopHandleRoute
   VerkaufenGuideRoute: typeof VerkaufenGuideRoute
@@ -399,6 +412,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ListingIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/kategorie/$slug': {
+      id: '/kategorie/$slug'
+      path: '/kategorie/$slug'
+      fullPath: '/kategorie/$slug'
+      preLoaderRoute: typeof KategorieSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -436,6 +456,7 @@ const rootRouteChildren: RootRouteChildren = {
   RedeemRoute: RedeemRoute,
   SpielenRoute: SpielenRoute,
   UeberRoute: UeberRoute,
+  KategorieSlugRoute: KategorieSlugRoute,
   ListingIdRoute: ListingIdRoute,
   ShopHandleRoute: ShopHandleRoute,
   VerkaufenGuideRoute: VerkaufenGuideRoute,

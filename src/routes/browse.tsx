@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery, queryOptions } from "@tanstack/react-query";
 import { Search } from "lucide-react";
 import { searchListings } from "@/lib/listings.functions";
-import { LuckyStar } from "@/components/LuckyStar";
+
 
 const searchQuery = (q: string) => queryOptions({
   queryKey: ["search", q],
@@ -33,8 +33,8 @@ function BrowsePage() {
 
   return (
     <section className="relative mx-auto max-w-7xl px-4 sm:px-6 py-16">
-      <LuckyStar scope="results" />
       <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-brand-soft px-3 py-1 text-xs font-bold uppercase tracking-widest text-brand">
+
         <Search className="h-3.5 w-3.5" /> Stöbern
       </div>
       <h1 className="font-display text-4xl font-black tracking-tight text-brand-ink sm:text-5xl">
