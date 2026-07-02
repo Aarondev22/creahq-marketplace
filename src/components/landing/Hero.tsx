@@ -1,7 +1,7 @@
 import { motion } from "motion/react";
 import { ArrowRight, Sparkles, Store, RotateCcw } from "lucide-react";
 import { useTheme, HERO_THEMES } from "@/hooks/useTheme";
-import { LuckyStar } from "@/components/LuckyStar";
+
 
 export function Hero() {
   const { themeId, setTheme, resetTheme } = useTheme();
@@ -9,7 +9,7 @@ export function Hero() {
 
   return (
     <section className="relative overflow-hidden">
-      <LuckyStar />
+
 
       <motion.div
         aria-hidden
