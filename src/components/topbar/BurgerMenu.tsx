@@ -78,24 +78,40 @@ export function BurgerMenu() {
         </Section>
 
         <Section icon={<Gamepad2 className="h-4 w-4" />} title="Spielen & Codes">
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              onClick={() => { close(); navigate({ to: "/spielen" }); }}
-              className="rounded-2xl border border-border bg-card p-3 text-left transition-all hover:-translate-y-0.5 hover:border-brand"
-            >
-              <Gamepad2 className="h-4 w-4 text-brand" />
-              <div className="mt-1.5 text-sm font-bold text-brand-ink">KI-Mini-Games</div>
-              <div className="text-[11px] text-muted-foreground">Flagge malen, Doodle-Search</div>
-            </button>
-            <button
-              onClick={() => { close(); navigate({ to: "/redeem" }); }}
-              className="rounded-2xl border border-border bg-card p-3 text-left transition-all hover:-translate-y-0.5 hover:border-brand"
-            >
-              <Ticket className="h-4 w-4 text-brand" />
-              <div className="mt-1.5 text-sm font-bold text-brand-ink">Code einlösen</div>
-              <div className="text-[11px] text-muted-foreground">Rabatte & Founder</div>
-            </button>
-          </div>
+          <ul className="space-y-1.5">
+            <li>
+              <button
+                onClick={() => { close(); navigate({ to: "/spielen" }); }}
+                className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium text-brand-ink transition-colors hover:bg-brand-soft"
+              >
+                <span className="text-base">✨</span> Glücksstern-Sammler
+              </button>
+            </li>
+            <li>
+              <button
+                onClick={() => { close(); navigate({ to: "/spielen" }); }}
+                className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium text-brand-ink transition-colors hover:bg-brand-soft"
+              >
+                <span className="text-base">🏳️</span> Sprache per Flagge malen
+              </button>
+            </li>
+            <li>
+              <button
+                onClick={() => { close(); navigate({ to: "/browse" }); }}
+                className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium text-brand-ink transition-colors hover:bg-brand-soft"
+              >
+                <span className="text-base">🎨</span> Doodle-Suche (in der Suchleiste)
+              </button>
+            </li>
+            <li>
+              <button
+                onClick={() => { close(); navigate({ to: "/redeem" }); }}
+                className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium text-brand-ink transition-colors hover:bg-brand-soft"
+              >
+                <Ticket className="h-4 w-4" /> Code einlösen
+              </button>
+            </li>
+          </ul>
         </Section>
 
         <Section icon={<Palette className="h-4 w-4" />} title="Themenwelten">

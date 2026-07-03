@@ -123,7 +123,8 @@ export function Hero() {
                     key={t.id}
                     onClick={() => setTheme(t.id)}
                     aria-label={`Theme ${t.label}`}
-                    className={`grid h-14 place-items-center rounded-2xl text-2xl shadow-sm backdrop-blur transition-all sm:h-16 ${
+                    title={t.label}
+                    className={`grid h-12 place-items-center rounded-2xl text-2xl shadow-sm backdrop-blur transition-all sm:h-14 ${
                       isActive ? "scale-110 bg-white ring-2 ring-brand" : "bg-white/80 hover:scale-105"
                     }`}
                     style={{ background: isActive ? undefined : `oklch(${t.softLight})` }}
@@ -133,6 +134,7 @@ export function Hero() {
                 );
               })}
             </div>
+            <p className="mt-3 text-[11px] text-muted-foreground">Farben & Flaggen — Hell/Dunkel wirkt auf alle.</p>
           </div>
 
           {/* Lucky star moved to <LuckyStar /> at section level — wandert über die Seite. */}
