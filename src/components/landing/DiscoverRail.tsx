@@ -101,16 +101,13 @@ function PlaceholderCard({ index, message, slug }: { index: number; message: str
   const className =
     "group relative flex h-64 w-56 shrink-0 flex-col justify-between overflow-hidden rounded-3xl border-2 border-dashed border-brand/30 bg-card/60 p-5 transition-all hover:-translate-y-0.5 hover:border-brand/60";
 
-  if (slug) {
-    return (
-      <Link to="/kategorie/$slug" params={{ slug }} className={className}>
-        {inner}
-      </Link>
-    );
-  }
+  // Placeholder cards always link to a placeholder LISTING detail page,
+  // never back to the category — a click on a product card should feel
+  // like opening the product, even when it's still empty.
+  const placeholderId = `beispiel-${slug ?? "shop"}-${index + 1}`;
   return (
-    <motion.div whileHover={{ y: -4 }} className={className}>
+    <Link to="/listing/$id" params={{ id: placeholderId }} className={className}>
       {inner}
-    </motion.div>
+    </Link>
   );
 }
