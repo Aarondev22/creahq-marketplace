@@ -11,6 +11,12 @@ export type HeroTheme = {
   softDark: string;     // dark-mode --brand-soft
 };
 
+/**
+ * Unified theme list. The first five are the "Farb"-Themes.
+ * The rest are flag-based national palettes — same mechanism, so
+ * dark/light mode automatically affects them too and they never
+ * mix with the default color themes anymore.
+ */
 export const HERO_THEMES: HeroTheme[] = [
   { id: "candy",  label: "Candy",  emoji: "🍭",
     brandLight: "0.62 0.24 340", brandDark: "0.74 0.2 340",
@@ -27,6 +33,23 @@ export const HERO_THEMES: HeroTheme[] = [
   { id: "violet", label: "Violet", emoji: "🪻",
     brandLight: "0.52 0.22 295", brandDark: "0.7 0.2 295",
     softLight: "0.92 0.06 295",  softDark: "0.3 0.1 295" },
+
+  // Flag themes — brand = signature color, soft = accent color of the flag.
+  { id: "flag-de", label: "Deutschland", emoji: "🇩🇪",
+    brandLight: "0.55 0.22 30",  brandDark: "0.72 0.2 30",
+    softLight: "0.94 0.14 90",   softDark: "0.32 0.12 60" },
+  { id: "flag-fr", label: "Frankreich",  emoji: "🇫🇷",
+    brandLight: "0.5 0.2 260",   brandDark: "0.7 0.18 260",
+    softLight: "0.92 0.1 20",    softDark: "0.32 0.12 20" },
+  { id: "flag-it", label: "Italien",     emoji: "🇮🇹",
+    brandLight: "0.55 0.18 145", brandDark: "0.72 0.16 145",
+    softLight: "0.93 0.08 25",   softDark: "0.32 0.1 25" },
+  { id: "flag-es", label: "Spanien",     emoji: "🇪🇸",
+    brandLight: "0.55 0.22 30",  brandDark: "0.72 0.2 30",
+    softLight: "0.94 0.15 90",   softDark: "0.34 0.13 90" },
+  { id: "flag-jp", label: "Japan",       emoji: "🇯🇵",
+    brandLight: "0.6 0.24 25",   brandDark: "0.72 0.2 25",
+    softLight: "0.95 0.03 25",   softDark: "0.3 0.08 25" },
 ];
 
 const DEFAULT_THEME_ID = "violet";
@@ -41,7 +64,6 @@ function applyTheme(theme: HeroTheme, mode: Mode) {
   const soft = mode === "dark" ? theme.softDark : theme.softLight;
   root.style.setProperty("--brand", `oklch(${brand})`);
   root.style.setProperty("--brand-soft", `oklch(${soft})`);
-  // intentionally do NOT override --brand-ink / --surface — let .dark/:root rule.
 }
 
 function clearTheme() {
@@ -59,6 +81,8 @@ export function useTheme() {
 
   useEffect(() => {
     try {
+      // Clear the old CountryTheme leftover so it never mixes anymore.
+      try { localStorage.removeItem("creahq:country-theme"); } catch { /* noop */ }
       const t = localStorage.getItem(LS_THEME) ?? DEFAULT_THEME_ID;
       const m = (localStorage.getItem(LS_MODE) as Mode | null) ?? "light";
       setThemeId(t);
