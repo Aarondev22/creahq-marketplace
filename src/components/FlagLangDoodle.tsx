@@ -6,10 +6,24 @@ import { guessFlagLang } from "@/lib/flag-lang.functions";
 
 const LS_LANG = "creahq:lang";
 
+/** 10 colors — enough to cover 99% of national flags. */
+const PALETTE = [
+  { name: "Schwarz", hex: "#111111" },
+  { name: "Weiß",    hex: "#FFFFFF" },
+  { name: "Rot",     hex: "#DC143C" },
+  { name: "Blau",    hex: "#0055A4" },
+  { name: "Grün",    hex: "#008C45" },
+  { name: "Gelb",    hex: "#FFCC00" },
+  { name: "Orange",  hex: "#FF7A00" },
+  { name: "Lila",    hex: "#7A3FB5" },
+  { name: "Cyan",    hex: "#00A3B4" },
+  { name: "Braun",   hex: "#7A4E2D" },
+];
+
 /**
  * Draw a national flag, the AI guesses the country and switches
- * the stored UI language. We don't ship a full i18n runtime yet —
- * the choice is persisted so a future translation layer can pick it up.
+ * the stored UI language. Ships a 10-color palette so users can
+ * paint real flag colors — not just monochrome outlines.
  */
 export function FlagLangDoodle() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -18,6 +32,8 @@ export function FlagLangDoodle() {
   const [result, setResult] = useState<{ country: string; lang: string } | null>(null);
   const [current, setCurrent] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const [color, setColor] = useState<string>(PALETTE[0].hex);
+  const [size, setSize] = useState<number>(14);
   const guessFn = useServerFn(guessFlagLang);
 
   useEffect(() => {
@@ -30,7 +46,6 @@ export function FlagLangDoodle() {
     const c = canvasRef.current; if (!c) return;
     const ctx = c.getContext("2d"); if (!ctx) return;
     ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, c.width, c.height);
-    ctx.strokeStyle = "#1a1a1a"; ctx.lineWidth = 6; ctx.lineCap = "round"; ctx.lineJoin = "round";
     setResult(null); setErr(null);
   }
 
@@ -38,15 +53,29 @@ export function FlagLangDoodle() {
     const c = canvasRef.current!; const r = c.getBoundingClientRect();
     return { x: ((e.clientX - r.left) / r.width) * c.width, y: ((e.clientY - r.top) / r.height) * c.height };
   }
+  function applyBrush(ctx: CanvasRenderingContext2D) {
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+    ctx.lineWidth = size;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+  }
   function down(e: React.PointerEvent) {
     (e.target as Element).setPointerCapture?.(e.pointerId);
     setDrawing(true);
     const ctx = canvasRef.current!.getContext("2d")!;
-    const p = pos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x + 0.1, p.y + 0.1); ctx.stroke();
+    applyBrush(ctx);
+    const p = pos(e);
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, size / 2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(p.x, p.y);
   }
   function move(e: React.PointerEvent) {
     if (!drawing) return;
     const ctx = canvasRef.current!.getContext("2d")!;
+    applyBrush(ctx);
     const p = pos(e); ctx.lineTo(p.x, p.y); ctx.stroke();
   }
   function up() { setDrawing(false); }
@@ -79,7 +108,7 @@ export function FlagLangDoodle() {
             Sprache per Flagge
           </h3>
           <p className="mt-1 text-sm text-muted-foreground">
-            Zeichne eine Nationalflagge. Die KI erkennt sie und stellt die passende Sprache ein.
+            Zeichne eine Nationalflagge mit den passenden Farben — die KI erkennt sie und stellt die Sprache um.
           </p>
         </div>
         <div className="inline-flex items-center gap-1.5 rounded-full bg-brand-soft px-2.5 py-1 text-[11px] font-bold text-brand-ink">
@@ -88,16 +117,49 @@ export function FlagLangDoodle() {
         </div>
       </div>
 
-      <canvas
-        ref={canvasRef}
-        width={720}
-        height={380}
-        onPointerDown={down}
-        onPointerMove={move}
-        onPointerUp={up}
-        onPointerLeave={up}
-        className="mt-4 w-full touch-none rounded-2xl border-2 border-border bg-white"
-      />
+      <div className="mt-4 grid gap-4 sm:grid-cols-[1fr_auto]">
+        <canvas
+          ref={canvasRef}
+          width={720}
+          height={420}
+          onPointerDown={down}
+          onPointerMove={move}
+          onPointerUp={up}
+          onPointerLeave={up}
+          className="w-full touch-none rounded-2xl border-2 border-border bg-white"
+        />
+
+        {/* Farbpalette rechts */}
+        <div className="flex flex-row flex-wrap items-start gap-2 sm:flex-col sm:gap-2.5">
+          {PALETTE.map((p) => {
+            const active = color === p.hex;
+            return (
+              <button
+                key={p.hex}
+                onClick={() => setColor(p.hex)}
+                aria-label={p.name}
+                title={p.name}
+                className={`h-9 w-9 rounded-xl border-2 transition-all ${
+                  active ? "scale-110 border-brand ring-2 ring-brand/40" : "border-border hover:scale-105"
+                }`}
+                style={{ background: p.hex }}
+              />
+            );
+          })}
+          <div className="mt-1 flex w-full flex-col items-center gap-1 sm:mt-3">
+            <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Pinsel</label>
+            <input
+              type="range"
+              min={4}
+              max={40}
+              value={size}
+              onChange={(e) => setSize(Number(e.target.value))}
+              className="w-full accent-brand"
+            />
+            <div className="text-[10px] text-muted-foreground">{size}px</div>
+          </div>
+        </div>
+      </div>
 
       <div className="mt-4 flex flex-wrap items-center gap-2">
         <button
