@@ -14,9 +14,9 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "CreaHQ — Mach deins. Find ihres." },
-      { name: "description", content: "Verspielter Marktplatz für digitale Produkte und Services von Creatorn. Entdecken, kaufen, sofort starten." },
+      { name: "description", content: "Marktplatz für digitale & physische Produkte, Services und Chatbots von echten Creatorn. Entdecken, kaufen, sofort starten." },
       { property: "og:title", content: "CreaHQ — Mach deins. Find ihres." },
-      { property: "og:description", content: "Marktplatz für digitale Produkte und Services. Mit Mini-Games und einem Sticker-FAQ." },
+      { property: "og:description", content: "Digitale & physische Produkte, Services und Chatbots — mit Mini-Games und Sticker-FAQ." },
     ],
   }),
   loader: async ({ context }) => {
