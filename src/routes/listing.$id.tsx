@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery, queryOptions } from "@tanstack/react-query";
 import { motion } from "motion/react";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Heart, Share2, Shield, Truck, Download, MessageCircle, Star } from "lucide-react";
+import { useState } from "react";
 import { fetchListingById } from "@/lib/listings.functions";
 
 const listingQuery = (id: string) => queryOptions({
