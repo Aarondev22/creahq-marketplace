@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery, queryOptions } from "@tanstack/react-query";
 import { motion } from "motion/react";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Heart, Share2, Shield, Truck, Download, MessageCircle, Star } from "lucide-react";
+import { useState } from "react";
 import { fetchListingById } from "@/lib/listings.functions";
 
 const listingQuery = (id: string) => queryOptions({
@@ -63,13 +64,15 @@ function RealListing({ id }: { id: string }) {
 }
 
 /**
- * Placeholder detail view — shows the structure of a product page
- * (image, title, seller, description, price, buy button) with dummy
- * content so clicking a placeholder card on the homepage never lands
- * back on the category grid.
+ * Placeholder detail view — shows the full structure of a product page
+ * (image, title, seller, description, meta, favorite, share, related)
+ * with dummy content, so clicking a placeholder card never lands back
+ * on a category grid.
  */
 function PlaceholderListing({ id }: { id: string }) {
   const nr = id.split("-").pop() ?? "01";
+  const [fav, setFav] = useState(false);
+
   return (
     <div className="mx-auto max-w-6xl px-6 py-10">
       <Link to="/" className="inline-flex items-center gap-1 rounded-full bg-brand-soft px-3 py-1.5 text-xs font-bold text-brand-ink hover:bg-brand hover:text-primary-foreground">
@@ -77,27 +80,47 @@ function PlaceholderListing({ id }: { id: string }) {
       </Link>
 
       <div className="mt-6 grid gap-8 lg:grid-cols-2">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.98 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="relative flex aspect-square items-center justify-center overflow-hidden rounded-[2rem] border-2 border-dashed border-brand/30 bg-gradient-to-br from-brand-soft/60 via-transparent to-amber-100/40"
-        >
-          <div className="text-center">
-            <div className="text-7xl">📦</div>
-            <p className="mt-4 text-xs font-bold uppercase tracking-widest text-brand/70">Platzhalter #{String(nr).padStart(2, "0")}</p>
+        <div className="space-y-3">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="relative flex aspect-square items-center justify-center overflow-hidden rounded-[2rem] border-2 border-dashed border-brand/30 bg-gradient-to-br from-brand-soft/60 via-transparent to-amber-100/40"
+          >
+            <div className="text-center">
+              <div className="text-7xl">📦</div>
+              <p className="mt-4 text-xs font-bold uppercase tracking-widest text-brand/70">Platzhalter #{String(nr).padStart(2, "0")}</p>
+            </div>
+          </motion.div>
+          {/* Miniatur-Galerie */}
+          <div className="grid grid-cols-4 gap-2">
+            {[0,1,2,3].map((i) => (
+              <div key={i} className="aspect-square rounded-xl border border-dashed border-brand/20 bg-brand-soft/40" />
+            ))}
           </div>
-        </motion.div>
+        </div>
 
         <div>
-          <span className="inline-block rounded-full bg-brand-soft px-3 py-1 text-xs font-bold uppercase tracking-widest text-brand">
-            Beispiel-Kategorie
-          </span>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-block rounded-full bg-brand-soft px-3 py-1 text-xs font-bold uppercase tracking-widest text-brand">
+              Beispiel-Kategorie
+            </span>
+            <span className="inline-block rounded-full border border-border bg-card px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+              Digital · Service · Chatbot
+            </span>
+          </div>
+
           <h1 className="mt-2 font-display text-4xl font-black text-brand-ink">
             Hier wohnt bald ein echtes Produkt.
           </h1>
-          <div className="mt-2 inline-flex items-center gap-2 text-sm text-muted-foreground">
-            <span className="grid h-7 w-7 place-items-center rounded-full bg-brand/15 text-xs font-bold text-brand">C</span>
-            von einem Creator, den wir noch suchen
+
+          <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+            <div className="inline-flex items-center gap-2">
+              <span className="grid h-7 w-7 place-items-center rounded-full bg-brand/15 text-xs font-bold text-brand">C</span>
+              von einem Creator, den wir noch suchen
+            </div>
+            <div className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-900">
+              <Star className="h-3 w-3 fill-current" /> 0,0 · noch keine Bewertungen
+            </div>
           </div>
 
           <div className="mt-6 space-y-2">
@@ -107,23 +130,96 @@ function PlaceholderListing({ id }: { id: string }) {
             <div className="h-3 w-6/12 rounded-full bg-brand/10" />
           </div>
 
+          {/* Details */}
+          <dl className="mt-6 grid grid-cols-2 gap-3 rounded-2xl border border-border bg-card p-4 text-sm">
+            <Detail icon={<Download className="h-3.5 w-3.5" />} label="Typ" value="Digital / Service / Chatbot" />
+            <Detail icon={<Truck className="h-3.5 w-3.5" />} label="Lieferzeit" value="Sofort verfügbar" />
+            <Detail icon={<Shield className="h-3.5 w-3.5" />} label="Käuferschutz" value="Über CreaHQ" />
+            <Detail icon={<MessageCircle className="h-3.5 w-3.5" />} label="Support" value="Direkt vom Creator" />
+          </dl>
+
           <div className="mt-8 flex items-end gap-4">
             <div className="font-display text-4xl font-black text-brand">—,— €</div>
             <span className="pb-2 text-xs text-muted-foreground">Preis, sobald ein Creator drückt auf „Veröffentlichen".</span>
           </div>
 
-          <button
-            disabled
-            className="mt-6 w-full cursor-not-allowed rounded-full bg-brand/60 px-6 py-4 text-base font-bold text-primary-foreground brand-glow"
-          >
-            In den Warenkorb (bald)
-          </button>
+          <div className="mt-6 flex gap-2">
+            <button
+              disabled
+              className="flex-1 cursor-not-allowed rounded-full bg-brand/60 px-6 py-4 text-base font-bold text-primary-foreground brand-glow"
+            >
+              In den Warenkorb (bald)
+            </button>
+            <button
+              onClick={() => setFav((v) => !v)}
+              aria-pressed={fav}
+              aria-label="Favorisieren"
+              title={fav ? "Favorit entfernen" : "Favorisieren"}
+              className={`grid h-14 w-14 shrink-0 place-items-center rounded-full border-2 transition-colors ${
+                fav ? "border-red-500 bg-red-50 text-red-500" : "border-border bg-card text-brand-ink hover:border-brand hover:text-brand"
+              }`}
+            >
+              <Heart className={`h-5 w-5 ${fav ? "fill-current" : ""}`} />
+            </button>
+            <button
+              aria-label="Teilen"
+              title="Teilen"
+              className="grid h-14 w-14 shrink-0 place-items-center rounded-full border-2 border-border bg-card text-brand-ink hover:border-brand hover:text-brand"
+            >
+              <Share2 className="h-5 w-5" />
+            </button>
+          </div>
 
           <div className="mt-6 rounded-2xl border border-border bg-card p-4 text-sm text-muted-foreground">
-            Das ist ein <strong className="text-brand-ink">Platzhalter-Produkt</strong> — du siehst die Struktur einer Produktseite. Sobald Creator hier reinstellen, ersetzt echtes Zeug diese Ansicht.
+            Das ist ein <strong className="text-brand-ink">Platzhalter-Produkt</strong> — du siehst die Struktur einer echten Produktseite. Sobald Creator hier reinstellen, ersetzt echtes Zeug diese Ansicht.
           </div>
         </div>
       </div>
+
+      {/* Weitere Beispiele */}
+      <section className="mt-14">
+        <div className="mb-4 flex items-end justify-between">
+          <div>
+            <h2 className="font-display text-2xl font-black text-brand-ink">Weitere Beispiele</h2>
+            <p className="text-sm text-muted-foreground">Andere Platzhalter, um die Struktur zu erkunden.</p>
+          </div>
+          <Link to="/browse" className="text-xs font-semibold text-brand hover:underline">Alle ansehen →</Link>
+        </div>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => {
+            const otherId = `beispiel-${((Number(nr) + i) % 8) + 1}`;
+            return (
+              <Link
+                key={otherId}
+                to="/listing/$id"
+                params={{ id: otherId }}
+                className="group overflow-hidden rounded-2xl border border-border bg-card transition-all hover:-translate-y-1 hover:border-brand hover:shadow-lg"
+              >
+                <div className="flex aspect-square items-center justify-center bg-gradient-to-br from-brand-soft/60 via-transparent to-amber-100/40 text-4xl">
+                  {"📦🎨🎧🧩".charAt(i)}
+                </div>
+                <div className="p-3">
+                  <div className="text-xs font-bold uppercase tracking-widest text-brand/70">Platzhalter</div>
+                  <div className="mt-0.5 truncate text-sm font-semibold text-brand-ink group-hover:text-brand">Beispiel #{i + 1}</div>
+                  <div className="mt-1 text-xs text-muted-foreground">—,— €</div>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      </section>
     </div>
   );
 }
+
+function Detail({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+  return (
+    <div>
+      <dt className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+        {icon} {label}
+      </dt>
+      <dd className="mt-0.5 text-sm font-semibold text-brand-ink">{value}</dd>
+    </div>
+  );
+}
+

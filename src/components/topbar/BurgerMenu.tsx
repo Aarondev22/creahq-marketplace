@@ -1,5 +1,5 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Menu, Palette, Languages, Moon, Sun, FileText, Tag, Shield, Store, Gamepad2, Ticket } from "lucide-react";
+import { Menu, Palette, Moon, Sun, FileText, Tag, Shield, Store, Gamepad2, Ticket } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
@@ -100,7 +100,9 @@ export function BurgerMenu() {
                 onClick={() => { close(); navigate({ to: "/browse" }); }}
                 className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium text-brand-ink transition-colors hover:bg-brand-soft"
               >
-                <span className="text-base">🎨</span> Doodle-Suche (in der Suchleiste)
+                <span className="text-base">🎨</span>
+                <span className="flex-1">Doodle-Suche</span>
+                <span className="rounded-full bg-brand-soft px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-brand-ink">In der Suchleiste</span>
               </button>
             </li>
             <li>
@@ -129,18 +131,6 @@ export function BurgerMenu() {
           </ul>
         </Section>
 
-        <Section icon={<Languages className="h-4 w-4" />} title="Sprache">
-          <button
-            onClick={() => { close(); navigate({ to: "/spielen" }); }}
-            className="group flex w-full items-center justify-between rounded-xl border-2 border-dashed border-brand/40 bg-card px-4 py-3 text-left transition-all hover:border-brand hover:bg-brand-soft"
-          >
-            <div>
-              <div className="text-sm font-bold text-brand-ink">🇩🇪 Deutsch</div>
-              <div className="text-xs text-muted-foreground">Mal eine Flagge im Mini-Game ✨</div>
-            </div>
-            <span className="rounded-full bg-brand px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-primary-foreground">Bald</span>
-          </button>
-        </Section>
 
         <Section icon={mode === "dark" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />} title="Aussehen">
           <div className="flex gap-2">

@@ -1,11 +1,14 @@
 import { motion } from "motion/react";
-import { ArrowRight, Sparkles, Store, RotateCcw } from "lucide-react";
-import { useTheme, HERO_THEMES } from "@/hooks/useTheme";
+import { ArrowRight, Sparkles, Store, RotateCcw, Palette, Flag } from "lucide-react";
+import { useState } from "react";
+import { useTheme, COLOR_THEMES, COUNTRY_THEMES, HERO_THEMES } from "@/hooks/useTheme";
 
 
 export function Hero() {
   const { themeId, setTheme, resetTheme } = useTheme();
   const active = HERO_THEMES.find((t) => t.id === themeId) ?? HERO_THEMES[HERO_THEMES.length - 1];
+  const [tab, setTab] = useState<"color" | "country">(active.kind === "country" ? "country" : "color");
+  const list = tab === "country" ? COUNTRY_THEMES : COLOR_THEMES;
 
   return (
     <section className="relative overflow-hidden">
@@ -55,8 +58,8 @@ export function Hero() {
 
           <p className="mt-5 max-w-lg text-sm leading-relaxed text-muted-foreground sm:mt-6 sm:text-lg">
             CreaHQ ist der verspielte Marktplatz für{" "}
-            <span className="font-semibold text-brand-ink">digitale Produkte und Services</span> von echten Creatorn.
-            Stöbern, entdecken, sofort runterladen — oder selbst einen Shop eröffnen und loslegen.
+            <span className="font-semibold text-brand-ink">digitale &amp; physische Produkte, Services und Chatbots</span> von echten Creatorn.
+            Stöbern, entdecken, sofort loslegen — oder selbst einen Shop eröffnen.
           </p>
 
           <div className="mt-6 flex flex-wrap items-center gap-3 sm:mt-8">
@@ -101,40 +104,71 @@ export function Hero() {
                 <div className="text-xs font-bold uppercase tracking-widest text-brand-ink/70">Theme-Mixer</div>
                 <div className="mt-1 text-[11px] text-muted-foreground">Tap = ganze Seite ändert die Stimmung.</div>
               </div>
-              <button
-                onClick={resetTheme}
-                className="inline-flex shrink-0 items-center gap-1 rounded-full bg-white/80 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-brand-ink shadow-sm backdrop-blur transition-colors hover:bg-white"
-                title="Standard wiederherstellen"
-              >
-                <RotateCcw className="h-3 w-3" /> Reset
-              </button>
+              <div className="flex shrink-0 items-center gap-1.5">
+                <div className="inline-flex rounded-full bg-white/70 p-0.5 shadow-sm backdrop-blur">
+                  <button
+                    onClick={() => setTab("color")}
+                    className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider transition-colors ${
+                      tab === "color" ? "bg-brand text-primary-foreground" : "text-brand-ink hover:bg-white"
+                    }`}
+                  >
+                    <Palette className="h-3 w-3" /> Farben
+                  </button>
+                  <button
+                    onClick={() => setTab("country")}
+                    className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider transition-colors ${
+                      tab === "country" ? "bg-brand text-primary-foreground" : "text-brand-ink hover:bg-white"
+                    }`}
+                  >
+                    <Flag className="h-3 w-3" /> Länder
+                  </button>
+                </div>
+                <button
+                  onClick={resetTheme}
+                  className="inline-flex items-center gap-1 rounded-full bg-white/80 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-brand-ink shadow-sm backdrop-blur transition-colors hover:bg-white"
+                  title="Standard wiederherstellen"
+                >
+                  <RotateCcw className="h-3 w-3" /> Reset
+                </button>
+              </div>
             </div>
 
-            <div className="mt-6 font-display text-4xl font-black leading-none text-brand-ink sm:text-5xl">
+            <div className="mt-6 font-display text-3xl font-black leading-none text-brand-ink sm:text-4xl">
               {active.label}
               <span className="ml-2 inline-block [animation:wiggle_3s_ease-in-out_infinite]">{active.emoji}</span>
             </div>
 
-            <div className="mt-6 grid grid-cols-5 gap-2 sm:gap-3">
-              {HERO_THEMES.map((t) => {
+            <div
+              className={`mt-6 grid gap-2 sm:gap-2.5 ${
+                tab === "country" ? "grid-cols-5 sm:grid-cols-5" : "grid-cols-5"
+              }`}
+            >
+              {list.map((t) => {
                 const isActive = t.id === themeId;
+                const swatchBg = t.kind === "country" && t.swatches
+                  ? `linear-gradient(135deg, ${t.swatches[0]} 0%, ${t.swatches[1]} 50%, ${t.swatches[2]} 100%)`
+                  : undefined;
                 return (
                   <button
                     key={t.id}
                     onClick={() => setTheme(t.id)}
                     aria-label={`Theme ${t.label}`}
                     title={t.label}
-                    className={`grid h-12 place-items-center rounded-2xl text-2xl shadow-sm backdrop-blur transition-all sm:h-14 ${
-                      isActive ? "scale-110 bg-white ring-2 ring-brand" : "bg-white/80 hover:scale-105"
+                    className={`grid ${tab === "country" ? "h-11" : "h-14"} place-items-center overflow-hidden rounded-2xl text-2xl shadow-sm backdrop-blur transition-all ${
+                      isActive ? "scale-110 ring-2 ring-brand" : "hover:scale-105"
                     }`}
-                    style={{ background: isActive ? undefined : `oklch(${t.softLight})` }}
+                    style={{ background: swatchBg ?? (isActive ? "#ffffff" : t.softLight) }}
                   >
-                    {t.emoji}
+                    <span className="drop-shadow-sm">{t.emoji}</span>
                   </button>
                 );
               })}
             </div>
-            <p className="mt-3 text-[11px] text-muted-foreground">Farben & Flaggen — Hell/Dunkel wirkt auf alle.</p>
+            <p className="mt-3 text-[11px] text-muted-foreground">
+              {tab === "country"
+                ? "Flaggen-Farben schmelzen in den ganzen Hintergrund. Hell/Dunkel wirkt weiter."
+                : "Farben wirken auf die ganze Seite — Hell/Dunkel auch."}
+            </p>
           </div>
 
           {/* Lucky star moved to <LuckyStar /> at section level — wandert über die Seite. */}

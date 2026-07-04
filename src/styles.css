@@ -140,6 +140,9 @@
 
   html, body {
     background-color: var(--color-background);
+    background-image: var(--page-bg-image, none);
+    background-attachment: fixed;
+    background-size: cover;
     color: var(--color-foreground);
     font-family: var(--font-sans);
     font-feature-settings: "ss01", "cv11";
