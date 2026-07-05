@@ -2,11 +2,21 @@ import { useEffect, useState, useCallback } from "react";
 
 /**
  * A theme swaps a couple of CSS custom properties globally.
- * Country themes additionally set `--page-bg-image` so the whole
- * site background gets a modern, "melted" gradient in flag colors.
- * Light/Dark mode still applies — the gradient just uses different
- * alpha and the brand/soft variants swap accordingly.
+ *
+ * Country themes work differently from color themes:
+ *   - The page surface stays pure white (light) or pure black (dark).
+ *   - On top of that surface sits a soft, "verflossen" gradient painted
+ *     from the flag's stripes in their real proportions and order.
+ *   - Buttons invert: white in light mode, black in dark mode, so they
+ *     read as neutral chrome on top of the colorful flag background.
  */
+export type Stripes = {
+  /** "h" = horizontal stripes (colors flow top→bottom), "v" = vertical (left→right). */
+  dir: "h" | "v";
+  /** Bands as [hex, weight]. Weights are relative — they get normalized. */
+  bands: Array<[string, number]>;
+};
+
 export type HeroTheme = {
   id: string;
   label: string;
@@ -18,9 +28,8 @@ export type HeroTheme = {
   /** Full CSS color for `--brand-soft`. */
   softLight: string;
   softDark: string;
-  /** Optional page background gradient — used by country themes. */
-  pageBgLight?: string;
-  pageBgDark?: string;
+  /** Country themes only — used to build the melted flag background. */
+  stripes?: Stripes;
   /** Display swatches (hex) — country themes render these below the emoji. */
   swatches?: string[];
 };
@@ -36,77 +45,63 @@ function hexRgba(hex: string, a: number) {
 }
 
 /**
- * Build a modern, "verflossen" flag-color background that covers the whole page.
- * The gradient itself is mode-independent — light/dark only swaps the base
- * surface (white ↔ near-black) that it floats on top of, so the flag stays
- * recognizable in both modes.
+ * Build a soft, "verflossen" flag-colored gradient in proportional stripes.
+ * The gradient is painted with semi-transparent colors on top of a pure
+ * white (light) or pure black (dark) page surface, so it feels like the
+ * flag's colors have melted into the page — recognizably in flag order
+ * and proportion, but never a hard flag graphic.
  */
-function melted(colors: [string, string, string], mode: "light" | "dark") {
-  // Slightly stronger in dark mode so colors don't disappear on near-black.
-  const a = mode === "dark" ? 0.55 : 0.42;
-  const b = mode === "dark" ? 0.35 : 0.24;
-  const wash = mode === "dark" ? 0.28 : 0.18;
-  return [
-    `radial-gradient(60% 55% at 8% 12%, ${hexRgba(colors[0], a)} 0%, transparent 62%)`,
-    `radial-gradient(55% 50% at 92% 18%, ${hexRgba(colors[1], a)} 0%, transparent 62%)`,
-    `radial-gradient(70% 55% at 20% 88%, ${hexRgba(colors[1], b)} 0%, transparent 65%)`,
-    `radial-gradient(75% 60% at 85% 82%, ${hexRgba(colors[2], a)} 0%, transparent 65%)`,
-    `radial-gradient(45% 40% at 50% 50%, ${hexRgba(colors[0], b)} 0%, transparent 70%)`,
-    `linear-gradient(135deg, ${hexRgba(colors[0], wash)}, ${hexRgba(colors[1], wash)} 50%, ${hexRgba(colors[2], wash)})`,
-  ].join(", ");
-}
+function meltedStripes(stripes: Stripes, mode: "light" | "dark"): string {
+  const alpha = mode === "dark" ? 0.55 : 0.5;
+  const total = stripes.bands.reduce((s, [, w]) => s + w, 0) || 1;
+  // Blend zone as a fraction of the full length — bigger = softer.
+  const blend = 14;
+  const angle = stripes.dir === "h" ? "180deg" : "90deg";
 
-/** Signature chromatic color for --brand — must read against white text and stay off pure black/white. */
-function pickBrand(colors: [string, string, string]) {
-  const parse = (h: string) => {
-    const s = h.replace("#", "");
-    return [parseInt(s.slice(0, 2), 16), parseInt(s.slice(2, 4), 16), parseInt(s.slice(4, 6), 16)];
-  };
-  const score = (h: string) => {
-    const [r, g, b] = parse(h);
-    const max = Math.max(r, g, b), min = Math.min(r, g, b);
-    if (max < 50 || min > 220) return -1000; // near-black or near-white
-    const chroma = max - min;
-    const lum = 0.299 * r + 0.587 * g + 0.114 * b;
-    // Reward saturation, penalize brightness (so white text stays readable).
-    return chroma - lum * 1.5;
-  };
-  return [...colors].sort((a, b) => score(b) - score(a))[0];
-}
+  const stops: string[] = [];
+  let cursor = 0;
+  stripes.bands.forEach(([hex, w], i) => {
+    const size = (w / total) * 100;
+    const start = cursor;
+    const end = cursor + size;
+    const rgba = hexRgba(hex, alpha);
+    const first = i === 0 ? 0 : Math.min(100, start + blend / 2);
+    const last = i === stripes.bands.length - 1 ? 100 : Math.max(0, end - blend / 2);
+    stops.push(`${rgba} ${first.toFixed(2)}%`);
+    stops.push(`${rgba} ${last.toFixed(2)}%`);
+    cursor = end;
+  });
 
-/** Simple hex mix with white or near-black. */
-function tint(hex: string, mix: string, ratio: number) {
-  const parse = (h: string) => {
-    const s = h.replace("#", "");
-    return [parseInt(s.slice(0, 2), 16), parseInt(s.slice(2, 4), 16), parseInt(s.slice(4, 6), 16)];
-  };
-  const [r1, g1, b1] = parse(hex);
-  const [r2, g2, b2] = parse(mix);
-  const r = Math.round(r1 * (1 - ratio) + r2 * ratio);
-  const g = Math.round(g1 * (1 - ratio) + g2 * ratio);
-  const b = Math.round(b1 * (1 - ratio) + b2 * ratio);
-  return `rgb(${r},${g},${b})`;
+  // Two crossing gradients for a modern, wavy feel — same stripe order
+  // in both, one straight, one angled diagonally, softly averaged.
+  const primary = `linear-gradient(${angle}, ${stops.join(", ")})`;
+  const diagonalAngle = stripes.dir === "h" ? "155deg" : "115deg";
+  const secondary = `linear-gradient(${diagonalAngle}, ${stops
+    .map((s) => s.replace(/,([\d.]+)\)/, (_, a) => `,${(parseFloat(a) * 0.55).toFixed(3)})`))
+    .join(", ")})`;
+
+  return `${secondary}, ${primary}`;
 }
 
 function country(
   id: string,
   label: string,
   emoji: string,
-  colors: [string, string, string],
+  stripes: Stripes,
 ): HeroTheme {
-  const brand = pickBrand(colors);
+  const swatches = stripes.bands.map(([c]) => c);
   return {
     id,
     label,
     emoji,
     kind: "country",
-    brandLight: brand,
-    brandDark: tint(brand, "#ffffff", 0.35),
-    softLight: tint(brand, "#ffffff", 0.82),
-    softDark: tint(brand, "#ffffff", 0.25),
-    pageBgLight: melted(colors, "light"),
-    pageBgDark: melted(colors, "dark"),
-    swatches: colors,
+    // Buttons for country themes invert vs page surface, handled in applyTheme.
+    brandLight: "#ffffff",
+    brandDark: "#0a0a0a",
+    softLight: "rgba(0,0,0,0.06)",
+    softDark:  "rgba(255,255,255,0.10)",
+    stripes,
+    swatches,
   };
 }
 
@@ -130,27 +125,28 @@ export const COLOR_THEMES: HeroTheme[] = [
     softLight:  "oklch(0.92 0.06 295)", softDark:  "oklch(0.3 0.1 295)" },
 ];
 
+// Flag stripe data — direction + bands in real proportion (top→bottom for "h", left→right for "v").
 export const COUNTRY_THEMES: HeroTheme[] = [
-  country("c-de", "Deutschland",  "🇩🇪", ["#000000", "#DD0000", "#FFCC00"]),
-  country("c-fr", "Frankreich",   "🇫🇷", ["#0055A4", "#FFFFFF", "#EF4135"]),
-  country("c-it", "Italien",      "🇮🇹", ["#008C45", "#F4F5F0", "#CD212A"]),
-  country("c-es", "Spanien",      "🇪🇸", ["#AA151B", "#F1BF00", "#AA151B"]),
-  country("c-nl", "Niederlande",  "🇳🇱", ["#AE1C28", "#FFFFFF", "#21468B"]),
-  country("c-be", "Belgien",      "🇧🇪", ["#000000", "#FDDA24", "#EF3340"]),
-  country("c-ch", "Schweiz",      "🇨🇭", ["#DA291C", "#FFFFFF", "#DA291C"]),
-  country("c-at", "Österreich",   "🇦🇹", ["#ED2939", "#FFFFFF", "#ED2939"]),
-  country("c-gb", "UK",           "🇬🇧", ["#012169", "#FFFFFF", "#C8102E"]),
-  country("c-ie", "Irland",       "🇮🇪", ["#169B62", "#FFFFFF", "#FF883E"]),
-  country("c-se", "Schweden",     "🇸🇪", ["#006AA7", "#FECC00", "#006AA7"]),
-  country("c-no", "Norwegen",     "🇳🇴", ["#BA0C2F", "#FFFFFF", "#00205B"]),
-  country("c-dk", "Dänemark",     "🇩🇰", ["#C60C30", "#FFFFFF", "#C60C30"]),
-  country("c-fi", "Finnland",     "🇫🇮", ["#003580", "#FFFFFF", "#003580"]),
-  country("c-pt", "Portugal",     "🇵🇹", ["#046A38", "#FFE900", "#DA291C"]),
-  country("c-gr", "Griechenland", "🇬🇷", ["#0D5EAF", "#FFFFFF", "#0D5EAF"]),
-  country("c-pl", "Polen",        "🇵🇱", ["#FFFFFF", "#DC143C", "#FFFFFF"]),
-  country("c-jp", "Japan",        "🇯🇵", ["#FFFFFF", "#BC002D", "#FFFFFF"]),
-  country("c-us", "USA",          "🇺🇸", ["#B22234", "#FFFFFF", "#3C3B6E"]),
-  country("c-br", "Brasilien",    "🇧🇷", ["#009C3B", "#FFDF00", "#002776"]),
+  country("c-de", "Deutschland",  "🇩🇪", { dir: "h", bands: [["#000000", 1], ["#DD0000", 1], ["#FFCC00", 1]] }),
+  country("c-fr", "Frankreich",   "🇫🇷", { dir: "v", bands: [["#0055A4", 1], ["#FFFFFF", 1], ["#EF4135", 1]] }),
+  country("c-it", "Italien",      "🇮🇹", { dir: "v", bands: [["#008C45", 1], ["#F4F5F0", 1], ["#CD212A", 1]] }),
+  country("c-es", "Spanien",      "🇪🇸", { dir: "h", bands: [["#AA151B", 1], ["#F1BF00", 2], ["#AA151B", 1]] }),
+  country("c-nl", "Niederlande",  "🇳🇱", { dir: "h", bands: [["#AE1C28", 1], ["#FFFFFF", 1], ["#21468B", 1]] }),
+  country("c-be", "Belgien",      "🇧🇪", { dir: "v", bands: [["#000000", 1], ["#FDDA24", 1], ["#EF3340", 1]] }),
+  country("c-ch", "Schweiz",      "🇨🇭", { dir: "h", bands: [["#DA291C", 1], ["#FFFFFF", 1], ["#DA291C", 1]] }),
+  country("c-at", "Österreich",   "🇦🇹", { dir: "h", bands: [["#ED2939", 1], ["#FFFFFF", 1], ["#ED2939", 1]] }),
+  country("c-gb", "UK",           "🇬🇧", { dir: "v", bands: [["#012169", 1], ["#FFFFFF", 1], ["#C8102E", 1], ["#FFFFFF", 1], ["#012169", 1]] }),
+  country("c-ie", "Irland",       "🇮🇪", { dir: "v", bands: [["#169B62", 1], ["#FFFFFF", 1], ["#FF883E", 1]] }),
+  country("c-se", "Schweden",     "🇸🇪", { dir: "h", bands: [["#006AA7", 2], ["#FECC00", 1], ["#006AA7", 2]] }),
+  country("c-no", "Norwegen",     "🇳🇴", { dir: "h", bands: [["#BA0C2F", 2], ["#FFFFFF", 1], ["#00205B", 1], ["#FFFFFF", 1], ["#BA0C2F", 2]] }),
+  country("c-dk", "Dänemark",     "🇩🇰", { dir: "h", bands: [["#C60C30", 2], ["#FFFFFF", 1], ["#C60C30", 2]] }),
+  country("c-fi", "Finnland",     "🇫🇮", { dir: "h", bands: [["#FFFFFF", 2], ["#003580", 1], ["#FFFFFF", 2]] }),
+  country("c-pt", "Portugal",     "🇵🇹", { dir: "v", bands: [["#046A38", 2], ["#DA291C", 3]] }),
+  country("c-gr", "Griechenland", "🇬🇷", { dir: "h", bands: [["#0D5EAF", 1], ["#FFFFFF", 1], ["#0D5EAF", 1], ["#FFFFFF", 1], ["#0D5EAF", 1]] }),
+  country("c-pl", "Polen",        "🇵🇱", { dir: "h", bands: [["#FFFFFF", 1], ["#DC143C", 1]] }),
+  country("c-jp", "Japan",        "🇯🇵", { dir: "h", bands: [["#FFFFFF", 2], ["#BC002D", 1], ["#FFFFFF", 2]] }),
+  country("c-us", "USA",          "🇺🇸", { dir: "h", bands: [["#B22234", 1], ["#FFFFFF", 1], ["#B22234", 1], ["#FFFFFF", 1], ["#3C3B6E", 1]] }),
+  country("c-br", "Brasilien",    "🇧🇷", { dir: "h", bands: [["#009C3B", 2], ["#FFDF00", 1], ["#002776", 1], ["#FFDF00", 1], ["#009C3B", 2]] }),
 ];
 
 export const HERO_THEMES: HeroTheme[] = [...COLOR_THEMES, ...COUNTRY_THEMES];
@@ -161,18 +157,49 @@ const LS_MODE = "creahq:mode";
 
 type Mode = "light" | "dark";
 
+/** Vars we set — cleared together to avoid leaks between themes. */
+const OVERRIDE_VARS = [
+  "--brand",
+  "--brand-soft",
+  "--page-bg-image",
+  "--background",
+  "--surface",
+  "--primary-foreground",
+  "--sidebar-primary-foreground",
+] as const;
+
 function applyTheme(theme: HeroTheme, mode: Mode) {
   const root = document.documentElement;
+
+  // Reset every override first so switching between kinds never leaks.
+  OVERRIDE_VARS.forEach((v) => root.style.removeProperty(v));
+
+  if (theme.kind === "country" && theme.stripes) {
+    // Pure surface behind the flag gradient — white in light, black in dark.
+    const surface = mode === "dark" ? "#000000" : "#ffffff";
+    root.style.setProperty("--surface", surface);
+    root.style.setProperty("--background", surface);
+
+    // Buttons invert vs surface so they read as neutral chrome.
+    const btn = mode === "dark" ? "#0a0a0a" : "#ffffff";
+    const btnInk = mode === "dark" ? "#f5f5f5" : "#111111";
+    root.style.setProperty("--brand", btn);
+    root.style.setProperty("--brand-soft", mode === "dark" ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.06)");
+    root.style.setProperty("--primary-foreground", btnInk);
+    root.style.setProperty("--sidebar-primary-foreground", btnInk);
+
+    root.style.setProperty("--page-bg-image", meltedStripes(theme.stripes, mode));
+    return;
+  }
+
+  // Color theme — just brand + soft; page bg stays default.
   root.style.setProperty("--brand", mode === "dark" ? theme.brandDark : theme.brandLight);
   root.style.setProperty("--brand-soft", mode === "dark" ? theme.softDark : theme.softLight);
-  const bg = mode === "dark" ? theme.pageBgDark : theme.pageBgLight;
-  if (bg) root.style.setProperty("--page-bg-image", bg);
-  else root.style.removeProperty("--page-bg-image");
 }
 
 function clearTheme() {
   const root = document.documentElement;
-  ["--brand", "--brand-soft", "--page-bg-image"].forEach((v) => root.style.removeProperty(v));
+  OVERRIDE_VARS.forEach((v) => root.style.removeProperty(v));
 }
 
 function applyMode(mode: Mode) {
@@ -218,6 +245,7 @@ export function useTheme() {
     applyMode(m);
     const found = HERO_THEMES.find((x) => x.id === themeId);
     if (found && found.id !== DEFAULT_THEME_ID) applyTheme(found, m);
+    else clearTheme();
   }, [themeId]);
 
   const toggleMode = useCallback(() => {
