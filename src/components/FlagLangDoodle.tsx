@@ -97,8 +97,9 @@ export function FlagLangDoodle() {
     if (!result || result.lang === "unklar") return;
     try { localStorage.setItem(LS_LANG, result.lang); } catch { /* noop */ }
     setCurrent(result.lang);
-    toast(`Sprache auf ${result.country} (${result.lang.toUpperCase()}) gesetzt.`);
+    toast(`Sprachwunsch gespeichert: ${result.country} (${result.lang.toUpperCase()}). Übersetzungen folgen bald.`);
   }
+
 
   return (
     <div className="rounded-3xl border border-border bg-card p-6 sm:p-8">
