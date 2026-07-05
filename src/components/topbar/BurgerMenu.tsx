@@ -89,24 +89,6 @@ export function BurgerMenu() {
             </li>
             <li>
               <button
-                onClick={() => { close(); navigate({ to: "/spielen" }); }}
-                className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium text-brand-ink transition-colors hover:bg-brand-soft"
-              >
-                <span className="text-base">🏳️</span> Sprache per Flagge malen
-              </button>
-            </li>
-            <li>
-              <button
-                onClick={() => { close(); navigate({ to: "/browse" }); }}
-                className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium text-brand-ink transition-colors hover:bg-brand-soft"
-              >
-                <span className="text-base">🎨</span>
-                <span className="flex-1">Doodle-Suche</span>
-                <span className="rounded-full bg-brand-soft px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-brand-ink">In der Suchleiste</span>
-              </button>
-            </li>
-            <li>
-              <button
                 onClick={() => { close(); navigate({ to: "/redeem" }); }}
                 className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium text-brand-ink transition-colors hover:bg-brand-soft"
               >
@@ -115,6 +97,16 @@ export function BurgerMenu() {
             </li>
           </ul>
         </Section>
+
+        <Section icon={<Languages className="h-4 w-4" />} title="Sprache">
+          <button
+            onClick={() => { close(); navigate({ to: "/spielen" }); }}
+            className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium text-brand-ink transition-colors hover:bg-brand-soft"
+          >
+            <span className="text-base">🏳️</span> Sprache per Flagge malen
+          </button>
+        </Section>
+
 
         <Section icon={<Palette className="h-4 w-4" />} title="Themenwelten">
           <ul className="space-y-1.5">
