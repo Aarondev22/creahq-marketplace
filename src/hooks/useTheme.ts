@@ -35,22 +35,43 @@ function hexRgba(hex: string, a: number) {
   return `rgba(${r},${g},${b},${a})`;
 }
 
-/** Build a modern, "verflossen" three-color gradient background. */
+/**
+ * Build a modern, "verflossen" flag-color background that covers the whole page.
+ * The gradient itself is mode-independent — light/dark only swaps the base
+ * surface (white ↔ near-black) that it floats on top of, so the flag stays
+ * recognizable in both modes.
+ */
 function melted(colors: [string, string, string], mode: "light" | "dark") {
-  const a = mode === "dark" ? 0.32 : 0.22;
-  const b = mode === "dark" ? 0.24 : 0.16;
+  // Slightly stronger in dark mode so colors don't disappear on near-black.
+  const a = mode === "dark" ? 0.55 : 0.42;
+  const b = mode === "dark" ? 0.35 : 0.24;
+  const wash = mode === "dark" ? 0.28 : 0.18;
   return [
-    `radial-gradient(70% 60% at 12% 15%, ${hexRgba(colors[0], a)} 0%, transparent 65%)`,
-    `radial-gradient(70% 60% at 88% 25%, ${hexRgba(colors[1], a)} 0%, transparent 65%)`,
-    `radial-gradient(90% 70% at 50% 110%, ${hexRgba(colors[2], a)} 0%, transparent 70%)`,
-    `linear-gradient(135deg, ${hexRgba(colors[0], b)}, ${hexRgba(colors[2], b)})`,
+    `radial-gradient(60% 55% at 8% 12%, ${hexRgba(colors[0], a)} 0%, transparent 62%)`,
+    `radial-gradient(55% 50% at 92% 18%, ${hexRgba(colors[1], a)} 0%, transparent 62%)`,
+    `radial-gradient(70% 55% at 20% 88%, ${hexRgba(colors[1], b)} 0%, transparent 65%)`,
+    `radial-gradient(75% 60% at 85% 82%, ${hexRgba(colors[2], a)} 0%, transparent 65%)`,
+    `radial-gradient(45% 40% at 50% 50%, ${hexRgba(colors[0], b)} 0%, transparent 70%)`,
+    `linear-gradient(135deg, ${hexRgba(colors[0], wash)}, ${hexRgba(colors[1], wash)} 50%, ${hexRgba(colors[2], wash)})`,
   ].join(", ");
 }
 
-/** Signature (non-white) color for --brand. */
+/** Signature chromatic color for --brand — must read against white text and stay off pure black/white. */
 function pickBrand(colors: [string, string, string]) {
-  const nonWhite = colors.find((c) => c.toLowerCase() !== "#ffffff" && c.toLowerCase() !== "#f4f5f0");
-  return nonWhite ?? colors[0];
+  const parse = (h: string) => {
+    const s = h.replace("#", "");
+    return [parseInt(s.slice(0, 2), 16), parseInt(s.slice(2, 4), 16), parseInt(s.slice(4, 6), 16)];
+  };
+  const score = (h: string) => {
+    const [r, g, b] = parse(h);
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    if (max < 50 || min > 220) return -1000; // near-black or near-white
+    const chroma = max - min;
+    const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+    // Reward saturation, penalize brightness (so white text stays readable).
+    return chroma - lum * 1.5;
+  };
+  return [...colors].sort((a, b) => score(b) - score(a))[0];
 }
 
 /** Simple hex mix with white or near-black. */
@@ -80,9 +101,9 @@ function country(
     emoji,
     kind: "country",
     brandLight: brand,
-    brandDark: tint(brand, "#ffffff", 0.15),
-    softLight: tint(brand, "#ffffff", 0.85),
-    softDark: tint(brand, "#111111", 0.7),
+    brandDark: tint(brand, "#ffffff", 0.35),
+    softLight: tint(brand, "#ffffff", 0.82),
+    softDark: tint(brand, "#ffffff", 0.25),
     pageBgLight: melted(colors, "light"),
     pageBgDark: melted(colors, "dark"),
     swatches: colors,
