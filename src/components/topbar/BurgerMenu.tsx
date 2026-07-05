@@ -1,5 +1,5 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Menu, Palette, Moon, Sun, FileText, Tag, Shield, Store, Gamepad2, Ticket } from "lucide-react";
+import { Menu, Palette, Moon, Sun, FileText, Tag, Shield, Store, Gamepad2, Ticket, Languages } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
