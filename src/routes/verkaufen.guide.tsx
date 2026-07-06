@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageShell } from "@/components/PageShell";
 import { Instagram, Music2, Camera, Package, Truck, Banknote, ShieldCheck, MessageSquare, Sparkles, Scale, Clock } from "lucide-react";
 import { feeForSale } from "@/lib/fees";
