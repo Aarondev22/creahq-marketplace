@@ -56,7 +56,7 @@ function RealListing({ id }: { id: string }) {
         </div>
         <div className="mt-6 flex gap-2">
           <button className="flex-1 rounded-full bg-brand px-6 py-4 text-base font-bold text-primary-foreground brand-glow transition-transform hover:scale-[1.02]">
-            In den Warenkorb (kommt bald)
+            In den Warenkorb
           </button>
           <button aria-label="Favorisieren" title="Favorisieren" className="grid h-14 w-14 shrink-0 place-items-center rounded-full border-2 border-border bg-card text-brand-ink hover:border-brand hover:text-brand">
             <Heart className="h-5 w-5" />
