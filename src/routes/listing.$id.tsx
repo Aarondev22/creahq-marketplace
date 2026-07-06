@@ -68,7 +68,7 @@ function RealListing({ id }: { id: string }) {
             <Share2 className="h-5 w-5" />
           </button>
         </div>
-        <p className="mt-2 text-center text-xs text-muted-foreground">Stripe Checkout, Favoriten &amp; Chat kommen im nächsten Schritt.</p>
+        <p className="mt-2 text-center text-xs text-muted-foreground">Stripe Checkout, Favoriten &amp; Chat folgen im nächsten Schritt.</p>
       </div>
       <RelatedRails currentId={l.id} sellerName={l.seller?.display_name ?? "diesem Shop"} />
     </div>
