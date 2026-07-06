@@ -229,12 +229,20 @@ function PlaceholderListing({ id }: { id: string }) {
               <Heart className={`h-5 w-5 ${fav ? "fill-current" : ""}`} />
             </button>
             <button
+              aria-label="Chat mit Verkäufer"
+              title="Chat mit Verkäufer"
+              className="grid h-14 w-14 shrink-0 place-items-center rounded-full border-2 border-border bg-card text-brand-ink hover:border-brand hover:text-brand"
+            >
+              <MessageCircle className="h-5 w-5" />
+            </button>
+            <button
               aria-label="Teilen"
               title="Teilen"
               className="grid h-14 w-14 shrink-0 place-items-center rounded-full border-2 border-border bg-card text-brand-ink hover:border-brand hover:text-brand"
             >
               <Share2 className="h-5 w-5" />
             </button>
+
           </div>
 
           <div className="mt-6 rounded-2xl border border-border bg-card p-4 text-sm text-muted-foreground">
