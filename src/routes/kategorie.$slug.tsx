@@ -63,7 +63,7 @@ function CategoryPage() {
             >
               <div className="absolute inset-0 -z-10 bg-gradient-to-br from-brand-soft/40 via-transparent to-amber-100/30" />
               <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-brand/70">
-                <span>Bald hier</span>
+                <span>Platzhalter</span>
                 <span>#{String(i + 1).padStart(2, "0")}</span>
               </div>
               {i === 0 ? (
