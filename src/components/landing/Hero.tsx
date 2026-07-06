@@ -1,14 +1,12 @@
 import { motion } from "motion/react";
-import { ArrowRight, Sparkles, Store, RotateCcw, Palette, Flag } from "lucide-react";
-import { useState } from "react";
-import { useTheme, COLOR_THEMES, COUNTRY_THEMES, HERO_THEMES } from "@/hooks/useTheme";
+import { ArrowRight, Sparkles, Store, RotateCcw } from "lucide-react";
+import { useTheme, HERO_THEMES } from "@/hooks/useTheme";
 
 
 export function Hero() {
   const { themeId, setTheme, resetTheme } = useTheme();
   const active = HERO_THEMES.find((t) => t.id === themeId) ?? HERO_THEMES[HERO_THEMES.length - 1];
-  const [tab, setTab] = useState<"color" | "country">(active.kind === "country" ? "country" : "color");
-  const list = tab === "country" ? COUNTRY_THEMES : COLOR_THEMES;
+  const list = HERO_THEMES;
 
   return (
     <section className="relative overflow-hidden">
