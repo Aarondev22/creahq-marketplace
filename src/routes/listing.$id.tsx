@@ -56,7 +56,7 @@ function RealListing({ id }: { id: string }) {
         </div>
         <div className="mt-6 flex gap-2">
           <button className="flex-1 rounded-full bg-brand px-6 py-4 text-base font-bold text-primary-foreground brand-glow transition-transform hover:scale-[1.02]">
-            In den Warenkorb (kommt bald)
+            In den Warenkorb
           </button>
           <button aria-label="Favorisieren" title="Favorisieren" className="grid h-14 w-14 shrink-0 place-items-center rounded-full border-2 border-border bg-card text-brand-ink hover:border-brand hover:text-brand">
             <Heart className="h-5 w-5" />
@@ -68,7 +68,7 @@ function RealListing({ id }: { id: string }) {
             <Share2 className="h-5 w-5" />
           </button>
         </div>
-        <p className="mt-2 text-center text-xs text-muted-foreground">Stripe Checkout, Favoriten &amp; Chat kommen im nächsten Schritt.</p>
+        <p className="mt-2 text-center text-xs text-muted-foreground">Stripe Checkout, Favoriten &amp; Chat folgen im nächsten Schritt.</p>
       </div>
       <RelatedRails currentId={l.id} sellerName={l.seller?.display_name ?? "diesem Shop"} />
     </div>
@@ -79,14 +79,14 @@ function RelatedRails({ currentId, sellerName }: { currentId: string; sellerName
   return (
     <div className="lg:col-span-2 space-y-12 pt-4">
       <PlaceholderRail
-        title={`Mehr aus ${sellerName}`}
-        subtitle="Weitere Sachen von diesem Creator — bald hier."
+        title={`Sachen vom Shop · ${sellerName}`}
+        subtitle="Weitere Produkte von diesem Creator."
         keyPrefix={`shop-${currentId}`}
         emoji="🏪"
       />
       <PlaceholderRail
-        title="Ähnliches auf CreaHQ"
-        subtitle="Passt vielleicht auch — Empfehlungen kommen mit dem ersten Verkauf."
+        title="Weitere Beispiele"
+        subtitle="Passt vielleicht auch — kuratierte Empfehlungen aus CreaHQ."
         keyPrefix={`sim-${currentId}`}
         emoji="✨"
       />
@@ -139,12 +139,32 @@ function PlaceholderRail({ title, subtitle, keyPrefix, emoji }: { title: string;
 function PlaceholderListing({ id }: { id: string }) {
   const nr = id.split("-").pop() ?? "01";
   const [fav, setFav] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
+
+  const isVerpackung = id.startsWith("beispiel-verpackung-");
+  const kind = id.includes("-verpackung-") ? "Verpackung" : "Digital · Service · Chatbot · Physisch";
+  const shopHandle = isVerpackung ? "packshop" : "creator";
+  const shopName = isVerpackung ? "PackShop" : "Creator-Shop";
+  const productTitle = isVerpackung
+    ? "Verpackungs-Bundle · Platzhalter"
+    : "Hier wohnt ein echtes Produkt.";
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-10">
       <Link to="/" className="inline-flex items-center gap-1 rounded-full bg-brand-soft px-3 py-1.5 text-xs font-bold text-brand-ink hover:bg-brand hover:text-primary-foreground">
         <ArrowLeft className="h-3.5 w-3.5" /> Zurück zur Startseite
       </Link>
+
+      {/* Shop + Produkt Kopfzeile */}
+      <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+        <Link to="/shop/$handle" params={{ handle: shopHandle }} className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 font-semibold text-brand-ink hover:border-brand hover:text-brand">
+          <span className="grid h-5 w-5 place-items-center rounded-full bg-brand/15 text-[10px] font-bold text-brand">{shopName.slice(0,1)}</span>
+          {shopName}
+        </Link>
+        <span>›</span>
+        <span className="font-semibold text-brand-ink">{productTitle}</span>
+        <span className="ml-auto rounded-full bg-brand/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-brand">Platzhalter</span>
+      </div>
 
       <div className="mt-6 grid gap-8 lg:grid-cols-2">
         <div className="space-y-3">
@@ -154,11 +174,10 @@ function PlaceholderListing({ id }: { id: string }) {
             className="relative flex aspect-square items-center justify-center overflow-hidden rounded-[2rem] border-2 border-dashed border-brand/30 bg-gradient-to-br from-brand-soft/60 via-transparent to-amber-100/40"
           >
             <div className="text-center">
-              <div className="text-7xl">📦</div>
+              <div className="text-7xl">{isVerpackung ? "📦" : "📦"}</div>
               <p className="mt-4 text-xs font-bold uppercase tracking-widest text-brand/70">Platzhalter #{String(nr).padStart(2, "0")}</p>
             </div>
           </motion.div>
-          {/* Miniatur-Galerie */}
           <div className="grid grid-cols-4 gap-2">
             {[0,1,2,3].map((i) => (
               <div key={i} className="aspect-square rounded-xl border border-dashed border-brand/20 bg-brand-soft/40" />
@@ -172,19 +191,19 @@ function PlaceholderListing({ id }: { id: string }) {
               Beispiel-Kategorie
             </span>
             <span className="inline-block rounded-full border border-border bg-card px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-              Digital · Service · Chatbot
+              {kind}
             </span>
           </div>
 
           <h1 className="mt-2 font-display text-4xl font-black text-brand-ink">
-            Hier wohnt bald ein echtes Produkt.
+            {productTitle}
           </h1>
 
           <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-            <div className="inline-flex items-center gap-2">
-              <span className="grid h-7 w-7 place-items-center rounded-full bg-brand/15 text-xs font-bold text-brand">C</span>
-              von einem Creator, den wir noch suchen
-            </div>
+            <Link to="/shop/$handle" params={{ handle: shopHandle }} className="inline-flex items-center gap-2 hover:text-brand">
+              <span className="grid h-7 w-7 place-items-center rounded-full bg-brand/15 text-xs font-bold text-brand">{shopName.slice(0,1)}</span>
+              von {shopName}
+            </Link>
             <div className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-900">
               <Star className="h-3 w-3 fill-current" /> 0,0 · noch keine Bewertungen
             </div>
@@ -197,10 +216,9 @@ function PlaceholderListing({ id }: { id: string }) {
             <div className="h-3 w-6/12 rounded-full bg-brand/10" />
           </div>
 
-          {/* Details */}
           <dl className="mt-6 grid grid-cols-2 gap-3 rounded-2xl border border-border bg-card p-4 text-sm">
-            <Detail icon={<Download className="h-3.5 w-3.5" />} label="Typ" value="Digital / Service / Chatbot" />
-            <Detail icon={<Truck className="h-3.5 w-3.5" />} label="Lieferzeit" value="Sofort verfügbar" />
+            <Detail icon={<Download className="h-3.5 w-3.5" />} label="Typ" value={kind} />
+            <Detail icon={<Truck className="h-3.5 w-3.5" />} label="Lieferzeit" value={isVerpackung ? "2–4 Werktage" : "Sofort verfügbar"} />
             <Detail icon={<Shield className="h-3.5 w-3.5" />} label="Käuferschutz" value="Über CreaHQ" />
             <Detail icon={<MessageCircle className="h-3.5 w-3.5" />} label="Support" value="Direkt vom Creator" />
           </dl>
@@ -215,7 +233,7 @@ function PlaceholderListing({ id }: { id: string }) {
               disabled
               className="flex-1 cursor-not-allowed rounded-full bg-brand/60 px-6 py-4 text-base font-bold text-primary-foreground brand-glow"
             >
-              In den Warenkorb (bald)
+              In den Warenkorb
             </button>
             <button
               onClick={() => setFav((v) => !v)}
@@ -228,13 +246,16 @@ function PlaceholderListing({ id }: { id: string }) {
             >
               <Heart className={`h-5 w-5 ${fav ? "fill-current" : ""}`} />
             </button>
-            <button
-              aria-label="Chat mit Verkäufer"
-              title="Chat mit Verkäufer"
-              className="grid h-14 w-14 shrink-0 place-items-center rounded-full border-2 border-border bg-card text-brand-ink hover:border-brand hover:text-brand"
-            >
-              <MessageCircle className="h-5 w-5" />
-            </button>
+            {!isVerpackung && (
+              <button
+                onClick={() => setChatOpen(true)}
+                aria-label="Chat mit Verkäufer"
+                title="Chat mit Verkäufer"
+                className="grid h-14 w-14 shrink-0 place-items-center rounded-full border-2 border-border bg-card text-brand-ink hover:border-brand hover:text-brand"
+              >
+                <MessageCircle className="h-5 w-5" />
+              </button>
+            )}
             <button
               aria-label="Teilen"
               title="Teilen"
@@ -242,8 +263,16 @@ function PlaceholderListing({ id }: { id: string }) {
             >
               <Share2 className="h-5 w-5" />
             </button>
-
           </div>
+
+          {isVerpackung && (
+            <button
+              onClick={() => setChatOpen(true)}
+              className="mt-3 inline-flex items-center gap-2 rounded-full bg-brand-soft px-4 py-2 text-xs font-bold text-brand-ink hover:bg-brand hover:text-primary-foreground"
+            >
+              <MessageCircle className="h-3.5 w-3.5" /> Chat mit {shopName} öffnen
+            </button>
+          )}
 
           <div className="mt-6 rounded-2xl border border-border bg-card p-4 text-sm text-muted-foreground">
             Das ist ein <strong className="text-brand-ink">Platzhalter-Produkt</strong> — du siehst die Struktur einer echten Produktseite. Sobald Creator hier reinstellen, ersetzt echtes Zeug diese Ansicht.
@@ -251,18 +280,28 @@ function PlaceholderListing({ id }: { id: string }) {
         </div>
       </div>
 
-      {/* Mehr aus diesem Shop + Ähnliches */}
-      {(["shop", "sim"] as const).map((kind) => (
+      {chatOpen && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4" onClick={() => setChatOpen(false)}>
+          <div onClick={(e) => e.stopPropagation()} className="w-full max-w-md rounded-3xl border border-border bg-card p-6 shadow-2xl">
+            <h3 className="font-display text-xl font-black text-brand-ink">Chat mit {shopName}</h3>
+            <p className="mt-2 text-sm text-muted-foreground">Sobald der Shop live ist, schreibst du hier direkt mit dem Creator. Vorerst ein Platzhalter.</p>
+            <button onClick={() => setChatOpen(false)} className="mt-4 w-full rounded-full bg-brand px-4 py-2 text-sm font-bold text-primary-foreground">Schließen</button>
+          </div>
+        </div>
+      )}
+
+      {/* Rails nur wenn nicht Verpackungs-Platzhalter */}
+      {!isVerpackung && (["shop", "sim"] as const).map((kind) => (
         <section key={kind} className="mt-14">
           <div className="mb-4 flex items-end justify-between">
             <div>
               <h2 className="font-display text-2xl font-black text-brand-ink">
-                {kind === "shop" ? "🏪 Mehr aus diesem Shop" : "✨ Ähnliches auf CreaHQ"}
+                {kind === "shop" ? `🏪 Sachen vom Shop · ${shopName}` : "✨ Weitere Beispiele"}
               </h2>
               <p className="text-sm text-muted-foreground">
                 {kind === "shop"
-                  ? "Weitere Sachen von diesem Creator — bald hier."
-                  : "Passt vielleicht auch — Empfehlungen kommen mit dem ersten Verkauf."}
+                  ? "Weitere Produkte von diesem Creator."
+                  : "Passt vielleicht auch — kuratierte Empfehlungen aus CreaHQ."}
               </p>
             </div>
             <Link to="/browse" className="text-xs font-semibold text-brand hover:underline">Alle ansehen →</Link>

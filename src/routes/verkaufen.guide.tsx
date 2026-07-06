@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageShell } from "@/components/PageShell";
 import { Instagram, Music2, Camera, Package, Truck, Banknote, ShieldCheck, MessageSquare, Sparkles, Scale, Clock } from "lucide-react";
 import { feeForSale } from "@/lib/fees";
@@ -78,22 +78,27 @@ function GuidePage() {
             <div className="mb-3 flex items-center justify-between gap-3">
               <div>
                 <h4 className="font-display text-lg font-black text-brand-ink">Verpackung &amp; Versand-Zubehör verkaufen</h4>
-                <p className="text-xs text-muted-foreground">Auch Verpackung ist Handwerk. Du kannst hier bald auch <strong className="text-brand-ink">Mailerbags, Kartons, Füllmaterial oder Etiketten</strong> als eigenes Produkt anbieten — Platzhalter unten.</p>
+                <p className="text-xs text-muted-foreground">Auch Verpackung ist Handwerk. Du kannst hier auch <strong className="text-brand-ink">Mailerbags, Kartons, Füllmaterial oder Etiketten</strong> als eigenes Produkt anbieten — Platzhalter unten.</p>
               </div>
-              <span className="shrink-0 rounded-full bg-brand/10 px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-brand">Bald</span>
+              <span className="shrink-0 rounded-full bg-brand/10 px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-brand">Platzhalter</span>
             </div>
             <div className="grid gap-3 sm:grid-cols-3">
               {[
-                { emoji: "📮", title: "Recycelte Mailerbags", note: "z.B. 100er-Pack, verschiedene Größen" },
-                { emoji: "📦", title: "Doppelwandige Kartons", note: "Faltbar, für zerbrechliche Ware" },
-                { emoji: "🏷️", title: "Etiketten &amp; Füllmaterial", note: "Versandlabels, Seidenpapier, Sticker" },
-              ].map((p, i) => (
-                <div key={i} className="rounded-2xl border border-dashed border-brand/30 bg-card/70 p-4">
+                { id: "verpackung-mailerbags", emoji: "📮", title: "Recycelte Mailerbags", note: "z.B. 100er-Pack, verschiedene Größen" },
+                { id: "verpackung-kartons",    emoji: "📦", title: "Doppelwandige Kartons", note: "Faltbar, für zerbrechliche Ware" },
+                { id: "verpackung-etiketten",  emoji: "🏷️", title: "Etiketten &amp; Füllmaterial", note: "Versandlabels, Seidenpapier, Sticker" },
+              ].map((p) => (
+                <Link
+                  key={p.id}
+                  to="/listing/$id"
+                  params={{ id: `beispiel-${p.id}` }}
+                  className="group block rounded-2xl border border-dashed border-brand/30 bg-card/70 p-4 transition-all hover:-translate-y-1 hover:border-brand hover:shadow-md"
+                >
                   <div className="text-3xl">{p.emoji}</div>
-                  <div className="mt-2 text-sm font-bold text-brand-ink" dangerouslySetInnerHTML={{ __html: p.title }} />
+                  <div className="mt-2 text-sm font-bold text-brand-ink group-hover:text-brand" dangerouslySetInnerHTML={{ __html: p.title }} />
                   <div className="mt-1 text-xs text-muted-foreground" dangerouslySetInnerHTML={{ __html: p.note }} />
                   <div className="mt-3 text-xs font-bold text-brand">—,— € · Platzhalter</div>
-                </div>
+                </Link>
               ))}
             </div>
           </div>
