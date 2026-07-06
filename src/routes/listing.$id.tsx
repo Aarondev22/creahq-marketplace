@@ -251,38 +251,47 @@ function PlaceholderListing({ id }: { id: string }) {
         </div>
       </div>
 
-      {/* Weitere Beispiele */}
-      <section className="mt-14">
-        <div className="mb-4 flex items-end justify-between">
-          <div>
-            <h2 className="font-display text-2xl font-black text-brand-ink">Weitere Beispiele</h2>
-            <p className="text-sm text-muted-foreground">Andere Platzhalter, um die Struktur zu erkunden.</p>
+      {/* Mehr aus diesem Shop + Ähnliches */}
+      {(["shop", "sim"] as const).map((kind) => (
+        <section key={kind} className="mt-14">
+          <div className="mb-4 flex items-end justify-between">
+            <div>
+              <h2 className="font-display text-2xl font-black text-brand-ink">
+                {kind === "shop" ? "🏪 Mehr aus diesem Shop" : "✨ Ähnliches auf CreaHQ"}
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                {kind === "shop"
+                  ? "Weitere Sachen von diesem Creator — bald hier."
+                  : "Passt vielleicht auch — Empfehlungen kommen mit dem ersten Verkauf."}
+              </p>
+            </div>
+            <Link to="/browse" className="text-xs font-semibold text-brand hover:underline">Alle ansehen →</Link>
           </div>
-          <Link to="/browse" className="text-xs font-semibold text-brand hover:underline">Alle ansehen →</Link>
-        </div>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => {
-            const otherId = `beispiel-${((Number(nr) + i) % 8) + 1}`;
-            return (
-              <Link
-                key={otherId}
-                to="/listing/$id"
-                params={{ id: otherId }}
-                className="group overflow-hidden rounded-2xl border border-border bg-card transition-all hover:-translate-y-1 hover:border-brand hover:shadow-lg"
-              >
-                <div className="flex aspect-square items-center justify-center bg-gradient-to-br from-brand-soft/60 via-transparent to-amber-100/40 text-4xl">
-                  {"📦🎨🎧🧩".charAt(i)}
-                </div>
-                <div className="p-3">
-                  <div className="text-xs font-bold uppercase tracking-widest text-brand/70">Platzhalter</div>
-                  <div className="mt-0.5 truncate text-sm font-semibold text-brand-ink group-hover:text-brand">Beispiel #{i + 1}</div>
-                  <div className="mt-1 text-xs text-muted-foreground">—,— €</div>
-                </div>
-              </Link>
-            );
-          })}
-        </div>
-      </section>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, i) => {
+              const otherId = `beispiel-${kind}-${((Number(nr) + i) % 8) + 1}`;
+              return (
+                <Link
+                  key={otherId}
+                  to="/listing/$id"
+                  params={{ id: otherId }}
+                  className="group overflow-hidden rounded-2xl border border-border bg-card transition-all hover:-translate-y-1 hover:border-brand hover:shadow-lg"
+                >
+                  <div className="flex aspect-square items-center justify-center bg-gradient-to-br from-brand-soft/60 via-transparent to-amber-100/40 text-4xl">
+                    {"📦🎨🎧🧩".charAt(i)}
+                  </div>
+                  <div className="p-3">
+                    <div className="text-xs font-bold uppercase tracking-widest text-brand/70">Platzhalter</div>
+                    <div className="mt-0.5 truncate text-sm font-semibold text-brand-ink group-hover:text-brand">Beispiel #{i + 1}</div>
+                    <div className="mt-1 text-xs text-muted-foreground">—,— €</div>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+      ))}
+
     </div>
   );
 }
