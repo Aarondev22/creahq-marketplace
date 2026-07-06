@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PageShell } from "@/components/PageShell";
-import { Instagram, Music2, Camera, Package, Truck, Banknote, ShieldCheck, MessageSquare, Sparkles } from "lucide-react";
+import { Instagram, Music2, Camera, Package, Truck, Banknote, ShieldCheck, MessageSquare, Sparkles, Scale, Clock } from "lucide-react";
 import { feeForSale } from "@/lib/fees";
 
 export const Route = createFileRoute("/verkaufen/guide")({
@@ -72,7 +72,69 @@ function GuidePage() {
             <p><strong className="text-brand-ink">Pflicht nach Verkauf:</strong> Trag innerhalb von 5 Werktagen die <em>Sendungsnummer und den Versanddienst</em> (DHL, Hermes, DPD, UPS, Post) im Dashboard ein. Ohne Tracking kein Schutz im Streitfall.</p>
             <p><strong className="text-brand-ink">Verpackung:</strong> Stabile Mailerbags für flache Sachen, doppelwandige Kartons für zerbrechliches. Polster mit Papier, kein Plastik.</p>
           </div>
+
+          {/* Verpackung & Versand als eigene Produkte auf CreaHQ */}
+          <div className="mt-6 rounded-3xl border-2 border-dashed border-brand/40 bg-brand-soft/30 p-5">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <div>
+                <h4 className="font-display text-lg font-black text-brand-ink">Verpackung &amp; Versand-Zubehör verkaufen</h4>
+                <p className="text-xs text-muted-foreground">Auch Verpackung ist Handwerk. Du kannst hier bald auch <strong className="text-brand-ink">Mailerbags, Kartons, Füllmaterial oder Etiketten</strong> als eigenes Produkt anbieten — Platzhalter unten.</p>
+              </div>
+              <span className="shrink-0 rounded-full bg-brand/10 px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-brand">Bald</span>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-3">
+              {[
+                { emoji: "📮", title: "Recycelte Mailerbags", note: "z.B. 100er-Pack, verschiedene Größen" },
+                { emoji: "📦", title: "Doppelwandige Kartons", note: "Faltbar, für zerbrechliche Ware" },
+                { emoji: "🏷️", title: "Etiketten &amp; Füllmaterial", note: "Versandlabels, Seidenpapier, Sticker" },
+              ].map((p, i) => (
+                <div key={i} className="rounded-2xl border border-dashed border-brand/30 bg-card/70 p-4">
+                  <div className="text-3xl">{p.emoji}</div>
+                  <div className="mt-2 text-sm font-bold text-brand-ink" dangerouslySetInnerHTML={{ __html: p.title }} />
+                  <div className="mt-1 text-xs text-muted-foreground" dangerouslySetInnerHTML={{ __html: p.note }} />
+                  <div className="mt-3 text-xs font-bold text-brand">—,— € · Platzhalter</div>
+                </div>
+              ))}
+            </div>
+          </div>
         </Block>
+
+        <Block icon={<Scale className="h-6 w-6" />} title="6. Rechtliches — was du einhalten musst">
+          <p className="text-muted-foreground">
+            Als Verkäufer bist du gewerblich unterwegs — auch wenn du klein anfängst. Halt dich an ein paar Basics, dann bleibt der Shop sauber:
+          </p>
+          <div className="mt-5 grid gap-4 md:grid-cols-2">
+            <Card icon={<ShieldCheck className="h-5 w-5" />} title="Impressum &amp; Kontakt">
+              <p className="text-sm text-muted-foreground">Pflicht in DE/AT/CH: vollständiger Name, Adresse, E-Mail. Bei Gewerbe zusätzlich USt-IdNr. und Handelsregister. CreaHQ verlinkt dein Impressum automatisch im Shop.</p>
+            </Card>
+            <Card icon={<Banknote className="h-5 w-5" />} title="Steuern &amp; Rechnungen">
+              <p className="text-sm text-muted-foreground">Kleinunternehmer? Vermerk „Kein Ausweis der Umsatzsteuer gemäß §19 UStG" auf jede Rechnung. Sonst gilt der Regelsteuersatz. CreaHQ liefert Rechnungs-PDFs für Käufer und dich.</p>
+            </Card>
+            <Card icon={<Package className="h-5 w-5" />} title="Widerruf &amp; Rückgabe">
+              <p className="text-sm text-muted-foreground">Verbraucher haben 14 Tage Widerrufsrecht. Digitale Downloads &amp; personalisierte Produkte können ausgeschlossen werden — musst du im Listing klar sagen.</p>
+            </Card>
+            <Card icon={<Sparkles className="h-5 w-5" />} title="Urheberrecht &amp; Marken">
+              <p className="text-sm text-muted-foreground">Verkauf nur, was du selbst erstellt hast oder wofür du klare Lizenzen hast. Keine Charaktere von Disney, Nintendo &amp; Co. ohne Berechtigung — sonst Take-Down.</p>
+            </Card>
+          </div>
+          <div className="mt-5 rounded-2xl border border-dashed border-brand/40 bg-brand-soft/30 p-4 text-sm">
+            <strong className="text-brand-ink">Kurz gesagt:</strong> Sei ehrlich, halt dich an Grundregeln, hol dir bei Zweifel kurz eine Auskunft (IHK, Steuerberater). CreaHQ prüft stichprobenartig und moderiert bei Meldungen.
+          </div>
+        </Block>
+
+        <Block icon={<Clock className="h-6 w-6" />} title="7. Aktivitäts-Regel — nach 6 Monaten wird aufgeräumt">
+          <p className="text-muted-foreground">
+            Damit der Marktplatz frisch bleibt, gilt eine einfache Regel:
+          </p>
+          <div className="mt-4 rounded-2xl border-2 border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
+            <strong>Listings ohne Verkauf werden nach 6 Monaten automatisch offline genommen.</strong>
+            <p className="mt-1 text-amber-900/80">Du bekommst 14 Tage vorher eine Erinnerung per E-Mail. Mit einem Klick verlängerst du das Listing, aktualisierst Bilder oder änderst den Preis — dann läuft die Frist von vorn.</p>
+          </div>
+          <p className="mt-3 text-sm text-muted-foreground">
+            Offline heißt <em>nicht gelöscht</em>: dein Listing bleibt im Dashboard und du kannst es jederzeit reaktivieren. So bleiben Suche und Rails voll mit Sachen, die wirklich verfügbar sind.
+          </p>
+        </Block>
+
 
         <Block icon={<Banknote className="h-6 w-6" />} title="3. Payouts — alle 2 Wochen automatisch">
           <p className="text-muted-foreground">
