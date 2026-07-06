@@ -79,14 +79,14 @@ function RelatedRails({ currentId, sellerName }: { currentId: string; sellerName
   return (
     <div className="lg:col-span-2 space-y-12 pt-4">
       <PlaceholderRail
-        title={`Mehr aus ${sellerName}`}
-        subtitle="Weitere Sachen von diesem Creator — bald hier."
+        title={`Sachen vom Shop · ${sellerName}`}
+        subtitle="Weitere Produkte von diesem Creator."
         keyPrefix={`shop-${currentId}`}
         emoji="🏪"
       />
       <PlaceholderRail
-        title="Ähnliches auf CreaHQ"
-        subtitle="Passt vielleicht auch — Empfehlungen kommen mit dem ersten Verkauf."
+        title="Weitere Beispiele"
+        subtitle="Passt vielleicht auch — kuratierte Empfehlungen aus CreaHQ."
         keyPrefix={`sim-${currentId}`}
         emoji="✨"
       />
