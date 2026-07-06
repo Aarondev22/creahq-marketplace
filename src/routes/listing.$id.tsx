@@ -54,14 +54,81 @@ function RealListing({ id }: { id: string }) {
         <div className="mt-8 flex items-end gap-4">
           <div className="font-display text-4xl font-black text-brand">{(l.price_cents/100).toFixed(2)} €</div>
         </div>
-        <button className="mt-6 w-full rounded-full bg-brand px-6 py-4 text-base font-bold text-primary-foreground brand-glow transition-transform hover:scale-[1.02]">
-          In den Warenkorb (kommt bald)
-        </button>
-        <p className="mt-2 text-center text-xs text-muted-foreground">Stripe Checkout wird im nächsten Schritt aktiviert.</p>
+        <div className="mt-6 flex gap-2">
+          <button className="flex-1 rounded-full bg-brand px-6 py-4 text-base font-bold text-primary-foreground brand-glow transition-transform hover:scale-[1.02]">
+            In den Warenkorb (kommt bald)
+          </button>
+          <button aria-label="Favorisieren" title="Favorisieren" className="grid h-14 w-14 shrink-0 place-items-center rounded-full border-2 border-border bg-card text-brand-ink hover:border-brand hover:text-brand">
+            <Heart className="h-5 w-5" />
+          </button>
+          <button aria-label="Chat mit Verkäufer" title="Chat mit Verkäufer" className="grid h-14 w-14 shrink-0 place-items-center rounded-full border-2 border-border bg-card text-brand-ink hover:border-brand hover:text-brand">
+            <MessageCircle className="h-5 w-5" />
+          </button>
+          <button aria-label="Teilen" title="Teilen" className="grid h-14 w-14 shrink-0 place-items-center rounded-full border-2 border-border bg-card text-brand-ink hover:border-brand hover:text-brand">
+            <Share2 className="h-5 w-5" />
+          </button>
+        </div>
+        <p className="mt-2 text-center text-xs text-muted-foreground">Stripe Checkout, Favoriten &amp; Chat kommen im nächsten Schritt.</p>
       </div>
+      <RelatedRails currentId={l.id} sellerName={l.seller?.display_name ?? "diesem Shop"} />
     </div>
   );
 }
+
+function RelatedRails({ currentId, sellerName }: { currentId: string; sellerName: string }) {
+  return (
+    <div className="lg:col-span-2 space-y-12 pt-4">
+      <PlaceholderRail
+        title={`Mehr aus ${sellerName}`}
+        subtitle="Weitere Sachen von diesem Creator — bald hier."
+        keyPrefix={`shop-${currentId}`}
+        emoji="🏪"
+      />
+      <PlaceholderRail
+        title="Ähnliches auf CreaHQ"
+        subtitle="Passt vielleicht auch — Empfehlungen kommen mit dem ersten Verkauf."
+        keyPrefix={`sim-${currentId}`}
+        emoji="✨"
+      />
+    </div>
+  );
+}
+
+function PlaceholderRail({ title, subtitle, keyPrefix, emoji }: { title: string; subtitle: string; keyPrefix: string; emoji: string }) {
+  return (
+    <section>
+      <div className="mb-4 flex items-end justify-between">
+        <div>
+          <h2 className="font-display text-2xl font-black text-brand-ink">
+            <span className="mr-1">{emoji}</span>{title}
+          </h2>
+          <p className="text-sm text-muted-foreground">{subtitle}</p>
+        </div>
+        <Link to="/browse" className="text-xs font-semibold text-brand hover:underline">Alle ansehen →</Link>
+      </div>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Link
+            key={`${keyPrefix}-${i}`}
+            to="/listing/$id"
+            params={{ id: `beispiel-${keyPrefix}-${i + 1}` }}
+            className="group overflow-hidden rounded-2xl border border-border bg-card transition-all hover:-translate-y-1 hover:border-brand hover:shadow-lg"
+          >
+            <div className="flex aspect-square items-center justify-center bg-gradient-to-br from-brand-soft/60 via-transparent to-amber-100/40 text-4xl">
+              {"📦🎨🎧🧩".charAt(i)}
+            </div>
+            <div className="p-3">
+              <div className="text-xs font-bold uppercase tracking-widest text-brand/70">Platzhalter</div>
+              <div className="mt-0.5 truncate text-sm font-semibold text-brand-ink group-hover:text-brand">Beispiel #{i + 1}</div>
+              <div className="mt-1 text-xs text-muted-foreground">—,— €</div>
+            </div>
+          </Link>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 
 /**
  * Placeholder detail view — shows the full structure of a product page
