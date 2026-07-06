@@ -40,7 +40,7 @@ export const Route = createFileRoute("/kategorie/$slug")({
 
 function CategoryPage() {
   const { slug } = Route.useParams();
-  const c = KATEGORIEN[slug] ?? { title: slug, subtitle: "Diese Ecke füllt sich bald.", emoji: "📦" };
+  const c = KATEGORIEN[slug] ?? { title: slug, subtitle: "Diese Ecke füllt sich noch.", emoji: "📦" };
 
   return (
     <PageShell eyebrow="Kategorie" title={`${c.emoji}  ${c.title}`} lead={c.subtitle}>
