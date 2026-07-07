@@ -15,6 +15,7 @@ import { Topbar } from "@/components/topbar/Topbar";
 import { Footer } from "@/components/footer/Footer";
 import { Toaster } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { SiteTranslator } from "@/components/SiteTranslator";
 
 function NotFoundComponent() {
   return (
@@ -139,6 +140,7 @@ function RootComponent() {
         </main>
         <Footer />
         <Toaster />
+        <SiteTranslator />
       </div>
     </QueryClientProvider>
   );

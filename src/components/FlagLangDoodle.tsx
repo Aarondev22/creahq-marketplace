@@ -97,7 +97,8 @@ export function FlagLangDoodle() {
     if (!result || result.lang === "unklar") return;
     try { localStorage.setItem(LS_LANG, result.lang); } catch { /* noop */ }
     setCurrent(result.lang);
-    toast(`Sprachwunsch gespeichert: ${result.country} (${result.lang.toUpperCase()}).`);
+    try { window.dispatchEvent(new CustomEvent("creahq:lang-change", { detail: { lang: result.lang } })); } catch { /* noop */ }
+    toast(`Sprache umgestellt: ${result.country} (${result.lang.toUpperCase()}). Übersetze Seite …`);
   }
 
 
