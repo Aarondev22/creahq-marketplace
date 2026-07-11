@@ -6,6 +6,9 @@ import { lovable } from "@/integrations/lovable";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/auth")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    mode: search.mode === "signup" ? "signup" as const : "signin" as const,
+  }),
   head: () => ({
     meta: [
       { title: "Anmelden — CreaHQ" },
@@ -17,11 +20,16 @@ export const Route = createFileRoute("/auth")({
 
 function AuthPage() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const { mode: initialMode } = Route.useSearch();
+  const [mode, setMode] = useState<"signin" | "signup" | "reset">(initialMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    setMode(initialMode);
+  }, [initialMode]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -44,12 +52,20 @@ function AuthPage() {
         });
         if (error) throw error;
         toast.success("Willkommen! Du bist eingeloggt.");
+        navigate({ to: "/dashboard" });
+      } else if (mode === "reset") {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: window.location.origin + "/auth",
+        });
+        if (error) throw error;
+        toast.success("E-Mail zum Zurücksetzen wurde verschickt. Bitte Posteingang prüfen.");
+        setMode("signin");
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         toast.success("Eingeloggt.");
+        navigate({ to: "/dashboard" });
       }
-      navigate({ to: "/dashboard" });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Hat nicht geklappt");
     } finally {
@@ -75,25 +91,33 @@ function AuthPage() {
         <div className="mb-6 text-center">
           <div className="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-brand to-brand-ink text-2xl">✨</div>
           <h1 className="font-display text-3xl font-black text-brand-ink">
-            {mode === "signup" ? "Werde Teil von CreaHQ" : "Willkommen zurück"}
+            {mode === "signup" ? "Werde Teil von CreaHQ" : mode === "reset" ? "Passwort zurücksetzen" : "Willkommen zurück"}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {mode === "signup" ? "In 30 Sekunden eingerichtet — kaufen und verkaufen mit einem Account." : "Schön, dass du wieder da bist."}
+            {mode === "signup"
+              ? "In 30 Sekunden eingerichtet — kaufen und verkaufen mit einem Account."
+              : mode === "reset"
+              ? "Gib deine E-Mail ein, wir schicken dir einen Link zum Zurücksetzen."
+              : "Schön, dass du wieder da bist."}
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={handleGoogle}
-          disabled={loading}
-          className="mb-3 flex w-full items-center justify-center gap-2 rounded-full border border-border bg-white px-4 py-3 text-sm font-semibold text-gray-800 transition-transform hover:scale-[1.02] disabled:opacity-60"
-        >
-          <GoogleIcon /> Mit Google fortfahren
-        </button>
+        {mode !== "reset" && (
+          <>
+            <button
+              type="button"
+              onClick={handleGoogle}
+              disabled={loading}
+              className="mb-3 flex w-full items-center justify-center gap-2 rounded-full border border-border bg-white px-4 py-3 text-sm font-semibold text-gray-800 transition-transform hover:scale-[1.02] disabled:opacity-60"
+            >
+              <GoogleIcon /> Mit Google fortfahren
+            </button>
 
-        <div className="my-4 flex items-center gap-3 text-xs text-muted-foreground">
-          <span className="h-px flex-1 bg-border" /> oder mit E-Mail <span className="h-px flex-1 bg-border" />
-        </div>
+            <div className="my-4 flex items-center gap-3 text-xs text-muted-foreground">
+              <span className="h-px flex-1 bg-border" /> oder mit E-Mail <span className="h-px flex-1 bg-border" />
+            </div>
+          </>
+        )}
 
         <form onSubmit={handleEmail} className="space-y-3">
           {mode === "signup" && (
@@ -113,33 +137,57 @@ function AuthPage() {
             onChange={(e) => setEmail(e.target.value)}
             className="w-full rounded-full border border-border bg-background px-4 py-3 text-sm focus:border-brand focus:outline-none"
           />
-          <input
-            type="password"
-            required
-            minLength={8}
-            placeholder="Passwort (min. 8 Zeichen)"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-full border border-border bg-background px-4 py-3 text-sm focus:border-brand focus:outline-none"
-          />
+          {mode !== "reset" && (
+            <input
+              type="password"
+              required
+              minLength={8}
+              placeholder="Passwort (min. 8 Zeichen)"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full rounded-full border border-border bg-background px-4 py-3 text-sm focus:border-brand focus:outline-none"
+            />
+          )}
           <button
             type="submit"
             disabled={loading}
             className="w-full rounded-full bg-brand px-4 py-3 text-sm font-bold text-primary-foreground brand-glow transition-transform hover:scale-[1.02] disabled:opacity-60"
           >
-            {loading ? "Moment …" : mode === "signup" ? "Account erstellen" : "Anmelden"}
+            {loading
+              ? "Moment …"
+              : mode === "signup"
+              ? "Account erstellen"
+              : mode === "reset"
+              ? "Link zusenden"
+              : "Anmelden"}
           </button>
         </form>
 
+        {mode === "signin" && (
+          <p className="mt-3 text-center text-sm">
+            <button type="button" onClick={() => setMode("reset")} className="font-semibold text-brand hover:underline">
+              Passwort vergessen?
+            </button>
+          </p>
+        )}
+
         <p className="mt-5 text-center text-sm text-muted-foreground">
-          {mode === "signup" ? "Schon dabei? " : "Neu hier? "}
-          <button
-            type="button"
-            onClick={() => setMode(mode === "signup" ? "signin" : "signup")}
-            className="font-semibold text-brand hover:underline"
-          >
-            {mode === "signup" ? "Anmelden" : "Account erstellen"}
-          </button>
+          {mode === "reset" ? (
+            <button type="button" onClick={() => setMode("signin")} className="font-semibold text-brand hover:underline">
+              Zurück zum Login
+            </button>
+          ) : (
+            <>
+              {mode === "signup" ? "Schon dabei? " : "Neu hier? "}
+              <button
+                type="button"
+                onClick={() => setMode(mode === "signup" ? "signin" : "signup")}
+                className="font-semibold text-brand hover:underline"
+              >
+                {mode === "signup" ? "Anmelden" : "Account erstellen"}
+              </button>
+            </>
+          )}
         </p>
         <p className="mt-3 text-center text-xs text-muted-foreground">
           <Link to="/" className="hover:text-brand">Zurück zur Startseite</Link>
