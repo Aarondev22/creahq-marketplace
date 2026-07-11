@@ -6,14 +6,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { User, Store, LogIn, UserPlus, LayoutDashboard, LogOut } from "lucide-react";
+import { User, LogIn, UserPlus, LayoutDashboard, LogOut } from "lucide-react";
 import { Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { FounderBadge } from "@/components/FounderBadge";
-import { Sparkles } from "lucide-react";
 
 export function ProfileMenu() {
   const { user, loading, isFounder, isAdmin } = useAuth();
@@ -55,18 +54,6 @@ export function ProfileMenu() {
             <DropdownMenuItem asChild>
               <Link to="/dashboard"><LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard</Link>
             </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link to="/dashboard"><Store className="mr-2 h-4 w-4" /> Verkaufen</Link>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link to="/redeem"><Sparkles className="mr-2 h-4 w-4" /> Code einlösen</Link>
-            </DropdownMenuItem>
-            {isAdmin && (
-              <DropdownMenuItem asChild>
-                <Link to="/redeem"><Sparkles className="mr-2 h-4 w-4" /> Admin: Menü → Founder-Tools</Link>
-              </DropdownMenuItem>
-            )}
             <DropdownMenuSeparator />
             <DropdownMenuItem onSelect={handleSignOut}>
               <LogOut className="mr-2 h-4 w-4" /> Abmelden
@@ -76,14 +63,10 @@ export function ProfileMenu() {
           <>
             <DropdownMenuLabel>Willkommen bei CreaHQ</DropdownMenuLabel>
             <DropdownMenuItem asChild>
-              <Link to="/auth"><LogIn className="mr-2 h-4 w-4" /> Anmelden</Link>
+              <Link to="/auth" search={{ mode: "signin" }}><LogIn className="mr-2 h-4 w-4" /> Anmelden</Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <Link to="/auth"><UserPlus className="mr-2 h-4 w-4" /> Registrieren</Link>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link to="/auth"><Store className="mr-2 h-4 w-4" /> Eigenen Shop eröffnen</Link>
+              <Link to="/auth" search={{ mode: "signup" }}><UserPlus className="mr-2 h-4 w-4" /> Registrieren</Link>
             </DropdownMenuItem>
           </>
         )}
