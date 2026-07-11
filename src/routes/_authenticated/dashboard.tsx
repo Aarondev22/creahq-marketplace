@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { motion } from "motion/react";
-import { Plus, Trash2, Eye, Store, ShoppingBag } from "lucide-react";
+import { Plus, Trash2, Eye, Store, ShoppingBag, TrendingUp, Package, Wallet } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -19,22 +19,37 @@ type MyListing = {
   created_at: string;
 };
 
+type MyOrder = { id: string; total_cents: number; status: string; created_at: string };
+
+type Tab = "overview" | "listings" | "orders";
+
 function Dashboard() {
   const [listings, setListings] = useState<MyListing[]>([]);
-  const [orders, setOrders] = useState<{ id: string; total_cents: number; status: string; created_at: string }[]>([]);
+  const [orders, setOrders] = useState<MyOrder[]>([]);
+  const [revenueCents, setRevenueCents] = useState(0);
+  const [salesCount, setSalesCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
+  const [tab, setTab] = useState<Tab>("overview");
 
   async function load() {
     setLoading(true);
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) return;
-    const [{ data: l }, { data: o }] = await Promise.all([
+
+    const [{ data: l }, { data: o }, { data: items }] = await Promise.all([
       supabase.from("listings").select("id,title,price_cents,status,cover_url,created_at").eq("seller_id", u.user.id).order("created_at", { ascending: false }),
-      supabase.from("orders").select("id,total_cents,status,created_at").order("created_at", { ascending: false }).limit(10),
+      // Bugfix: nur eigene Bestellungen als Käufer laden
+      supabase.from("orders").select("id,total_cents,status,created_at").eq("buyer_id", u.user.id).order("created_at", { ascending: false }).limit(10),
+      // Eigene Verkäufe (als Verkäufer) für Umsatz-Stat
+      supabase.from("order_items").select("unit_price_cents,qty").eq("seller_id", u.user.id),
     ]);
+
     setListings((l ?? []) as MyListing[]);
-    setOrders(o ?? []);
+    setOrders((o ?? []) as MyOrder[]);
+    const rev = (items ?? []).reduce((sum, it) => sum + it.unit_price_cents * it.qty, 0);
+    setRevenueCents(rev);
+    setSalesCount((items ?? []).reduce((sum, it) => sum + it.qty, 0));
     setLoading(false);
   }
 
@@ -47,6 +62,8 @@ function Dashboard() {
     toast.success("Gelöscht.");
     setListings((l) => l.filter((x) => x.id !== id));
   }
+
+  const publishedCount = listings.filter((l) => l.status === "published").length;
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 py-10">
@@ -66,66 +83,143 @@ function Dashboard() {
         </button>
       </div>
 
+      {/* Stat cards */}
+      <div className="mt-8 grid gap-4 sm:grid-cols-3">
+        <StatCard icon={<Wallet className="h-5 w-5" />} label="Umsatz gesamt" value={`${(revenueCents / 100).toFixed(2)} €`} />
+        <StatCard icon={<TrendingUp className="h-5 w-5" />} label="Verkäufe" value={String(salesCount)} />
+        <StatCard icon={<Package className="h-5 w-5" />} label="Aktive Listings" value={`${publishedCount} / ${listings.length}`} />
+      </div>
+
       {creating && <NewListingForm onClose={() => setCreating(false)} onCreated={load} />}
 
-      <section className="mt-10">
-        <h2 className="mb-4 font-display text-2xl font-black text-brand-ink">Deine Listings</h2>
-        {loading ? (
-          <div className="text-sm text-muted-foreground">Lade …</div>
-        ) : listings.length === 0 ? (
-          <div className="rounded-[2rem] border-2 border-dashed border-brand/30 bg-card/40 p-10 text-center">
-            <div className="text-5xl">📭</div>
-            <p className="mt-3 font-display text-lg font-bold text-brand-ink">Noch nix online.</p>
-            <p className="mt-1 text-sm text-muted-foreground">Klick "Neues Listing" und leg los.</p>
-          </div>
-        ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {listings.map((l) => (
-              <motion.div key={l.id} whileHover={{ y: -3 }} className="overflow-hidden rounded-3xl border border-border bg-card">
-                <div className="aspect-[4/3] bg-gradient-to-br from-brand-soft to-amber-100/40">
-                  {l.cover_url && <img src={l.cover_url} alt={l.title} className="h-full w-full object-cover" />}
-                </div>
-                <div className="p-4">
-                  <div className="flex items-start justify-between gap-2">
-                    <h3 className="line-clamp-2 font-display text-base font-bold text-brand-ink">{l.title}</h3>
-                    <span className="shrink-0 rounded-full bg-brand/10 px-2 py-0.5 text-xs font-bold text-brand">
-                      {(l.price_cents / 100).toFixed(2)} €
-                    </span>
-                  </div>
-                  <p className="mt-1 text-xs uppercase tracking-widest text-muted-foreground">{l.status}</p>
-                  <div className="mt-3 flex gap-2">
-                    <Link to="/listing/$id" params={{ id: l.id }} className="inline-flex items-center gap-1 rounded-full bg-brand-soft px-3 py-1.5 text-xs font-semibold text-brand-ink hover:bg-brand hover:text-primary-foreground">
-                      <Eye className="h-3 w-3" /> Ansehen
-                    </Link>
-                    <button onClick={() => deleteListing(l.id)} className="inline-flex items-center gap-1 rounded-full bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-100">
-                      <Trash2 className="h-3 w-3" /> Löschen
-                    </button>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        )}
-      </section>
+      {/* Tabs */}
+      <div className="mt-10 flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
+        <TabBtn label="Übersicht" active={tab === "overview"} onClick={() => setTab("overview")} />
+        <TabBtn label="Meine Listings" active={tab === "listings"} onClick={() => setTab("listings")} />
+        <TabBtn label="Meine Bestellungen" active={tab === "orders"} onClick={() => setTab("orders")} />
+      </div>
 
-      <section className="mt-12">
-        <h2 className="mb-4 inline-flex items-center gap-2 font-display text-2xl font-black text-brand-ink">
-          <ShoppingBag className="h-5 w-5" /> Deine letzten Bestellungen
-        </h2>
-        {orders.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Noch keine Bestellungen.</p>
-        ) : (
-          <ul className="divide-y divide-border rounded-2xl border border-border bg-card">
-            {orders.map((o) => (
-              <li key={o.id} className="flex items-center justify-between p-4 text-sm">
-                <span className="font-mono text-xs text-muted-foreground">#{o.id.slice(0, 8)}</span>
-                <span className="font-semibold">{(o.total_cents / 100).toFixed(2)} €</span>
-                <span className="rounded-full bg-brand/10 px-2 py-0.5 text-xs font-bold text-brand">{o.status}</span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+      {tab === "overview" && (
+        <section className="mt-8 grid gap-6 lg:grid-cols-2">
+          <div className="rounded-[2rem] border border-border bg-card p-6">
+            <h2 className="mb-3 font-display text-xl font-black text-brand-ink">Neueste Listings</h2>
+            {loading ? (
+              <div className="text-sm text-muted-foreground">Lade …</div>
+            ) : listings.length === 0 ? (
+              <EmptyListings />
+            ) : (
+              <ul className="space-y-2">
+                {listings.slice(0, 4).map((l) => (
+                  <li key={l.id} className="flex items-center justify-between rounded-xl bg-surface px-3 py-2 text-sm">
+                    <span className="truncate font-medium text-brand-ink">{l.title}</span>
+                    <span className="shrink-0 text-xs font-bold text-brand">{(l.price_cents / 100).toFixed(2)} €</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+          <div className="rounded-[2rem] border border-border bg-card p-6">
+            <h2 className="mb-3 font-display text-xl font-black text-brand-ink">Letzte Bestellungen</h2>
+            {orders.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Noch keine Bestellungen.</p>
+            ) : (
+              <ul className="space-y-2">
+                {orders.slice(0, 4).map((o) => (
+                  <li key={o.id} className="flex items-center justify-between rounded-xl bg-surface px-3 py-2 text-sm">
+                    <span className="font-mono text-xs text-muted-foreground">#{o.id.slice(0, 8)}</span>
+                    <span className="rounded-full bg-brand/10 px-2 py-0.5 text-xs font-bold text-brand">{o.status}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </section>
+      )}
+
+      {tab === "listings" && (
+        <section className="mt-8">
+          {loading ? (
+            <div className="text-sm text-muted-foreground">Lade …</div>
+          ) : listings.length === 0 ? (
+            <EmptyListings />
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {listings.map((l) => (
+                <motion.div key={l.id} whileHover={{ y: -3 }} className="overflow-hidden rounded-3xl border border-border bg-card">
+                  <div className="aspect-[4/3] bg-gradient-to-br from-brand-soft to-amber-100/40">
+                    {l.cover_url && <img src={l.cover_url} alt={l.title} className="h-full w-full object-cover" />}
+                  </div>
+                  <div className="p-4">
+                    <div className="flex items-start justify-between gap-2">
+                      <h3 className="line-clamp-2 font-display text-base font-bold text-brand-ink">{l.title}</h3>
+                      <span className="shrink-0 rounded-full bg-brand/10 px-2 py-0.5 text-xs font-bold text-brand">
+                        {(l.price_cents / 100).toFixed(2)} €
+                      </span>
+                    </div>
+                    <p className="mt-1 text-xs uppercase tracking-widest text-muted-foreground">{l.status}</p>
+                    <div className="mt-3 flex gap-2">
+                      <Link to="/listing/$id" params={{ id: l.id }} className="inline-flex items-center gap-1 rounded-full bg-brand-soft px-3 py-1.5 text-xs font-semibold text-brand-ink hover:bg-brand hover:text-primary-foreground">
+                        <Eye className="h-3 w-3" /> Ansehen
+                      </Link>
+                      <button onClick={() => deleteListing(l.id)} className="inline-flex items-center gap-1 rounded-full bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-100">
+                        <Trash2 className="h-3 w-3" /> Löschen
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+
+      {tab === "orders" && (
+        <section className="mt-8">
+          <h2 className="mb-4 inline-flex items-center gap-2 font-display text-2xl font-black text-brand-ink">
+            <ShoppingBag className="h-5 w-5" /> Deine Bestellungen
+          </h2>
+          {orders.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Noch keine Bestellungen.</p>
+          ) : (
+            <ul className="divide-y divide-border rounded-2xl border border-border bg-card">
+              {orders.map((o) => (
+                <li key={o.id} className="flex items-center justify-between p-4 text-sm">
+                  <span className="font-mono text-xs text-muted-foreground">#{o.id.slice(0, 8)}</span>
+                  <span className="font-semibold">{(o.total_cents / 100).toFixed(2)} €</span>
+                  <span className="rounded-full bg-brand/10 px-2 py-0.5 text-xs font-bold text-brand">{o.status}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
+    </div>
+  );
+}
+
+function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-border bg-card p-5">
+      <div className="flex items-center gap-2 text-brand">{icon}<span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{label}</span></div>
+      <div className="mt-2 font-display text-3xl font-black text-brand-ink">{value}</div>
+    </div>
+  );
+}
+
+function TabBtn({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+  return (
+    <button onClick={onClick} className={`rounded-full px-4 py-2 text-sm font-bold transition-colors ${active ? "bg-brand text-primary-foreground" : "text-brand-ink hover:bg-brand-soft"}`}>
+      {label}
+    </button>
+  );
+}
+
+function EmptyListings() {
+  return (
+    <div className="rounded-[2rem] border-2 border-dashed border-brand/30 bg-card/40 p-10 text-center">
+      <div className="text-5xl">📭</div>
+      <p className="mt-3 font-display text-lg font-bold text-brand-ink">Noch nix online.</p>
+      <p className="mt-1 text-sm text-muted-foreground">Klick "Neues Listing" und leg los.</p>
     </div>
   );
 }
@@ -146,7 +240,6 @@ function NewListingForm({ onClose, onCreated }: { onClose: () => void; onCreated
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) throw new Error("Nicht eingeloggt");
 
-      // Become seller on first publish
       await supabase.from("user_roles").insert({ user_id: u.user.id, role: "seller" }).then(() => {});
 
       let coverUrl: string | null = null;
