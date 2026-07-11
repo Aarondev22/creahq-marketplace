@@ -9,25 +9,17 @@ const SOURCE_LANG = "de";
 
 type NodeRec = { node: Text; original: string };
 
-/**
- * Walks the live DOM after each route change and translates visible text
- * nodes into the language stored under `creahq:lang`. Originals are kept in
- * memory so switching back to German (or between languages) restores them.
- * Translations are cached in localStorage per target language to avoid
- * spamming the AI gateway. Marketing/branding stays untouched; nodes with
- * `data-notranslate` or inside <script>/<style>/<code>/<pre> are skipped.
- */
 export function SiteTranslator() {
   const router = useRouter();
   const path = router.state.location.pathname;
   const nodesRef = useRef<NodeRec[]>([]);
   const translateFn = useServerFn(translateBatch);
   const runIdRef = useRef(0);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const run = async () => {
       const myRun = ++runIdRef.current;
-      // Give the freshly-mounted route a tick to render.
       await new Promise((r) => setTimeout(r, 120));
       if (myRun !== runIdRef.current) return;
 
@@ -35,7 +27,6 @@ export function SiteTranslator() {
         try { return localStorage.getItem(LS_LANG) || SOURCE_LANG; } catch { return SOURCE_LANG; }
       })().toLowerCase();
 
-      // Refresh the node map from the current DOM.
       const recs: NodeRec[] = [];
       const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
         acceptNode(node) {
@@ -44,13 +35,11 @@ export function SiteTranslator() {
           const parent = node.parentElement;
           if (!parent) return NodeFilter.FILTER_REJECT;
           if (parent.closest("script,style,code,pre,noscript,[data-notranslate]")) return NodeFilter.FILTER_REJECT;
-          // Skip pure numbers / symbols
           if (!/[a-zA-ZäöüÄÖÜß]/.test(t)) return NodeFilter.FILTER_REJECT;
           return NodeFilter.FILTER_ACCEPT;
         },
       });
       const seen = new WeakSet<Text>();
-      // Remember originals we already know about
       const oldMap = new Map<Text, string>();
       nodesRef.current.forEach((r) => oldMap.set(r.node, r.original));
 
@@ -67,17 +56,14 @@ export function SiteTranslator() {
       document.documentElement.lang = lang;
 
       if (lang === SOURCE_LANG) {
-        // Restore originals
         recs.forEach((r) => { if (r.node.nodeValue !== r.original) r.node.nodeValue = r.original; });
         return;
       }
 
-      // Load cache
       let cache: Record<string, string> = {};
       const cacheKey = LS_CACHE_PREFIX + lang;
       try { cache = JSON.parse(localStorage.getItem(cacheKey) || "{}"); } catch { /* noop */ }
 
-      // Apply cached translations first, collect misses
       const misses = new Set<string>();
       for (const r of recs) {
         const key = r.original.trim();
@@ -93,7 +79,6 @@ export function SiteTranslator() {
       const missing = Array.from(misses);
       if (!missing.length) return;
 
-      // Batch to keep prompts small
       const CHUNK = 40;
       for (let i = 0; i < missing.length; i += CHUNK) {
         if (myRun !== runIdRef.current) return;
@@ -102,7 +87,6 @@ export function SiteTranslator() {
           const { translations } = await translateFn({ data: { texts: chunk, lang } });
           chunk.forEach((src, idx) => { cache[src] = translations[idx] ?? src; });
           try { localStorage.setItem(cacheKey, JSON.stringify(cache)); } catch { /* quota */ }
-          // Apply the fresh translations to current nodes
           for (const r of nodesRef.current) {
             const key = r.original.trim();
             const t = cache[key];
@@ -117,9 +101,23 @@ export function SiteTranslator() {
 
     void run();
 
+    // NEU: Läuft erneut bei jeder relevanten DOM-Änderung (Modals, Popovers,
+    // async geladene Listings, etc.) — mit Debounce, damit es nicht bei jedem
+    // einzelnen kleinen Update feuert.
+    const observer = new MutationObserver(() => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => { void run(); }, 250);
+    });
+    observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+
     const onLang = () => void run();
     window.addEventListener("creahq:lang-change", onLang);
-    return () => window.removeEventListener("creahq:lang-change", onLang);
+
+    return () => {
+      window.removeEventListener("creahq:lang-change", onLang);
+      observer.disconnect();
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
   }, [path, translateFn]);
 
   return null;
