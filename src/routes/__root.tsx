@@ -132,17 +132,20 @@ function RootComponent() {
     return () => sub.subscription.unsubscribe();
   }, [router, queryClient]);
 
-  return (
+    return (
     <QueryClientProvider client={queryClient}>
-      <div className="flex min-h-screen flex-col bg-surface">
-        <Topbar />
-        <main className="flex-1">
-          <Outlet />
-        </main>
-        <Footer />
-        <Toaster />
-        <SiteTranslator />
-      </div>
+      <CartProvider>
+        <div className="flex min-h-screen flex-col bg-surface">
+          <Topbar />
+          <main className="flex-1">
+            <Outlet />
+          </main>
+          <Footer />
+          <Toaster />
+          <SiteTranslator />
+        </div>
+      </CartProvider>
     </QueryClientProvider>
   );
+
 }
