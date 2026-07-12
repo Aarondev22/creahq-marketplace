@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useSuspenseQuery, queryOptions } from "@tanstack/react-query";
 import { motion } from "motion/react";
 import { ArrowLeft, Heart, Share2, Shield, Truck, Download, MessageCircle, Star } from "lucide-react";
@@ -77,9 +77,16 @@ function RealListing({ id }: { id: string }) {
           <div className="font-display text-4xl font-black text-brand">{(l.price_cents/100).toFixed(2)} €</div>
         </div>
         <div className="mt-6 flex gap-2">
-          <button className="flex-1 rounded-full bg-brand px-6 py-4 text-base font-bold text-primary-foreground brand-glow transition-transform hover:scale-[1.02]">
-            In den Warenkorb
-          </button>
+          <button
+  onClick={() => {
+    addItem({ id: l.id, title: l.title, price_cents: l.price_cents, cover_url: l.cover_url });
+    toast.success("In den Warenkorb gelegt!");
+  }}
+  className="flex-1 rounded-full bg-brand px-6 py-4 text-base font-bold text-primary-foreground brand-glow transition-transform hover:scale-[1.02]"
+>
+  In den Warenkorb
+</button>
+
           <button aria-label="Favorisieren" title="Favorisieren" className="grid h-14 w-14 shrink-0 place-items-center rounded-full border-2 border-border bg-card text-brand-ink hover:border-brand hover:text-brand">
             <Heart className="h-5 w-5" />
           </button>
