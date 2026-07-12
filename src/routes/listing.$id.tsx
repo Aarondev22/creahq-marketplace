@@ -1,4 +1,5 @@
- import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useCart } from "@/lib/cart";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useSuspenseQuery, queryOptions } from "@tanstack/react-query";
 import { motion } from "motion/react";
 import { ArrowLeft, Heart, Share2, Shield, Truck, Download, MessageCircle, Star } from "lucide-react";
@@ -38,6 +39,8 @@ function ListingPage() {
 function RealListing({ id }: { id: string }) {
   const { data: l } = useSuspenseQuery(listingQuery(id));
   const navigate = useNavigate();
+  const { addItem } = useCart();
+
   if (!l) return <PlaceholderListing id={id} />;
 
   async function openChat() {
