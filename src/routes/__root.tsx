@@ -1,3 +1,4 @@
+import { CartProvider } from "@/lib/cart";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,
