@@ -49,10 +49,12 @@ function RealListing({ id }: { id: string }) {
     const convId = await getOrCreateConversation(sellerId);
     toast(`Conversation-ID: ${convId}`, { duration: 8000 });
     navigate({ to: "/nachrichten", search: { c: convId } });
-  } catch (err) {
-    toast.error(err instanceof Error ? err.message : "Unbekannter Fehler beim Chat öffnen", { duration: 15000 });
+  } catch (err: any) {
+    const msg = err?.message ?? "Unbekannter Fehler beim Chat öffnen";
+    toast.error(msg, { duration: 15000 });
   }
 }
+
 
 
 
