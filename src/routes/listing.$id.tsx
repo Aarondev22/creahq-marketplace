@@ -41,18 +41,19 @@ function RealListing({ id }: { id: string }) {
   if (!l) return <PlaceholderListing id={id} />;
 
   async function openChat() {
-  toast("Chat wird geöffnet …");
+  toast("Chat wird geöffnet …", { duration: 8000 });
   try {
     const sellerId = (l as any).seller_id ?? l.seller?.id;
-    toast(`Verkäufer-ID: ${sellerId ?? "FEHLT"}`);
+    toast(`Verkäufer-ID: ${sellerId ?? "FEHLT"}`, { duration: 8000 });
     if (!sellerId) throw new Error("Keine Verkäufer-ID gefunden");
     const convId = await getOrCreateConversation(sellerId);
-    toast(`Conversation-ID: ${convId}`);
+    toast(`Conversation-ID: ${convId}`, { duration: 8000 });
     navigate({ to: "/nachrichten", search: { c: convId } });
   } catch (err) {
-    toast.error(err instanceof Error ? err.message : "Unbekannter Fehler beim Chat öffnen");
+    toast.error(err instanceof Error ? err.message : "Unbekannter Fehler beim Chat öffnen", { duration: 15000 });
   }
 }
+
 
 
   return (
