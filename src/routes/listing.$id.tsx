@@ -58,50 +58,92 @@ function RealListing({ id }: { id: string }) {
   }
 
   return (
-    <div className="mx-auto grid max-w-6xl gap-8 px-6 py-12 lg:grid-cols-2">
-      <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="overflow-hidden rounded-[2rem] border border-border bg-gradient-to-br from-brand-soft to-amber-100/40 aspect-square">
-        {l.cover_url ? <img src={l.cover_url} alt={l.title} className="h-full w-full object-cover" /> : <div className="grid h-full place-items-center text-6xl">🎨</div>}
-      </motion.div>
-      <div>
-        {l.category && <span className="inline-block rounded-full bg-brand-soft px-3 py-1 text-xs font-bold uppercase tracking-widest text-brand">{l.category}</span>}
-        <h1 className="mt-2 font-display text-4xl font-black text-brand-ink">{l.title}</h1>
-        {l.seller && (
-          <Link to="/shop/$handle" params={{ handle: l.seller.handle ?? "" }} className="mt-2 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-brand">
-            <span className="grid h-7 w-7 place-items-center rounded-full bg-brand/15 text-xs font-bold text-brand">{(l.seller.display_name ?? "?").slice(0,1).toUpperCase()}</span>
-            von {l.seller.display_name}
-          </Link>
-        )}
-        <p className="mt-6 whitespace-pre-line text-sm leading-relaxed text-foreground/80">{l.description}</p>
-        <div className="mt-8 flex items-end gap-4">
-          <div className="font-display text-4xl font-black text-brand">{(l.price_cents/100).toFixed(2)} €</div>
+    <div className="mx-auto max-w-6xl px-6 py-12">
+      <div className="grid gap-8 lg:grid-cols-2">
+        <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="overflow-hidden rounded-[2rem] border border-border bg-gradient-to-br from-brand-soft to-amber-100">
+          {l.cover_url ? <img src={l.cover_url} alt={l.title} className="h-full w-full object-cover" /> : <div className="grid h-full place-items-center text-6xl">🎨</div>}
+        </motion.div>
+        <div>
+          {l.category && <span className="inline-block rounded-full bg-brand-soft px-3 py-1 text-xs font-bold uppercase tracking-widest text-brand">{l.category}</span>}
+          <h1 className="mt-2 font-display text-4xl font-black text-brand-ink">{l.title}</h1>
+          {l.seller && (
+            <Link to="/shop/$handle" params={{ handle: l.seller.handle ?? "" }} className="mt-2 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-brand">
+              <span className="grid h-7 w-7 place-items-center rounded-full bg-brand/15 text-xs font-bold text-brand">{(l.seller.display_name ?? "?").slice(0,1).toUpperCase()}</span>
+              von {l.seller.display_name}
+            </Link>
+          )}
+          
+          {/* Rating Section */}
+          {l.reviews && l.reviews.length > 0 ? (
+            <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-900">
+              <Star className="h-3 w-3 fill-current" /> {(l.average_rating || 0).toFixed(1)} · {l.reviews.length} {l.reviews.length === 1 ? "Bewertung" : "Bewertungen"}
+            </div>
+          ) : (
+            <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-bold text-gray-600">
+              <Star className="h-3 w-3" /> 0,0 · noch keine Bewertungen
+            </div>
+          )}
+          
+          <p className="mt-6 whitespace-pre-line text-sm leading-relaxed text-foreground/80">{l.description}</p>
+          <div className="mt-8 flex items-end gap-4">
+            <div className="font-display text-4xl font-black text-brand">{(l.price_cents/100).toFixed(2)} €</div>
+          </div>
+          <div className="mt-6 flex gap-2">
+            <button
+              onClick={() => {
+                addItem({ id: l.id, title: l.title, price_cents: l.price_cents, cover_url: l.cover_url });
+                toast.success("In den Warenkorb gelegt!");
+              }}
+              className="flex-1 rounded-full bg-brand px-6 py-4 text-base font-bold text-primary-foreground brand-glow transition-transform hover:scale-[1.02]"
+            >
+              In den Warenkorb
+            </button>
+            <button aria-label="Favorisieren" title="Favorisieren" className="grid h-14 w-14 shrink-0 place-items-center rounded-full border-2 border-border bg-card text-brand-ink hover:border-brand hover:text-brand transition-colors">
+              <Heart className="h-5 w-5" />
+            </button>
+            <button
+              onClick={openChat}
+              aria-label="Chat mit Verkäufer"
+              title="Chat mit Verkäufer"
+              className="grid h-14 w-14 shrink-0 place-items-center rounded-full border-2 border-border bg-card text-brand-ink hover:border-brand hover:text-brand transition-colors"
+            >
+              <MessageCircle className="h-5 w-5" />
+            </button>
+            <button aria-label="Teilen" title="Teilen" className="grid h-14 w-14 shrink-0 place-items-center rounded-full border-2 border-border bg-card text-brand-ink hover:border-brand hover:text-brand transition-colors">
+              <Share2 className="h-5 w-5" />
+            </button>
+          </div>
+          <p className="mt-2 text-center text-xs text-muted-foreground">Stripe Checkout folgt im nächsten Schritt.</p>
         </div>
-        <div className="mt-6 flex gap-2">
-          <button
-            onClick={() => {
-              addItem({ id: l.id, title: l.title, price_cents: l.price_cents, cover_url: l.cover_url });
-              toast.success("In den Warenkorb gelegt!");
-            }}
-            className="flex-1 rounded-full bg-brand px-6 py-4 text-base font-bold text-primary-foreground brand-glow transition-transform hover:scale-[1.02]"
-          >
-            In den Warenkorb
-          </button>
-          <button aria-label="Favorisieren" title="Favorisieren" className="grid h-14 w-14 shrink-0 place-items-center rounded-full border-2 border-border bg-card text-brand-ink hover:border-brand hover:text-brand">
-            <Heart className="h-5 w-5" />
-          </button>
-          <button
-            onClick={openChat}
-            aria-label="Chat mit Verkäufer"
-            title="Chat mit Verkäufer"
-            className="grid h-14 w-14 shrink-0 place-items-center rounded-full border-2 border-border bg-card text-brand-ink hover:border-brand hover:text-brand"
-          >
-            <MessageCircle className="h-5 w-5" />
-          </button>
-          <button aria-label="Teilen" title="Teilen" className="grid h-14 w-14 shrink-0 place-items-center rounded-full border-2 border-border bg-card text-brand-ink hover:border-brand hover:text-brand">
-            <Share2 className="h-5 w-5" />
-          </button>
-        </div>
-        <p className="mt-2 text-center text-xs text-muted-foreground">Stripe Checkout folgt im nächsten Schritt.</p>
       </div>
+      
+      {/* Reviews Section */}
+      {l.reviews && l.reviews.length > 0 && (
+        <div className="mt-12 border-t border-border pt-12">
+          <h2 className="font-display text-2xl font-black text-brand-ink">⭐ Bewertungen</h2>
+          <div className="mt-6 space-y-4">
+            {l.reviews.map((review: any, i: number) => (
+              <div key={i} className="rounded-xl border border-border bg-card p-4">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-brand-ink">{review.author || "Anonymer Käufer"}</span>
+                      <div className="flex">
+                        {Array.from({ length: 5 }).map((_, j) => (
+                          <Star key={j} className={`h-3.5 w-3.5 ${j < (review.rating || 0) ? "fill-amber-400 text-amber-400" : "text-gray-300"}`} />
+                        ))}
+                      </div>
+                    </div>
+                    <p className="mt-1 text-xs text-muted-foreground">{new Date(review.created_at).toLocaleDateString('de-DE')}</p>
+                  </div>
+                </div>
+                <p className="mt-3 text-sm text-foreground">{review.content}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      
       <RelatedRails currentId={l.id} sellerName={l.seller?.display_name ?? "diesem Shop"} />
     </div>
   );
@@ -109,7 +151,7 @@ function RealListing({ id }: { id: string }) {
 
 function RelatedRails({ currentId, sellerName }: { currentId: string; sellerName: string }) {
   return (
-    <div className="lg:col-span-2 space-y-12 pt-4">
+    <div className="mt-12 space-y-12">
       <PlaceholderRail
         title={`Sachen vom Shop · ${sellerName}`}
         subtitle="Weitere Produkte von diesem Creator."
@@ -275,7 +317,7 @@ function PlaceholderListing({ id }: { id: string }) {
                 onClick={() => setChatOpen(true)}
                 aria-label="Chat mit Verkäufer"
                 title="Chat mit Verkäufer"
-                className="grid h-14 w-14 shrink-0 place-items-center rounded-full border-2 border-border bg-card text-brand-ink hover:border-brand hover:text-brand"
+                className="grid h-14 w-14 shrink-0 place-items-center rounded-full border-2 border-border bg-card text-brand-ink hover:border-brand hover:text-brand transition-colors"
               >
                 <MessageCircle className="h-5 w-5" />
               </button>
@@ -283,7 +325,7 @@ function PlaceholderListing({ id }: { id: string }) {
             <button
               aria-label="Teilen"
               title="Teilen"
-              className="grid h-14 w-14 shrink-0 place-items-center rounded-full border-2 border-border bg-card text-brand-ink hover:border-brand hover:text-brand"
+              className="grid h-14 w-14 shrink-0 place-items-center rounded-full border-2 border-border bg-card text-brand-ink hover:border-brand hover:text-brand transition-colors"
             >
               <Share2 className="h-5 w-5" />
             </button>
@@ -299,7 +341,7 @@ function PlaceholderListing({ id }: { id: string }) {
           )}
 
           <div className="mt-6 rounded-2xl border border-border bg-card p-4 text-sm text-muted-foreground">
-            Das ist ein <strong className="text-brand-ink">Platzhalter-Produkt</strong> — du siehst die Struktur einer echten Produktseite. Sobald Creator hier reinstellen, ersetzt echtes Zeug diese Ansicht.
+            Das ist ein <strong className="text-brand-ink">Platzhalter-Produkt</strong> — du siehst die Struktur einer echten Produktseite. Sobald Creator hier reinstellen, ersetzt echtes Zeug das Platzhalter-Design.
           </div>
         </div>
       </div>
