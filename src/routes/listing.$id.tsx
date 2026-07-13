@@ -40,22 +40,68 @@ function RealListing({ id }: { id: string }) {
   const { data: l } = useSuspenseQuery(listingQuery(id));
   const navigate = useNavigate();
   const { addItem } = useCart();
+  const [isFav, setIsFav] = useState(false);
+  
   if (!l) return <PlaceholderListing id={id} />;
 
-  async function openChat() {
-    toast("Chat wird geöffnet …", { duration: 8000 });
+  const handleAddToCart = () => {
+    try {
+      addItem({ id: l.id, title: l.title, price_cents: l.price_cents, cover_url: l.cover_url });
+      toast.success("In den Warenkorb gelegt!");
+    } catch (err: any) {
+      const msg = err?.message ?? "Fehler beim Hinzufügen zum Warenkorb";
+      toast.error(msg, { duration: 5000 });
+    }
+  };
+
+  const handleFavorite = () => {
+    try {
+      setIsFav(!isFav);
+      toast.success(isFav ? "Aus Favoriten entfernt" : "Zu Favoriten hinzugefügt!");
+    } catch (err: any) {
+      const msg = err?.message ?? "Fehler beim Aktualisieren der Favoriten";
+      toast.error(msg, { duration: 5000 });
+    }
+  };
+
+  const handleOpenChat = async () => {
+    toast.loading("Chat wird geöffnet …", { duration: 8000 });
     try {
       const sellerId = (l as any).seller_id ?? l.seller?.id;
-      toast(`Verkäufer-ID: ${sellerId ?? "FEHLT"}`, { duration: 8000 });
-      if (!sellerId) throw new Error("Keine Verkäufer-ID gefunden");
+      if (!sellerId) {
+        throw new Error("Keine Verkäufer-ID gefunden");
+      }
       const convId = await getOrCreateConversation(sellerId);
-      toast(`Conversation-ID: ${convId}`, { duration: 8000 });
+      if (!convId) {
+        throw new Error("Konversation konnte nicht erstellt werden");
+      }
+      toast.dismiss();
+      toast.success("Chat geöffnet!");
       navigate({ to: "/nachrichten", search: { c: convId } });
     } catch (err: any) {
       const msg = err?.message ?? "Unbekannter Fehler beim Chat öffnen";
-      toast.error(msg, { duration: 15000 });
+      toast.dismiss();
+      toast.error(msg, { duration: 8000 });
     }
-  }
+  };
+
+  const handleShare = () => {
+    try {
+      if (navigator.share) {
+        navigator.share({
+          title: l.title,
+          text: l.description,
+          url: window.location.href,
+        });
+      } else {
+        navigator.clipboard.writeText(window.location.href);
+        toast.success("Link kopiert!");
+      }
+    } catch (err: any) {
+      const msg = err?.message ?? "Fehler beim Teilen";
+      toast.error(msg, { duration: 5000 });
+    }
+  };
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-12">
@@ -90,26 +136,33 @@ function RealListing({ id }: { id: string }) {
           </div>
           <div className="mt-6 flex gap-2">
             <button
-              onClick={() => {
-                addItem({ id: l.id, title: l.title, price_cents: l.price_cents, cover_url: l.cover_url });
-                toast.success("In den Warenkorb gelegt!");
-              }}
+              onClick={handleAddToCart}
               className="flex-1 rounded-full bg-brand px-6 py-4 text-base font-bold text-primary-foreground brand-glow transition-transform hover:scale-[1.02]"
             >
               In den Warenkorb
             </button>
-            <button aria-label="Favorisieren" title="Favorisieren" className="grid h-14 w-14 shrink-0 place-items-center rounded-full border-2 border-border bg-card text-brand-ink hover:border-brand hover:text-brand transition-colors">
-              <Heart className="h-5 w-5" />
+            <button 
+              onClick={handleFavorite}
+              aria-label="Favorisieren" 
+              title={isFav ? "Aus Favoriten entfernen" : "Favorisieren"}
+              className="grid h-14 w-14 shrink-0 place-items-center rounded-full border-2 border-border bg-card text-brand-ink hover:border-brand hover:text-brand transition-colors"
+            >
+              <Heart className={`h-5 w-5 ${isFav ? "fill-red-500 text-red-500" : ""}`} />
             </button>
             <button
-              onClick={openChat}
+              onClick={handleOpenChat}
               aria-label="Chat mit Verkäufer"
               title="Chat mit Verkäufer"
               className="grid h-14 w-14 shrink-0 place-items-center rounded-full border-2 border-border bg-card text-brand-ink hover:border-brand hover:text-brand transition-colors"
             >
               <MessageCircle className="h-5 w-5" />
             </button>
-            <button aria-label="Teilen" title="Teilen" className="grid h-14 w-14 shrink-0 place-items-center rounded-full border-2 border-border bg-card text-brand-ink hover:border-brand hover:text-brand transition-colors">
+            <button 
+              onClick={handleShare}
+              aria-label="Teilen" 
+              title="Teilen" 
+              className="grid h-14 w-14 shrink-0 place-items-center rounded-full border-2 border-border bg-card text-brand-ink hover:border-brand hover:text-brand transition-colors"
+            >
               <Share2 className="h-5 w-5" />
             </button>
           </div>
