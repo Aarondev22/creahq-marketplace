@@ -129,12 +129,24 @@ function RealListing({ id }: { id: string }) {
         </div>
         <p className="mt-2 text-center text-xs text-muted-foreground">Stripe Checkout folgt im nächsten Schritt.</p>
       </div>
-      <RelatedRails currentId={l.id} sellerName={l.seller?.display_name ?? "diesem Shop"} />
+      <RelatedRails 
+        currentId={l.id} 
+        sellerName={l.seller?.display_name ?? "diesem Shop"} 
+        sellerHandle={l.seller?.handle}
+      />
     </div>
   );
 }
 
-function RelatedRails({ currentId, sellerName }: { currentId: string; sellerName: string }) {
+function RelatedRails({ 
+  currentId, 
+  sellerName, 
+  sellerHandle 
+}: { 
+  currentId: string; 
+  sellerName: string; 
+  sellerHandle?: string | null;
+}) {
   return (
     <div className="lg:col-span-2 space-y-12 pt-4">
       <PlaceholderRail
@@ -142,18 +154,32 @@ function RelatedRails({ currentId, sellerName }: { currentId: string; sellerName
         subtitle="Weitere Produkte von diesem Creator."
         keyPrefix={`shop-${currentId}`}
         emoji="🏪"
+        viewAllLink={sellerHandle ? `/shop/${sellerHandle}` : "/browse"}
       />
       <PlaceholderRail
         title="Weitere Beispiele"
         subtitle="Passt vielleicht auch — kuratierte Empfehlungen aus CreaHQ."
         keyPrefix={`sim-${currentId}`}
         emoji="✨"
+        viewAllLink="/browse"
       />
     </div>
   );
 }
 
-function PlaceholderRail({ title, subtitle, keyPrefix, emoji }: { title: string; subtitle: string; keyPrefix: string; emoji: string }) {
+function PlaceholderRail({ 
+  title, 
+  subtitle, 
+  keyPrefix, 
+  emoji,
+  viewAllLink = "/browse"
+}: { 
+  title: string; 
+  subtitle: string; 
+  keyPrefix: string; 
+  emoji: string;
+  viewAllLink?: string;
+}) {
   return (
     <section>
       <div className="mb-4 flex items-end justify-between">
@@ -163,7 +189,9 @@ function PlaceholderRail({ title, subtitle, keyPrefix, emoji }: { title: string;
           </h2>
           <p className="text-sm text-muted-foreground">{subtitle}</p>
         </div>
-        <Link to="/browse" className="text-xs font-semibold text-brand hover:underline">Alle ansehen →</Link>
+        <Link to={viewAllLink} className="text-xs font-semibold text-brand hover:underline">
+          Alle ansehen →
+        </Link>
       </div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
         {Array.from({ length: 4 }).map((_, i) => (
@@ -340,47 +368,6 @@ function PlaceholderListing({ id }: { id: string }) {
           </div>
         </div>
       )}
-
-      {!isVerpackung && (["shop", "sim"] as const).map((kind) => (
-        <section key={kind} className="mt-14">
-          <div className="mb-4 flex items-end justify-between">
-            <div>
-              <h2 className="font-display text-2xl font-black text-brand-ink">
-                {kind === "shop" ? `🏪 Sachen vom Shop · ${shopName}` : "✨ Weitere Beispiele"}
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                {kind === "shop"
-                  ? "Weitere Produkte von diesem Creator."
-                  : "Passt vielleicht auch — kuratierte Empfehlungen aus CreaHQ."}
-              </p>
-            </div>
-            <Link to="/browse" className="text-xs font-semibold text-brand hover:underline">Alle ansehen →</Link>
-          </div>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-            {Array.from({ length: 4 }).map((_, i) => {
-              const otherId = `beispiel-${kind}-${((Number(nr) + i) % 8) + 1}`;
-              return (
-                <Link
-                  key={otherId}
-                  to="/listing/$id"
-                  params={{ id: otherId }}
-                  className="group overflow-hidden rounded-2xl border border-border bg-card transition-all hover:-translate-y-1 hover:border-brand hover:shadow-lg"
-                >
-                  <div className="flex aspect-square items-center justify-center bg-gradient-to-br from-brand-soft/60 via-transparent to-amber-100/40 text-4xl">
-                    {"📦🎨🎧🧩".charAt(i)}
-                  </div>
-                  <div className="p-3">
-                    <div className="text-xs font-bold uppercase tracking-widest text-brand/70">Platzhalter</div>
-                    <div className="mt-0.5 truncate text-sm font-semibold text-brand-ink group-hover:text-brand">Beispiel #{i + 1}</div>
-                    <div className="mt-1 text-xs text-muted-foreground">—,— €</div>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        </section>
-      ))}
-
     </div>
   );
 }
