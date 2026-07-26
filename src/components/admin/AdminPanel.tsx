@@ -154,6 +154,7 @@ function UsersTab() {
 
     const rows: UserRow[] = (profiles ?? []).map((p) => ({
       ...p,
+      banned: p.banned ?? false,
       roles: (roles ?? []).filter((r) => r.user_id === p.id).map((r) => r.role),
     }));
     setUsers(rows);
@@ -202,10 +203,13 @@ function UsersTab() {
       ) : (
         <ul className="space-y-2">
           {users.map((u) => (
-            <li key={u.id} className="rounded-xl border border-border bg-surface p-3">
+            <li key={u.id} className={`rounded-xl border p-3 ${u.banned ? "border-red-300 bg-red-50/50" : "border-border bg-surface"}`}>
               <div className="flex items-center justify-between gap-2">
                 <div className="min-w-0">
-                  <div className="truncate text-sm font-semibold text-brand-ink">{u.display_name ?? "Unbenannt"}</div>
+                  <div className="truncate text-sm font-semibold text-brand-ink">
+                    {u.display_name ?? "Unbenannt"}
+                    {u.banned && <span className="ml-2 text-[10px] font-bold uppercase text-red-600">Gesperrt</span>}
+                  </div>
                   <div className="truncate text-xs text-muted-foreground">@{u.handle ?? "—"}</div>
                 </div>
                 <button
