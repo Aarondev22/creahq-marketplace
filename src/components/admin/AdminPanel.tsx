@@ -144,7 +144,7 @@ function UsersTab() {
 
   async function search() {
     setLoading(true);
-    let query = supabase.from("profiles").select("id,display_name,handle,banned").limit(20);
+    let query = supabase.from("profiles").select("id,display_name,handle").limit(20);
     if (q.trim()) query = query.or(`display_name.ilike.%${q}%,handle.ilike.%${q}%`);
     const { data: profiles, error } = await query;
     if (error) { toast.error(error.message); setLoading(false); return; }
