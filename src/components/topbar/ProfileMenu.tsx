@@ -6,19 +6,20 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { User, LogIn, UserPlus, LayoutDashboard, LogOut } from "lucide-react";
+import { User, LogIn, UserPlus, LayoutDashboard, LogOut, ShoppingCart } from "lucide-react";
 import { Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
-
 import { FounderBadge } from "@/components/FounderBadge";
+import { useCart } from "@/lib/cart";
 
 export function ProfileMenu() {
   const { user, loading, isFounder, isAdmin } = useAuth();
   const navigate = useNavigate();
   const router = useRouter();
   const qc = useQueryClient();
+  const { totalCount } = useCart();
 
   async function handleSignOut() {
     await qc.cancelQueries();
@@ -53,6 +54,17 @@ export function ProfileMenu() {
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
               <Link to="/dashboard"><LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard</Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link to="/warenkorb">
+                <ShoppingCart className="mr-2 h-4 w-4" />
+                Warenkorb
+                {totalCount > 0 && (
+                  <span className="ml-auto rounded-full bg-brand px-2 py-0.5 text-[10px] font-bold text-primary-foreground">
+                    {totalCount}
+                  </span>
+                )}
+              </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onSelect={handleSignOut}>
