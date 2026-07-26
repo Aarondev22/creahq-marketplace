@@ -3,7 +3,6 @@ import { Logo } from "./Logo";
 import { SearchBar } from "./SearchBar";
 import { NotificationsBell } from "./NotificationsBell";
 import { ProfileMenu } from "./ProfileMenu";
-import { CartButton } from "./CartButton";
 
 export function Topbar() {
   return (
@@ -15,7 +14,6 @@ export function Topbar() {
           <SearchBar />
         </div>
         <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
-          <CartButton />
           <NotificationsBell />
           <ProfileMenu />
         </div>
