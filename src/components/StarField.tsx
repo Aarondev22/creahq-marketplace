@@ -22,16 +22,17 @@ function randPos() {
  */
 export function StarField({ count = 6 }: { count?: number }) {
   const [enabled, setEnabled] = useState(true);
-  const [seeds, setSeeds] = useState<{ id: number; pos: { top: string; left: string } }[]>(
-    () => Array.from({ length: count }, (_, i) => ({ id: i, pos: randPos() }))
-  );
+  // Positions are random, so they are generated only after mount to keep SSR and
+  // client markup identical (no hydration mismatch).
+  const [seeds, setSeeds] = useState<{ id: number; pos: { top: string; left: string } }[]>([]);
 
   useEffect(() => {
+    setSeeds(Array.from({ length: count }, (_, i) => ({ id: i, pos: randPos() })));
     try {
       const raw = localStorage.getItem(LS_ENABLED);
       if (raw !== null) setEnabled(raw === "1");
     } catch { /* noop */ }
-  }, []);
+  }, [count]);
 
   const toggle = useCallback(() => {
     setEnabled((v) => {

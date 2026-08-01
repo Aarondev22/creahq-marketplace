@@ -2,7 +2,8 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useSuspenseQuery, queryOptions } from "@tanstack/react-query";
 import { motion } from "motion/react";
 import { ArrowLeft, Heart, Share2, Shield, Truck, Download, MessageCircle, Star } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { fetchListingById } from "@/lib/listings.functions";
 import { getOrCreateConversation } from "@/lib/chat.functions";
 import { useCart } from "@/lib/cart";
@@ -46,16 +47,44 @@ function ListingView({ l }: { l: NonNullable<Awaited<ReturnType<typeof fetchList
   const navigate = useNavigate();
   const { addItem } = useCart();
   const [isFav, setIsFav] = useState(false);
+  const [favId, setFavId] = useState<string | null>(null);
 
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) return;
+      const { data } = await supabase.from("favorites").select("id").eq("user_id", u.user.id).eq("listing_id", l.id).maybeSingle();
+      if (!active) return;
+      setFavId(data?.id ?? null);
+      setIsFav(Boolean(data));
+    })();
+    return () => { active = false; };
+  }, [l.id]);
 
   function handleAddToCart() {
     addItem({ id: l.id, title: l.title, price_cents: l.price_cents, cover_url: l.cover_url });
     toast.success("In den Warenkorb gelegt!");
   }
 
-  function handleFavorite() {
-    setIsFav((v) => !v);
-    toast.success(isFav ? "Aus Favoriten entfernt" : "Zu Favoriten hinzugefügt!");
+  async function handleFavorite() {
+    const { data: u } = await supabase.auth.getUser();
+    if (!u.user) {
+      toast.error("Melde dich an, um zu favorisieren.");
+      navigate({ to: "/auth" });
+      return;
+    }
+    if (isFav && favId) {
+      const { error } = await supabase.from("favorites").delete().eq("id", favId);
+      if (error) return toast.error(error.message);
+      setIsFav(false); setFavId(null);
+      toast.success("Aus Favoriten entfernt");
+    } else {
+      const { data, error } = await supabase.from("favorites").insert({ user_id: u.user.id, listing_id: l.id }).select("id").single();
+      if (error) return toast.error(error.message);
+      setIsFav(true); setFavId(data.id);
+      toast.success("Zu Favoriten hinzugefügt!");
+    }
   }
 
   async function handleOpenChat() {
