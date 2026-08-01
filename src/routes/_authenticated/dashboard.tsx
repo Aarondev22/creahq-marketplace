@@ -79,6 +79,14 @@ function Dashboard() {
     setListings((l) => l.filter((x) => x.id !== id));
   }
 
+  async function removeFavorite(favId: string) {
+    const { error } = await supabase.from("favorites").delete().eq("id", favId);
+    if (error) return toast.error(error.message);
+    setFavorites((f) => f.filter((x) => x.id !== favId));
+    toast.success("Aus Favoriten entfernt.");
+  }
+
+
   const publishedCount = listings.filter((l) => l.status === "published").length;
 
   return (
