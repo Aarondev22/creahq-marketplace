@@ -199,6 +199,45 @@ function Dashboard() {
         </section>
       )}
 
+      {tab === "favorites" && (
+        <section className="mt-8">
+          <h2 className="mb-4 inline-flex items-center gap-2 font-display text-2xl font-black text-brand-ink">
+            <Heart className="h-5 w-5" /> Deine Favoriten
+          </h2>
+          {favorites.filter((f) => f.listing).length === 0 ? (
+            <div className="rounded-[2rem] border-2 border-dashed border-brand/30 bg-card/40 p-10 text-center">
+              <div className="text-5xl">💜</div>
+              <p className="mt-3 font-display text-lg font-bold text-brand-ink">Noch nichts favorisiert.</p>
+              <p className="mt-1 text-sm text-muted-foreground">Klick auf das Herz bei einem Produkt, dann landet es hier.</p>
+            </div>
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {favorites.filter((f) => f.listing).map((f) => (
+                <motion.div key={f.id} whileHover={{ y: -3 }} className="overflow-hidden rounded-3xl border border-border bg-card">
+                  <div className="aspect-[4/3] bg-gradient-to-br from-brand-soft to-amber-100/40">
+                    {f.listing!.cover_url && <img src={f.listing!.cover_url} alt={f.listing!.title} className="h-full w-full object-cover" />}
+                  </div>
+                  <div className="p-4">
+                    <div className="flex items-start justify-between gap-2">
+                      <h3 className="line-clamp-2 font-display text-base font-bold text-brand-ink">{f.listing!.title}</h3>
+                      <span className="shrink-0 rounded-full bg-brand/10 px-2 py-0.5 text-xs font-bold text-brand">{(f.listing!.price_cents / 100).toFixed(2)} €</span>
+                    </div>
+                    <div className="mt-3 flex gap-2">
+                      <Link to="/listing/$id" params={{ id: f.listing!.id }} className="inline-flex items-center gap-1 rounded-full bg-brand-soft px-3 py-1.5 text-xs font-semibold text-brand-ink hover:bg-brand hover:text-primary-foreground">
+                        <Eye className="h-3 w-3" /> Ansehen
+                      </Link>
+                      <button onClick={() => removeFavorite(f.id)} className="inline-flex items-center gap-1 rounded-full bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-100">
+                        <Trash2 className="h-3 w-3" /> Entfernen
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+
       {tab === "orders" && (
         <section className="mt-8">
           <h2 className="mb-4 inline-flex items-center gap-2 font-display text-2xl font-black text-brand-ink">
