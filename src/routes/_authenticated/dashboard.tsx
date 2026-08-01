@@ -475,10 +475,45 @@ function ListingWizard({ onClose, onCreated }: { onClose: () => void; onCreated:
       )}
 
       {step === 3 && (
-        <div className="space-y-3">
-          <h3 className="font-display text-xl font-bold text-brand-ink">Bild hochladen</h3>
-          <input type="file" accept="image/*" onChange={(e) => update("file", e.target.files?.[0] ?? null)} className="block w-full text-sm" />
-          {data.file && <p className="text-xs text-muted-foreground">Ausgewählt: {data.file.name}</p>}
+        <div className="space-y-4">
+          <h3 className="font-display text-xl font-bold text-brand-ink">Bilder & Details</h3>
+          <div>
+            <label className="mb-1 block text-xs font-bold uppercase tracking-widest text-muted-foreground">Bilder (erstes = Titelbild, max. 8)</label>
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={(e) => update("files", [...data.files, ...Array.from(e.target.files ?? [])].slice(0, 8))}
+              className="block w-full text-sm"
+            />
+          </div>
+          {data.files.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {data.files.map((f, i) => (
+                <div key={`${f.name}-${i}`} className="relative overflow-hidden rounded-xl border border-border">
+                  <img src={URL.createObjectURL(f)} alt={f.name} className="h-20 w-20 object-cover" />
+                  {i === 0 && <span className="absolute bottom-0 left-0 right-0 bg-brand/90 px-1 text-center text-[9px] font-bold text-primary-foreground">Titelbild</span>}
+                  <button
+                    type="button"
+                    onClick={() => update("files", data.files.filter((_, j) => j !== i))}
+                    className="absolute right-0 top-0 grid h-5 w-5 place-items-center rounded-bl-lg bg-red-500 text-white"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="grid gap-3 sm:grid-cols-3">
+            <input placeholder="Ort / Stadt (optional)" value={data.location} onChange={(e) => update("location", e.target.value)} className="rounded-full border border-border bg-background px-4 py-2.5 text-sm focus:border-brand focus:outline-none" />
+            <select value={data.condition} onChange={(e) => update("condition", e.target.value)} className="rounded-full border border-border bg-background px-4 py-2.5 text-sm focus:border-brand focus:outline-none">
+              <option value="neu">Neu</option>
+              <option value="handgemacht">Handgemacht</option>
+              <option value="gebraucht">Gebraucht</option>
+              <option value="digital">Digital / unbegrenzt</option>
+            </select>
+            <input type="number" min="0" placeholder="Lagerbestand (optional)" value={data.stock} onChange={(e) => update("stock", e.target.value)} className="rounded-full border border-border bg-background px-4 py-2.5 text-sm focus:border-brand focus:outline-none" />
+          </div>
         </div>
       )}
 
@@ -489,10 +524,12 @@ function ListingWizard({ onClose, onCreated }: { onClose: () => void; onCreated:
             <div><strong>{data.title || "—"}</strong></div>
             <div className="text-muted-foreground">{data.description || "Keine Beschreibung"}</div>
             <div>Preis: <strong>{data.price} €</strong> · {data.kind === "digital" ? "Digital" : "Service"}</div>
+            <div>Bilder: {data.files.length} · Zustand: {data.condition}{data.location ? ` · ${data.location}` : ""}{data.stock ? ` · ${data.stock} Stück` : ""}</div>
             {data.kind === "service" && <div>Versand: {data.shippingMode}{data.shippingMode === "extra" ? ` (${data.shippingPrice} €)` : ""}</div>}
           </div>
         </div>
       )}
+
 
       <div className="mt-6 flex justify-between gap-2">
         <button
