@@ -363,15 +363,20 @@ type WizardData = {
   price: string; kind: "digital" | "service";
   shippingMode: "included" | "extra" | "digital";
   shippingPrice: string;
-  file: File | null;
+  location: string; condition: string; stock: string;
+  files: File[];
 };
+
+const SIGNED_URL_TTL = 60 * 60 * 24 * 365; // 1 Jahr
 
 function ListingWizard({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
   const [step, setStep] = useState(1);
   const [saving, setSaving] = useState(false);
   const [data, setData] = useState<WizardData>({
     title: "", description: "", category: "", price: "9.00", kind: "digital",
-    shippingMode: "digital", shippingPrice: "0", file: null,
+    shippingMode: "digital", shippingPrice: "0",
+    location: "", condition: "neu", stock: "",
+    files: [],
   });
   const totalSteps = 4;
 
@@ -392,24 +397,29 @@ function ListingWizard({ onClose, onCreated }: { onClose: () => void; onCreated:
 
       await supabase.from("user_roles").insert({ user_id: u.user.id, role: "seller" }).then(() => {});
 
-      let coverUrl: string | null = null;
-      if (data.file) {
-        const path = `${u.user.id}/${crypto.randomUUID()}-${data.file.name.replace(/[^\w.-]/g, "_")}`;
-        const { error: upErr } = await supabase.storage.from("listing-covers").upload(path, data.file, { upsert: false });
+      const urls: string[] = [];
+      for (const file of data.files.slice(0, 8)) {
+        const path = `${u.user.id}/${crypto.randomUUID()}-${file.name.replace(/[^\w.-]/g, "_")}`;
+        const { error: upErr } = await supabase.storage.from("listing-covers").upload(path, file, { upsert: false });
         if (upErr) throw upErr;
-        const { data: pub } = supabase.storage.from("listing-covers").getPublicUrl(path);
-        coverUrl = pub.publicUrl;
+        const { data: signed } = await supabase.storage.from("listing-covers").createSignedUrl(path, SIGNED_URL_TTL);
+        if (signed?.signedUrl) urls.push(signed.signedUrl);
       }
 
       const price_cents = Math.round(parseFloat(data.price.replace(",", ".")) * 100);
       const shipping_price_cents = Math.round(parseFloat(data.shippingPrice.replace(",", ".") || "0") * 100);
+      const stock = data.stock.trim() ? Math.max(0, parseInt(data.stock, 10)) : null;
 
       const { error } = await supabase.from("listings").insert({
         seller_id: u.user.id,
         title: data.title, description: data.description, category: data.category,
         kind: data.kind, price_cents,
         shipping_mode: data.shippingMode, shipping_price_cents,
-        cover_url: coverUrl, status: "published",
+        cover_url: urls[0] ?? null, images: urls,
+        location: data.location.trim() || null,
+        condition: data.condition || null,
+        stock,
+        status: "published",
       });
       if (error) throw error;
       toast.success("Veröffentlicht!");
