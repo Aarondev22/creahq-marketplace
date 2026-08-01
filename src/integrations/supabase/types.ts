@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      contact_messages: {
+        Row: {
+          created_at: string
+          email: string
+          handled: boolean
+          id: string
+          message: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          handled?: boolean
+          id?: string
+          message: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          handled?: boolean
+          id?: string
+          message?: string
+          name?: string
+        }
+        Relationships: []
+      }
       conversations: {
         Row: {
           buyer_id: string
@@ -266,19 +293,23 @@ export type Database = {
       listings: {
         Row: {
           category: string | null
+          condition: string | null
           cover_url: string | null
           created_at: string
           currency: string
           description: string | null
           favorites_count: number
           id: string
+          images: string[]
           kind: Database["public"]["Enums"]["listing_kind"]
+          location: string | null
           price_cents: number
           seller_id: string
           shipping_mode: string
           shipping_price_cents: number
           slug: string | null
           status: Database["public"]["Enums"]["listing_status"]
+          stock: number | null
           stripe_price_id: string | null
           tags: string[]
           title: string
@@ -286,19 +317,23 @@ export type Database = {
         }
         Insert: {
           category?: string | null
+          condition?: string | null
           cover_url?: string | null
           created_at?: string
           currency?: string
           description?: string | null
           favorites_count?: number
           id?: string
+          images?: string[]
           kind?: Database["public"]["Enums"]["listing_kind"]
+          location?: string | null
           price_cents: number
           seller_id: string
           shipping_mode?: string
           shipping_price_cents?: number
           slug?: string | null
           status?: Database["public"]["Enums"]["listing_status"]
+          stock?: number | null
           stripe_price_id?: string | null
           tags?: string[]
           title: string
@@ -306,19 +341,23 @@ export type Database = {
         }
         Update: {
           category?: string | null
+          condition?: string | null
           cover_url?: string | null
           created_at?: string
           currency?: string
           description?: string | null
           favorites_count?: number
           id?: string
+          images?: string[]
           kind?: Database["public"]["Enums"]["listing_kind"]
+          location?: string | null
           price_cents?: number
           seller_id?: string
           shipping_mode?: string
           shipping_price_cents?: number
           slug?: string | null
           status?: Database["public"]["Enums"]["listing_status"]
+          stock?: number | null
           stripe_price_id?: string | null
           tags?: string[]
           title?: string
@@ -538,6 +577,7 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          banned: boolean
           bio: string | null
           created_at: string
           display_name: string | null
@@ -545,12 +585,12 @@ export type Database = {
           id: string
           onboarding_completed: boolean
           shop_shipping_default: string | null
-          stripe_account_id: string | null
           theme_color: string | null
           updated_at: string
         }
         Insert: {
           avatar_url?: string | null
+          banned?: boolean
           bio?: string | null
           created_at?: string
           display_name?: string | null
@@ -558,12 +598,12 @@ export type Database = {
           id: string
           onboarding_completed?: boolean
           shop_shipping_default?: string | null
-          stripe_account_id?: string | null
           theme_color?: string | null
           updated_at?: string
         }
         Update: {
           avatar_url?: string | null
+          banned?: boolean
           bio?: string | null
           created_at?: string
           display_name?: string | null
@@ -571,9 +611,29 @@ export type Database = {
           id?: string
           onboarding_completed?: boolean
           shop_shipping_default?: string | null
-          stripe_account_id?: string | null
           theme_color?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      seller_payment_accounts: {
+        Row: {
+          created_at: string
+          stripe_account_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          stripe_account_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          stripe_account_id?: string | null
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
