@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { motion } from "motion/react";
-import { Plus, Trash2, Eye, Store, ShoppingBag, TrendingUp, Package, Wallet, ChevronRight, ChevronLeft, Check, Truck } from "lucide-react";
+import { Plus, Trash2, Eye, Store, ShoppingBag, TrendingUp, Package, Wallet, ChevronRight, ChevronLeft, Check, Truck, Heart, X } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
