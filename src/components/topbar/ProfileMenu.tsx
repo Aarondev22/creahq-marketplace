@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { FounderBadge } from "@/components/FounderBadge";
 import { useCart } from "@/lib/cart";
+import { useEffect, useState } from "react";
 
 export function ProfileMenu() {
   const { user, loading, isFounder, isAdmin } = useAuth();
@@ -20,6 +21,29 @@ export function ProfileMenu() {
   const router = useRouter();
   const qc = useQueryClient();
   const { totalCount } = useCart();
+
+  const [displayName, setDisplayName] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        if (!user) {
+          setDisplayName(null);
+          return;
+        }
+        // Try to read profile.display_name from the profiles table (preferred)
+        const { data } = await supabase.from("profiles").select("display_name").eq("id", user.id).maybeSingle();
+        if (!active) return;
+        const name = data?.display_name ?? (user.user_metadata?.display_name as string | undefined) ?? user.email ?? "?";
+        setDisplayName(name);
+      } catch (e) {
+        // fallback
+        setDisplayName((user?.user_metadata?.display_name as string | undefined) ?? user?.email ?? "?");
+      }
+    })();
+    return () => { active = false; };
+  }, [user]);
 
   async function handleSignOut() {
     await qc.cancelQueries();
@@ -29,7 +53,7 @@ export function ProfileMenu() {
     navigate({ to: "/", replace: true });
   }
 
-  const initial = (user?.user_metadata?.display_name ?? user?.email ?? "?").toString().slice(0, 1).toUpperCase();
+  const initial = (displayName ?? "?").toString().slice(0, 1).toUpperCase();
 
   return (
     <DropdownMenu>
@@ -48,7 +72,7 @@ export function ProfileMenu() {
         ) : user ? (
           <>
             <DropdownMenuLabel className="flex flex-col gap-1">
-              <span className="truncate text-sm">{user.email}</span>
+              <span className="truncate text-sm">{displayName}</span>
               {isFounder && <FounderBadge />}
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
