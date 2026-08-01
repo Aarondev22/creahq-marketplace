@@ -24,6 +24,7 @@ function Dashboard() {
   const { roles } = useAuth();
   const [listings, setListings] = useState<MyListing[]>([]);
   const [orders, setOrders] = useState<MyOrder[]>([]);
+  const [favorites, setFavorites] = useState<FavRow[]>([]);
   const [sales, setSales] = useState<MySale[]>([]);
   const [revenueCents, setRevenueCents] = useState(0);
   const [salesCount, setSalesCount] = useState(0);
@@ -37,15 +38,17 @@ function Dashboard() {
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) return;
 
-    const [{ data: l }, { data: o }, { data: items }, mySales] = await Promise.all([
+    const [{ data: l }, { data: o }, { data: items }, { data: favs }, mySales] = await Promise.all([
       supabase.from("listings").select("id,title,price_cents,status,cover_url,created_at").eq("seller_id", u.user.id).order("created_at", { ascending: false }),
       supabase.from("orders").select("id,total_cents,status,created_at").eq("buyer_id", u.user.id).order("created_at", { ascending: false }).limit(10),
       supabase.from("order_items").select("unit_price_cents,qty,created_at").eq("seller_id", u.user.id),
+      supabase.from("favorites").select("id, listing:listings(id,title,price_cents,cover_url)").eq("user_id", u.user.id).not("listing_id", "is", null).order("created_at", { ascending: false }),
       fetchMySales().catch(() => []),
     ]);
 
     setListings((l ?? []) as MyListing[]);
     setOrders((o ?? []) as MyOrder[]);
+    setFavorites((favs ?? []) as unknown as FavRow[]);
     setSales(mySales);
     const rev = (items ?? []).reduce((sum, it) => sum + it.unit_price_cents * it.qty, 0);
     setRevenueCents(rev);
