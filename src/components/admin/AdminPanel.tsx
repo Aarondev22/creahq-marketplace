@@ -170,7 +170,7 @@ function UsersTab() {
     setUsers((arr) => arr.map((x) => (x.id === u.id ? { ...x, banned: !x.banned } : x)));
   }
 
-  async function toggleRole(u: UserRow, role: string) {
+  async function toggleRole(u: UserRow, role: "seller" | "admin" | "founder") {
     const has = u.roles.includes(role);
     if (has) {
       const { error } = await supabase.from("user_roles").delete().eq("user_id", u.id).eq("role", role);
@@ -220,7 +220,7 @@ function UsersTab() {
                 </button>
               </div>
               <div className="mt-2 flex flex-wrap gap-1.5">
-                {["seller", "admin", "founder"].map((role) => (
+                {(["seller", "admin", "founder"] as const).map((role) => (
                   <button
                     key={role}
                     onClick={() => toggleRole(u, role)}

@@ -131,11 +131,12 @@ const KategorieSlugRoute = KategorieSlugRouteImport.update({
   path: '/kategorie/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedNachrichtenRoute = AuthenticatedNachrichtenRouteImport.update({
-  id: '/nachrichten',
-  path: '/nachrichten',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
+const AuthenticatedNachrichtenRoute =
+  AuthenticatedNachrichtenRouteImport.update({
+    id: '/nachrichten',
+    path: '/nachrichten',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',

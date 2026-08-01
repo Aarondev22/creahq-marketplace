@@ -37,12 +37,16 @@ function ListingPage() {
 }
 
 function RealListing({ id }: { id: string }) {
-  const { data: l } = useSuspenseQuery(listingQuery(id));
+  const { data } = useSuspenseQuery(listingQuery(id));
+  if (!data) return <PlaceholderListing id={id} />;
+  return <ListingView l={data} />;
+}
+
+function ListingView({ l }: { l: NonNullable<Awaited<ReturnType<typeof fetchListingById>>> }) {
   const navigate = useNavigate();
   const { addItem } = useCart();
   const [isFav, setIsFav] = useState(false);
 
-  if (!l) return <PlaceholderListing id={id} />;
 
   function handleAddToCart() {
     addItem({ id: l.id, title: l.title, price_cents: l.price_cents, cover_url: l.cover_url });
