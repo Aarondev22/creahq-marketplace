@@ -15,7 +15,8 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 
 type MyListing = { id: string; title: string; price_cents: number; status: string; cover_url: string | null; created_at: string };
 type MyOrder = { id: string; total_cents: number; status: string; created_at: string };
-type Tab = "overview" | "listings" | "orders" | "sales";
+type FavRow = { id: string; listing: { id: string; title: string; price_cents: number; cover_url: string | null } | null };
+type Tab = "overview" | "listings" | "favorites" | "orders" | "sales";
 
 const ROLE_LABELS: Record<string, string> = { buyer: "Käufer", seller: "Verkäufer", admin: "Admin", founder: "Founder" };
 
