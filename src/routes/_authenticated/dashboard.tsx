@@ -117,9 +117,11 @@ function Dashboard() {
       <div className="mt-10 flex flex-wrap gap-1 rounded-full border border-border bg-card p-1 w-fit">
         <TabBtn label="Übersicht" active={tab === "overview"} onClick={() => setTab("overview")} />
         <TabBtn label="Meine Listings" active={tab === "listings"} onClick={() => setTab("listings")} />
+        <TabBtn label={`Favoriten (${favorites.length})`} active={tab === "favorites"} onClick={() => setTab("favorites")} />
         <TabBtn label="Meine Bestellungen" active={tab === "orders"} onClick={() => setTab("orders")} />
         <TabBtn label="Meine Verkäufe" active={tab === "sales"} onClick={() => setTab("sales")} />
       </div>
+
 
       {tab === "overview" && (
         <>
