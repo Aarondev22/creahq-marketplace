@@ -81,7 +81,7 @@ export const searchListings = createServerFn({ method: "GET" })
 export type ListingDetail = ListingCard & {
   description: string | null;
   tags: string[];
-  seller: { handle: string | null; display_name: string | null; avatar_url: string | null } | null;
+  seller: { id: string; handle: string | null; display_name: string | null; avatar_url: string | null } | null;
 };
 
 export const fetchListingById = createServerFn({ method: "GET" })
@@ -97,7 +97,7 @@ export const fetchListingById = createServerFn({ method: "GET" })
     if (!row) return null;
     const { data: seller } = await supa
       .from("profiles")
-      .select("handle,display_name,avatar_url")
+      .select("id,handle,display_name,avatar_url")
       .eq("id", row.seller_id)
       .maybeSingle();
     return { ...(row as ListingCard & { description: string | null; tags: string[] }), seller: seller ?? null };

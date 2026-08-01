@@ -23,7 +23,6 @@ function ContactPage() {
     };
     if (!payload.name || !payload.email || !payload.message) return;
     setLoading(true);
-    // @ts-expect-error table type generated after next migration sync
     const { error } = await supabase.from("contact_messages").insert(payload);
     setLoading(false);
     if (error) {
