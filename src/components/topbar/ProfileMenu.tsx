@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -62,7 +63,8 @@ export function ProfileMenu() {
         ) : user ? (
           <>
             <DropdownMenuLabel className="flex flex-col gap-1">
-              <span className="truncate text-sm">{user.email}</span>
+              <span className="truncate text-sm font-bold text-brand-ink">{shownName}</span>
+              {shownName !== user.email && <span className="truncate text-[11px] font-normal text-muted-foreground">{user.email}</span>}
               {isFounder && <FounderBadge />}
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
