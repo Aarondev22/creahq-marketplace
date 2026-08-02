@@ -20,6 +20,19 @@ export function ProfileMenu() {
   const router = useRouter();
   const qc = useQueryClient();
   const { totalCount } = useCart();
+  const [displayName, setDisplayName] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    if (!user) { setDisplayName(null); return; }
+    supabase
+      .from("profiles")
+      .select("display_name")
+      .eq("id", user.id)
+      .maybeSingle()
+      .then(({ data }) => { if (active) setDisplayName(data?.display_name ?? null); });
+    return () => { active = false; };
+  }, [user?.id]);
 
   async function handleSignOut() {
     await qc.cancelQueries();
@@ -29,7 +42,8 @@ export function ProfileMenu() {
     navigate({ to: "/", replace: true });
   }
 
-  const initial = (user?.user_metadata?.display_name ?? user?.email ?? "?").toString().slice(0, 1).toUpperCase();
+  const shownName = displayName ?? (user?.user_metadata?.display_name as string | undefined) ?? user?.email ?? "";
+  const initial = (shownName || "?").toString().slice(0, 1).toUpperCase();
 
   return (
     <DropdownMenu>
