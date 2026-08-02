@@ -91,7 +91,7 @@ function ListingView({ l }: { l: NonNullable<Awaited<ReturnType<typeof fetchList
     try {
       const sellerId = (l as any).seller_id ?? l.seller?.id;
       if (!sellerId) throw new Error("Keine Verkäufer-ID gefunden");
-      const convId = await getOrCreateConversation(sellerId);
+      const convId = await getOrCreateConversation(sellerId, l.id);
       navigate({ to: "/nachrichten", search: { c: convId } });
     } catch (err: any) {
       toast.error(err?.message ?? "Unbekannter Fehler beim Chat öffnen");
