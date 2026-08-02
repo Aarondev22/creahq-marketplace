@@ -56,7 +56,15 @@ export function SiteTranslator() {
       document.documentElement.lang = lang;
 
       if (lang === SOURCE_LANG) {
-        recs.forEach((r) => { if (r.node.nodeValue !== r.original) r.node.nodeValue = r.original; });
+        // Nur zurücksetzen, wenn vorher wirklich übersetzt wurde — sonst würden
+        // legitime UI-Text-Updates (z.B. Theme-Name) überschrieben.
+        if (translatedRef.current.size > 0) {
+          recs.forEach((r) => {
+            if (translatedRef.current.has(r.node) && r.node.nodeValue !== r.original) r.node.nodeValue = r.original;
+          });
+          translatedRef.current = new WeakSet<Text>();
+          translatedCountRef.current = 0;
+        }
         return;
       }
 
