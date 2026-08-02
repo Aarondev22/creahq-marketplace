@@ -3,6 +3,7 @@ import { motion } from "motion/react";
 import { X, Minus, GripHorizontal, Users, Store, Tag, Star, Megaphone, BarChart3, Search, Ban, ShieldCheck, ArrowUp, ArrowDown, Trash2, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import type { AppRole } from "@/hooks/useAuth";
 
 type Tab = "overview" | "users" | "shops" | "codes" | "featured" | "broadcast" | "disputes";
 
