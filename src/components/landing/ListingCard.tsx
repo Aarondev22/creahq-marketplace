@@ -14,7 +14,7 @@ export function ListingCard({ l }: { l: TListing }) {
           <h3 className="mt-0.5 line-clamp-2 font-display text-sm font-bold text-brand-ink">{l.title}</h3>
           <div className="mt-2 flex items-center justify-between">
             <span className="rounded-full bg-brand/10 px-2 py-0.5 text-xs font-bold text-brand">{(l.price_cents/100).toFixed(2)} €</span>
-            <span className="text-[10px] text-muted-foreground">{l.kind === "digital" ? "Digital" : "Service"}</span>
+            <span className="text-[10px] text-muted-foreground">{l.kind === "digital" ? "Digital" : "Physisch"}</span>
           </div>
         </div>
       </Link>
