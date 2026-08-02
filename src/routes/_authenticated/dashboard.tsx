@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { motion } from "motion/react";
-import { Plus, Trash2, Eye, Store, ShoppingBag, TrendingUp, Package, Wallet, ChevronRight, ChevronLeft, Check, Truck, Heart, X } from "lucide-react";
+import { Plus, Trash2, Eye, Store, ShoppingBag, TrendingUp, Package, Wallet, ChevronRight, ChevronLeft, Check, Truck, Heart, X, ImagePlus } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -454,7 +454,7 @@ function ListingWizard({ onClose, onCreated }: { onClose: () => void; onCreated:
             <input required type="number" step="0.01" min="0" placeholder="Preis €" value={data.price} onChange={(e) => update("price", e.target.value)} className="rounded-full border border-border bg-background px-4 py-2.5 text-sm focus:border-brand focus:outline-none" />
             <select value={data.kind} onChange={(e) => update("kind", e.target.value as "digital" | "service")} className="rounded-full border border-border bg-background px-4 py-2.5 text-sm focus:border-brand focus:outline-none">
               <option value="digital">Digital</option>
-              <option value="service">Service</option>
+              <option value="service">Physisch</option>
             </select>
           </div>
           {data.kind === "digital" ? (
@@ -462,7 +462,7 @@ function ListingWizard({ onClose, onCreated }: { onClose: () => void; onCreated:
           ) : (
             <div className="grid gap-3 sm:grid-cols-2">
               <select value={data.shippingMode} onChange={(e) => update("shippingMode", e.target.value as WizardData["shippingMode"])} className="rounded-full border border-border bg-background px-4 py-2.5 text-sm focus:border-brand focus:outline-none">
-                <option value="digital">Kein Versand (Service)</option>
+                <option value="digital">Kein Versand</option>
                 <option value="included">Versand inklusive</option>
                 <option value="extra">Versand extra</option>
               </select>
@@ -479,13 +479,18 @@ function ListingWizard({ onClose, onCreated }: { onClose: () => void; onCreated:
           <h3 className="font-display text-xl font-bold text-brand-ink">Bilder & Details</h3>
           <div>
             <label className="mb-1 block text-xs font-bold uppercase tracking-widest text-muted-foreground">Bilder (erstes = Titelbild, max. 8)</label>
-            <input
-              type="file"
-              accept="image/*"
-              multiple
-              onChange={(e) => update("files", [...data.files, ...Array.from(e.target.files ?? [])].slice(0, 8))}
-              className="block w-full text-sm"
-            />
+            <label className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-brand px-5 py-2.5 text-sm font-bold text-primary-foreground transition-transform hover:scale-105">
+              <ImagePlus className="h-4 w-4" />
+              Bilder auswählen
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={(e) => update("files", [...data.files, ...Array.from(e.target.files ?? [])].slice(0, 8))}
+                className="sr-only"
+              />
+            </label>
+            <span className="ml-3 text-xs text-muted-foreground">{data.files.length > 0 ? `${data.files.length} ausgewählt` : "Noch keine Bilder"}</span>
           </div>
           {data.files.length > 0 && (
             <div className="flex flex-wrap gap-2">
@@ -523,7 +528,7 @@ function ListingWizard({ onClose, onCreated }: { onClose: () => void; onCreated:
           <div className="rounded-2xl bg-surface p-4 text-sm space-y-1">
             <div><strong>{data.title || "—"}</strong></div>
             <div className="text-muted-foreground">{data.description || "Keine Beschreibung"}</div>
-            <div>Preis: <strong>{data.price} €</strong> · {data.kind === "digital" ? "Digital" : "Service"}</div>
+            <div>Preis: <strong>{data.price} €</strong> · {data.kind === "digital" ? "Digital" : "Physisch"}</div>
             <div>Bilder: {data.files.length} · Zustand: {data.condition}{data.location ? ` · ${data.location}` : ""}{data.stock ? ` · ${data.stock} Stück` : ""}</div>
             {data.kind === "service" && <div>Versand: {data.shippingMode}{data.shippingMode === "extra" ? ` (${data.shippingPrice} €)` : ""}</div>}
           </div>

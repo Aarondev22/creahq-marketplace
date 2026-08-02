@@ -20,18 +20,19 @@ export type ChatMessage = {
   created_at: string;
 };
 
-/** Findet den bestehenden Thread zwischen dir und einem Verkäufer, oder legt einen neuen an. */
+/** Ein Chat pro Produkt: findet den Thread zu diesem Verkäufer + Produkt, oder legt ihn an. */
 export async function getOrCreateConversation(sellerId: string, listingId?: string) {
   const { data: u } = await supabase.auth.getUser();
   if (!u.user) throw new Error("Nicht eingeloggt");
   if (u.user.id === sellerId) throw new Error("Du kannst dir nicht selbst schreiben");
 
-  const { data: existing } = await supabase
+  let q = supabase
     .from("conversations")
     .select("id")
     .eq("buyer_id", u.user.id)
-    .eq("seller_id", sellerId)
-    .maybeSingle();
+    .eq("seller_id", sellerId);
+  q = listingId ? q.eq("listing_id", listingId) : q.is("listing_id", null);
+  const { data: existing } = await q.maybeSingle();
 
   if (existing) return existing.id;
 

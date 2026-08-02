@@ -141,6 +141,11 @@ function UsersTab() {
   const [q, setQ] = useState("");
   const [users, setUsers] = useState<UserRow[]>([]);
   const [loading, setLoading] = useState(false);
+  const [myId, setMyId] = useState<string | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setMyId(data.user?.id ?? null));
+  }, []);
 
   async function search() {
     setLoading(true);
@@ -164,6 +169,7 @@ function UsersTab() {
   useEffect(() => { search(); }, []);
 
   async function toggleBan(u: UserRow) {
+    if (myId && u.id === myId) return toast.error("Du kannst dich nicht selbst sperren.");
     const { error } = await supabase.from("profiles").update({ banned: !u.banned }).eq("id", u.id);
     if (error) return toast.error(error.message);
     toast.success(u.banned ? "Entsperrt" : "Gesperrt");
@@ -172,6 +178,9 @@ function UsersTab() {
 
   async function toggleRole(u: UserRow, role: "seller" | "admin" | "founder") {
     const has = u.roles.includes(role);
+    if (has && myId && u.id === myId && (role === "admin" || role === "founder")) {
+      return toast.error("Du kannst dir deine eigenen Admin-/Founder-Rechte nicht entziehen.");
+    }
     if (has) {
       const { error } = await supabase.from("user_roles").delete().eq("user_id", u.id).eq("role", role);
       if (error) return toast.error(error.message);
@@ -181,6 +190,7 @@ function UsersTab() {
     }
     setUsers((arr) => arr.map((x) => (x.id === u.id ? { ...x, roles: has ? x.roles.filter((r) => r !== role) : [...x.roles, role] } : x)));
   }
+
 
   return (
     <div className="space-y-3">

@@ -16,6 +16,8 @@ export function SiteTranslator() {
   const translateFn = useServerFn(translateBatch);
   const runIdRef = useRef(0);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const translatedRef = useRef<WeakSet<Text>>(new WeakSet<Text>());
+  const translatedCountRef = useRef(0);
 
   useEffect(() => {
     const run = async () => {
@@ -56,7 +58,15 @@ export function SiteTranslator() {
       document.documentElement.lang = lang;
 
       if (lang === SOURCE_LANG) {
-        recs.forEach((r) => { if (r.node.nodeValue !== r.original) r.node.nodeValue = r.original; });
+        // Nur zurücksetzen, wenn vorher wirklich übersetzt wurde — sonst würden
+        // legitime UI-Text-Updates (z.B. Theme-Name) überschrieben.
+        if (translatedCountRef.current > 0) {
+          recs.forEach((r) => {
+            if (translatedRef.current.has(r.node) && r.node.nodeValue !== r.original) r.node.nodeValue = r.original;
+          });
+          translatedRef.current = new WeakSet<Text>();
+          translatedCountRef.current = 0;
+        }
         return;
       }
 
@@ -70,7 +80,11 @@ export function SiteTranslator() {
         if (!key) continue;
         const cached = cache[key];
         if (cached) {
-          if (r.node.nodeValue !== cached) r.node.nodeValue = preserveWhitespace(r.original, cached);
+          if (r.node.nodeValue !== cached) {
+            r.node.nodeValue = preserveWhitespace(r.original, cached);
+            translatedRef.current.add(r.node);
+            translatedCountRef.current++;
+          }
         } else {
           misses.add(key);
         }
@@ -90,7 +104,11 @@ export function SiteTranslator() {
           for (const r of nodesRef.current) {
             const key = r.original.trim();
             const t = cache[key];
-            if (t && r.node.nodeValue !== t) r.node.nodeValue = preserveWhitespace(r.original, t);
+            if (t && r.node.nodeValue !== t) {
+              r.node.nodeValue = preserveWhitespace(r.original, t);
+              translatedRef.current.add(r.node);
+              translatedCountRef.current++;
+            }
           }
         } catch (e) {
           console.warn("translate chunk failed", e);
