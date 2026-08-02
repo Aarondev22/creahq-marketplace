@@ -141,11 +141,6 @@ function UsersTab() {
   const [q, setQ] = useState("");
   const [users, setUsers] = useState<UserRow[]>([]);
   const [loading, setLoading] = useState(false);
-  const [myId, setMyId] = useState<string | null>(null);
-
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setMyId(data.user?.id ?? null));
-  }, []);
 
   async function search() {
     setLoading(true);
@@ -159,7 +154,6 @@ function UsersTab() {
 
     const rows: UserRow[] = (profiles ?? []).map((p) => ({
       ...p,
-      banned: p.banned ?? false,
       roles: (roles ?? []).filter((r) => r.user_id === p.id).map((r) => r.role),
     }));
     setUsers(rows);
@@ -169,18 +163,14 @@ function UsersTab() {
   useEffect(() => { search(); }, []);
 
   async function toggleBan(u: UserRow) {
-    if (myId && u.id === myId) return toast.error("Du kannst dich nicht selbst sperren.");
     const { error } = await supabase.from("profiles").update({ banned: !u.banned }).eq("id", u.id);
     if (error) return toast.error(error.message);
     toast.success(u.banned ? "Entsperrt" : "Gesperrt");
     setUsers((arr) => arr.map((x) => (x.id === u.id ? { ...x, banned: !x.banned } : x)));
   }
 
-  async function toggleRole(u: UserRow, role: "seller" | "admin" | "founder") {
+  async function toggleRole(u: UserRow, role: string) {
     const has = u.roles.includes(role);
-    if (has && myId && u.id === myId && (role === "admin" || role === "founder")) {
-      return toast.error("Du kannst dir deine eigenen Admin-/Founder-Rechte nicht entziehen.");
-    }
     if (has) {
       const { error } = await supabase.from("user_roles").delete().eq("user_id", u.id).eq("role", role);
       if (error) return toast.error(error.message);
@@ -190,7 +180,6 @@ function UsersTab() {
     }
     setUsers((arr) => arr.map((x) => (x.id === u.id ? { ...x, roles: has ? x.roles.filter((r) => r !== role) : [...x.roles, role] } : x)));
   }
-
 
   return (
     <div className="space-y-3">
@@ -213,13 +202,10 @@ function UsersTab() {
       ) : (
         <ul className="space-y-2">
           {users.map((u) => (
-            <li key={u.id} className={`rounded-xl border p-3 ${u.banned ? "border-red-300 bg-red-50/50" : "border-border bg-surface"}`}>
+            <li key={u.id} className="rounded-xl border border-border bg-surface p-3">
               <div className="flex items-center justify-between gap-2">
                 <div className="min-w-0">
-                  <div className="truncate text-sm font-semibold text-brand-ink">
-                    {u.display_name ?? "Unbenannt"}
-                    {u.banned && <span className="ml-2 text-[10px] font-bold uppercase text-red-600">Gesperrt</span>}
-                  </div>
+                  <div className="truncate text-sm font-semibold text-brand-ink">{u.display_name ?? "Unbenannt"}</div>
                   <div className="truncate text-xs text-muted-foreground">@{u.handle ?? "—"}</div>
                 </div>
                 <button
@@ -230,7 +216,7 @@ function UsersTab() {
                 </button>
               </div>
               <div className="mt-2 flex flex-wrap gap-1.5">
-                {(["seller", "admin", "founder"] as const).map((role) => (
+                {["seller", "admin", "founder"].map((role) => (
                   <button
                     key={role}
                     onClick={() => toggleRole(u, role)}
@@ -441,7 +427,7 @@ function CodesTab() {
   return (
     <form onSubmit={create} className="space-y-3">
       <div className="text-sm font-semibold text-brand-ink">Neuen globalen Rabatt-Code anlegen</div>
-      <input value={code} onChange={(e) => setCode(e.target.value)} placeholder="SUMMER10" className="w-full rounded-lg border border-border bg-surface px-3 py-2 font-mono text-sm" required />
+      <input value={code} onChange={(e) => setCode(e.target.value)} placeholder="Code eingeben" className="w-full rounded-lg border border-border bg-surface px-3 py-2 font-mono text-sm" required />
       <div className="flex gap-2">
         <select value={kind} onChange={(e) => setKind(e.target.value as never)} className="rounded-lg border border-border bg-surface px-3 py-2 text-sm">
           <option value="percent">Prozent</option>
