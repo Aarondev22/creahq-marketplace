@@ -16,6 +16,8 @@ export function SiteTranslator() {
   const translateFn = useServerFn(translateBatch);
   const runIdRef = useRef(0);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const translatedRef = useRef<WeakSet<Text>>(new WeakSet<Text>());
+  const translatedCountRef = useRef(0);
 
   useEffect(() => {
     const run = async () => {
