@@ -65,7 +65,7 @@ function RedeemPage() {
             <input
               value={code}
               onChange={(e) => setCode(e.target.value)}
-              placeholder="z.B. CREAHQ-FOUNDER-XXXXXXXXXXXX"
+              placeholder="Code eingeben"
               className="mt-5 w-full rounded-xl border border-border bg-surface px-4 py-3 font-mono text-sm uppercase tracking-wider text-brand-ink focus:border-brand focus:outline-none"
               autoFocus
             />
