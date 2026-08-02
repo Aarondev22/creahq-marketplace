@@ -60,7 +60,7 @@ export function SiteTranslator() {
       if (lang === SOURCE_LANG) {
         // Nur zurücksetzen, wenn vorher wirklich übersetzt wurde — sonst würden
         // legitime UI-Text-Updates (z.B. Theme-Name) überschrieben.
-        if (translatedRef.current.size > 0) {
+        if (translatedCountRef.current > 0) {
           recs.forEach((r) => {
             if (translatedRef.current.has(r.node) && r.node.nodeValue !== r.original) r.node.nodeValue = r.original;
           });
@@ -80,7 +80,11 @@ export function SiteTranslator() {
         if (!key) continue;
         const cached = cache[key];
         if (cached) {
-          if (r.node.nodeValue !== cached) r.node.nodeValue = preserveWhitespace(r.original, cached);
+          if (r.node.nodeValue !== cached) {
+            r.node.nodeValue = preserveWhitespace(r.original, cached);
+            translatedRef.current.add(r.node);
+            translatedCountRef.current++;
+          }
         } else {
           misses.add(key);
         }
@@ -100,7 +104,11 @@ export function SiteTranslator() {
           for (const r of nodesRef.current) {
             const key = r.original.trim();
             const t = cache[key];
-            if (t && r.node.nodeValue !== t) r.node.nodeValue = preserveWhitespace(r.original, t);
+            if (t && r.node.nodeValue !== t) {
+              r.node.nodeValue = preserveWhitespace(r.original, t);
+              translatedRef.current.add(r.node);
+              translatedCountRef.current++;
+            }
           }
         } catch (e) {
           console.warn("translate chunk failed", e);
