@@ -226,7 +226,7 @@ function UsersTab() {
                 </button>
               </div>
               <div className="mt-2 flex flex-wrap gap-1.5">
-                {["seller", "admin", "founder"].map((role) => (
+                {(["seller", "admin", "founder"] as AppRole[]).map((role) => (
                   <button
                     key={role}
                     onClick={() => toggleRole(u, role)}
