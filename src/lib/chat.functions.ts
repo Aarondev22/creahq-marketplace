@@ -20,19 +20,17 @@ export type ChatMessage = {
   created_at: string;
 };
 
-/** Ein Chat pro Produkt: findet den Thread zu diesem Verkäufer + Produkt, oder legt ihn an. */
 export async function getOrCreateConversation(sellerId: string, listingId?: string) {
   const { data: u } = await supabase.auth.getUser();
   if (!u.user) throw new Error("Nicht eingeloggt");
   if (u.user.id === sellerId) throw new Error("Du kannst dir nicht selbst schreiben");
 
-  let q = supabase
+  const { data: existing } = await supabase
     .from("conversations")
     .select("id")
     .eq("buyer_id", u.user.id)
-    .eq("seller_id", sellerId);
-  q = listingId ? q.eq("listing_id", listingId) : q.is("listing_id", null);
-  const { data: existing } = await q.maybeSingle();
+    .eq("seller_id", sellerId)
+    .maybeSingle();
 
   if (existing) return existing.id;
 
@@ -51,25 +49,36 @@ export async function fetchConversations(): Promise<Conversation[]> {
   if (!u.user) return [];
   const myId = u.user.id;
 
-  const { data, error } = await supabase
+  const { data: convs, error } = await supabase
     .from("conversations")
-    .select("id,buyer_id,seller_id,listing_id,last_message_at, listings(title), profiles!conversations_buyer_id_fkey(display_name), seller:profiles!conversations_seller_id_fkey(display_name)")
+    .select("id,buyer_id,seller_id,listing_id,last_message_at")
     .or(`buyer_id.eq.${myId},seller_id.eq.${myId}`)
     .order("last_message_at", { ascending: false });
 
   if (error) throw error;
+  if (!convs || convs.length === 0) return [];
 
-  return (data ?? []).map((c: any) => {
-    const iAmBuyer = c.buyer_id === myId;
+  const otherIds = Array.from(new Set(convs.map((c) => (c.buyer_id === myId ? c.seller_id : c.buyer_id))));
+  const listingIds = Array.from(new Set(convs.map((c) => c.listing_id).filter(Boolean))) as string[];
+
+  const [{ data: profiles }, { data: listings }] = await Promise.all([
+    supabase.from("profiles").select("id,display_name").in("id", otherIds.length ? otherIds : ["-"]),
+    supabase.from("listings").select("id,title").in("id", listingIds.length ? listingIds : ["-"]),
+  ]);
+
+  return convs.map((c) => {
+    const otherId = c.buyer_id === myId ? c.seller_id : c.buyer_id;
+    const profile = (profiles ?? []).find((p) => p.id === otherId);
+    const listing = (listings ?? []).find((l) => l.id === c.listing_id);
     return {
       id: c.id,
       buyer_id: c.buyer_id,
       seller_id: c.seller_id,
       listing_id: c.listing_id,
       last_message_at: c.last_message_at,
-      other_id: iAmBuyer ? c.seller_id : c.buyer_id,
-      other_name: (iAmBuyer ? c.seller?.display_name : c.profiles?.display_name) ?? "Unbekannt",
-      listing_title: c.listings?.title ?? null,
+      other_id: otherId,
+      other_name: profile?.display_name ?? "Unbekannt",
+      listing_title: listing?.title ?? null,
     };
   });
 }
