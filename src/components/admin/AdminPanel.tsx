@@ -7,6 +7,8 @@ import type { AppRole } from "@/hooks/useAuth";
 
 type Tab = "overview" | "users" | "shops" | "codes" | "featured" | "broadcast" | "disputes";
 
+const POS_KEY = "creahq-admin-panel-pos";
+
 export function AdminPanel({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [minimized, setMinimized] = useState(false);
   const [tab, setTab] = useState<Tab>("overview");
@@ -14,25 +16,77 @@ export function AdminPanel({ open, onClose }: { open: boolean; onClose: () => vo
   const [size, setSize] = useState({ w: 720, h: 520 });
   const dragRef = useRef<{ startX: number; startY: number; origX: number; origY: number } | null>(null);
   const resizeRef = useRef<{ startX: number; startY: number; origW: number; origH: number } | null>(null);
+  const sizeRef = useRef(size);
+  sizeRef.current = size;
+  const posRef = useRef(pos);
+  posRef.current = pos;
+
+  // Gespeicherte Position laden
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(POS_KEY);
+      if (raw) {
+        const saved = JSON.parse(raw) as { x: number; y: number; w?: number; h?: number };
+        if (typeof saved.x === "number" && typeof saved.y === "number") setPos({ x: saved.x, y: saved.y });
+        if (saved.w && saved.h) setSize({ w: saved.w, h: saved.h });
+      }
+    } catch { /* ignore */ }
+  }, []);
+
+  function clamp(x: number, y: number) {
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const w = sizeRef.current.w;
+    const margin = 80; // mindestens so viel bleibt sichtbar
+    return {
+      x: Math.min(Math.max(x, margin - w), vw - margin),
+      y: Math.min(Math.max(y, 0), vh - 48),
+    };
+  }
 
   useEffect(() => {
-    function onMove(e: MouseEvent) {
+    function apply(clientX: number, clientY: number) {
       if (dragRef.current) {
-        setPos({
-          x: Math.max(0, dragRef.current.origX + e.clientX - dragRef.current.startX),
-          y: Math.max(0, dragRef.current.origY + e.clientY - dragRef.current.startY),
-        });
+        setPos(clamp(dragRef.current.origX + clientX - dragRef.current.startX, dragRef.current.origY + clientY - dragRef.current.startY));
       } else if (resizeRef.current) {
         setSize({
-          w: Math.max(360, resizeRef.current.origW + e.clientX - resizeRef.current.startX),
-          h: Math.max(300, resizeRef.current.origH + e.clientY - resizeRef.current.startY),
+          w: Math.max(320, Math.min(window.innerWidth - 16, resizeRef.current.origW + clientX - resizeRef.current.startX)),
+          h: Math.max(300, Math.min(window.innerHeight - 16, resizeRef.current.origH + clientY - resizeRef.current.startY)),
         });
       }
     }
-    function onUp() { dragRef.current = null; resizeRef.current = null; }
+    function onMove(e: MouseEvent) { apply(e.clientX, e.clientY); }
+    function onTouchMove(e: TouchEvent) {
+      if (!dragRef.current && !resizeRef.current) return;
+      e.preventDefault();
+      const t = e.touches[0];
+      if (t) apply(t.clientX, t.clientY);
+    }
+    function onUp() {
+      if (dragRef.current || resizeRef.current) {
+        try {
+          localStorage.setItem(POS_KEY, JSON.stringify({ ...posRef.current, ...sizeRef.current }));
+        } catch { /* ignore */ }
+      }
+      dragRef.current = null;
+      resizeRef.current = null;
+    }
+    function onResizeWindow() { setPos((p) => clamp(p.x, p.y)); }
+
     window.addEventListener("mousemove", onMove);
     window.addEventListener("mouseup", onUp);
-    return () => { window.removeEventListener("mousemove", onMove); window.removeEventListener("mouseup", onUp); };
+    window.addEventListener("touchmove", onTouchMove, { passive: false });
+    window.addEventListener("touchend", onUp);
+    window.addEventListener("touchcancel", onUp);
+    window.addEventListener("resize", onResizeWindow);
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+      window.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("touchend", onUp);
+      window.removeEventListener("touchcancel", onUp);
+      window.removeEventListener("resize", onResizeWindow);
+    };
   }, []);
 
   if (!open) return null;
@@ -41,32 +95,41 @@ export function AdminPanel({ open, onClose }: { open: boolean; onClose: () => vo
     return (
       <button
         onClick={() => setMinimized(false)}
-        className="fixed bottom-4 right-4 z-50 flex items-center gap-2 rounded-full bg-brand px-4 py-2.5 text-sm font-bold text-primary-foreground shadow-xl"
+        className="fixed bottom-4 right-4 z-50 flex min-h-12 items-center gap-2 rounded-full bg-brand px-5 text-sm font-bold text-primary-foreground shadow-xl"
       >
         <BarChart3 className="h-4 w-4" /> Admin-Panel
       </button>
     );
   }
 
+  function startDrag(clientX: number, clientY: number) {
+    dragRef.current = { startX: clientX, startY: clientY, origX: pos.x, origY: pos.y };
+  }
+  function startResize(clientX: number, clientY: number) {
+    resizeRef.current = { startX: clientX, startY: clientY, origW: size.w, origH: size.h };
+  }
+
   return (
     <motion.div
       initial={{ scale: 0.9, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
-      style={{ left: pos.x, top: pos.y, width: size.w, height: size.h }}
+      style={{ left: pos.x, top: pos.y, width: size.w, height: size.h, maxWidth: "100vw", maxHeight: "100vh" }}
       className="fixed z-50 flex flex-col overflow-hidden rounded-2xl border-2 border-brand bg-card shadow-2xl"
     >
       <div
-        onMouseDown={(e) => { dragRef.current = { startX: e.clientX, startY: e.clientY, origX: pos.x, origY: pos.y }; }}
-        className="flex cursor-move items-center justify-between border-b border-border bg-gradient-to-r from-brand to-fuchsia-600 px-4 py-2 text-white"
+        onMouseDown={(e) => startDrag(e.clientX, e.clientY)}
+        onTouchStart={(e) => { const t = e.touches[0]; if (t) startDrag(t.clientX, t.clientY); }}
+        style={{ touchAction: "none" }}
+        className="flex cursor-move select-none items-center justify-between border-b border-border bg-gradient-to-r from-brand to-fuchsia-600 px-4 py-3 text-white"
       >
         <div className="flex items-center gap-2 text-sm font-bold"><GripHorizontal className="h-4 w-4" /> CreaHQ Admin</div>
         <div className="flex items-center gap-1">
-          <button onClick={() => setMinimized(true)} className="rounded p-1 hover:bg-white/20"><Minus className="h-4 w-4" /></button>
-          <button onClick={onClose} className="rounded p-1 hover:bg-white/20"><X className="h-4 w-4" /></button>
+          <button aria-label="Minimieren" onClick={() => setMinimized(true)} className="grid h-10 w-10 place-items-center rounded-lg hover:bg-white/20"><Minus className="h-4 w-4" /></button>
+          <button aria-label="Schließen" onClick={onClose} className="grid h-10 w-10 place-items-center rounded-lg hover:bg-white/20"><X className="h-4 w-4" /></button>
         </div>
       </div>
       <div className="flex flex-1 overflow-hidden">
-        <div className="flex w-44 shrink-0 flex-col gap-0.5 border-r border-border bg-surface p-2">
+        <div className="flex w-44 shrink-0 flex-col gap-0.5 overflow-y-auto border-r border-border bg-surface p-2">
           <TabBtn icon={<BarChart3 className="h-4 w-4" />} label="Übersicht" active={tab === "overview"} onClick={() => setTab("overview")} />
           <TabBtn icon={<Users className="h-4 w-4" />} label="Nutzer" active={tab === "users"} onClick={() => setTab("users")} />
           <TabBtn icon={<Store className="h-4 w-4" />} label="Shops" active={tab === "shops"} onClick={() => setTab("shops")} />
@@ -75,7 +138,7 @@ export function AdminPanel({ open, onClose }: { open: boolean; onClose: () => vo
           <TabBtn icon={<Star className="h-4 w-4" />} label="Featured" active={tab === "featured"} onClick={() => setTab("featured")} />
           <TabBtn icon={<Megaphone className="h-4 w-4" />} label="Broadcast" active={tab === "broadcast"} onClick={() => setTab("broadcast")} />
         </div>
-        <div className="flex-1 overflow-auto p-4">
+        <div className="flex-1 overflow-y-auto overscroll-contain p-4">
           {tab === "overview" && <OverviewTab />}
           {tab === "users" && <UsersTab />}
           {tab === "shops" && <ShopsTab />}
@@ -86,8 +149,10 @@ export function AdminPanel({ open, onClose }: { open: boolean; onClose: () => vo
         </div>
       </div>
       <div
-        onMouseDown={(e) => { resizeRef.current = { startX: e.clientX, startY: e.clientY, origW: size.w, origH: size.h }; }}
-        className="absolute bottom-0 right-0 h-4 w-4 cursor-nwse-resize bg-gradient-to-br from-transparent to-brand/40"
+        onMouseDown={(e) => startResize(e.clientX, e.clientY)}
+        onTouchStart={(e) => { const t = e.touches[0]; if (t) startResize(t.clientX, t.clientY); }}
+        style={{ touchAction: "none" }}
+        className="absolute bottom-0 right-0 h-6 w-6 cursor-nwse-resize bg-gradient-to-br from-transparent to-brand/40"
       />
     </motion.div>
   );
@@ -95,11 +160,12 @@ export function AdminPanel({ open, onClose }: { open: boolean; onClose: () => vo
 
 function TabBtn({ icon, label, active, onClick }: { icon: React.ReactNode; label: string; active: boolean; onClick: () => void }) {
   return (
-    <button onClick={onClick} className={`flex items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors ${active ? "bg-brand text-primary-foreground" : "text-brand-ink hover:bg-card"}`}>
+    <button onClick={onClick} className={`flex min-h-11 items-center gap-2 rounded-lg px-3 text-left text-sm font-medium transition-colors ${active ? "bg-brand text-primary-foreground" : "text-brand-ink hover:bg-card"}`}>
       {icon}{label}
     </button>
   );
 }
+
 
 function OverviewTab() {
   const [stats, setStats] = useState<{ users?: number; listings?: number; orders?: number; disputes?: number }>({});

@@ -1,10 +1,10 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useSuspenseQuery, queryOptions } from "@tanstack/react-query";
+import { useSuspenseQuery, useQuery, queryOptions } from "@tanstack/react-query";
 import { motion } from "motion/react";
-import { ArrowLeft, Heart, Share2, Shield, Truck, Download, MessageCircle, Star } from "lucide-react";
+import { ArrowLeft, Heart, Share2, Shield, Truck, Download, MessageCircle, Star, Package } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchListingById } from "@/lib/listings.functions";
+import { fetchListingById, fetchRelatedListings, type ListingCard } from "@/lib/listings.functions";
 import { getOrCreateConversation } from "@/lib/chat.functions";
 import { useCart } from "@/lib/cart";
 import { toast } from "sonner";
@@ -24,7 +24,14 @@ export const Route = createFileRoute("/listing/$id")({
     await context.queryClient.ensureQueryData(listingQuery(params.id));
   },
   head: () => ({
-    meta: [{ title: "Listing — CreaHQ" }, { name: "description", content: "Listing-Details auf CreaHQ." }],
+    meta: [
+      { title: "Listing — CreaHQ" },
+      { name: "description", content: "Listing-Details auf CreaHQ." },
+      { property: "og:title", content: "Listing — CreaHQ" },
+      { property: "og:description", content: "Listing-Details auf CreaHQ." },
+      { property: "og:type", content: "product" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
   }),
   component: ListingPage,
   errorComponent: ({ error }) => <div className="p-10 text-center text-sm text-muted-foreground">{error.message}</div>,
@@ -33,6 +40,7 @@ export const Route = createFileRoute("/listing/$id")({
 
 function ListingPage() {
   const { id } = Route.useParams();
+  useEffect(() => { window.scrollTo(0, 0); }, [id]);
   if (isPlaceholder(id)) return <PlaceholderListing id={id} />;
   return <RealListing id={id} />;
 }
@@ -48,6 +56,10 @@ function ListingView({ l }: { l: NonNullable<Awaited<ReturnType<typeof fetchList
   const { addItem } = useCart();
   const [isFav, setIsFav] = useState(false);
   const [favId, setFavId] = useState<string | null>(null);
+
+  const gallery = (l.images ?? []).filter(Boolean);
+  const allImages = gallery.length > 0 ? gallery : l.cover_url ? [l.cover_url] : [];
+  const [activeImg, setActiveImg] = useState(0);
 
   useEffect(() => {
     let active = true;
@@ -89,12 +101,12 @@ function ListingView({ l }: { l: NonNullable<Awaited<ReturnType<typeof fetchList
 
   async function handleOpenChat() {
     try {
-      const sellerId = (l as any).seller_id ?? l.seller?.id;
+      const sellerId = l.seller_id ?? l.seller?.id;
       if (!sellerId) throw new Error("Keine Verkäufer-ID gefunden");
       const convId = await getOrCreateConversation(sellerId, l.id);
       navigate({ to: "/nachrichten", search: { c: convId } });
-    } catch (err: any) {
-      toast.error(err?.message ?? "Unbekannter Fehler beim Chat öffnen");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Unbekannter Fehler beim Chat öffnen");
     }
   }
 
@@ -107,13 +119,46 @@ function ListingView({ l }: { l: NonNullable<Awaited<ReturnType<typeof fetchList
     }
   }
 
+  const isDigital = l.kind === "digital";
+  const shippingLabel = isDigital
+    ? "Kein Versand — sofort verfügbar"
+    : l.shipping_mode === "extra"
+      ? `${(l.shipping_price_cents / 100).toFixed(2)} € Versand`
+      : "Versand inklusive";
+
   return (
-    <div className="mx-auto grid max-w-6xl gap-8 px-6 py-12 lg:grid-cols-2">
-      <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="overflow-hidden rounded-[2rem] border border-border bg-gradient-to-br from-brand-soft to-amber-100/40 aspect-square">
-        {l.cover_url ? <img src={l.cover_url} alt={l.title} className="h-full w-full object-cover" /> : <div className="grid h-full place-items-center text-6xl">🎨</div>}
-      </motion.div>
+    <div className="mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:px-6 lg:grid-cols-2">
+      <div className="space-y-3">
+        <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="aspect-square overflow-hidden rounded-[2rem] border border-border bg-gradient-to-br from-brand-soft to-amber-100/40">
+          {allImages[activeImg] ? (
+            <img src={allImages[activeImg]} alt={l.title} className="h-full w-full object-cover" />
+          ) : (
+            <div className="grid h-full place-items-center text-6xl">🎨</div>
+          )}
+        </motion.div>
+        {allImages.length > 1 && (
+          <div className="grid grid-cols-4 gap-2">
+            {allImages.map((src, i) => (
+              <button
+                key={src}
+                onClick={() => setActiveImg(i)}
+                aria-label={`Bild ${i + 1} anzeigen`}
+                className={`aspect-square overflow-hidden rounded-xl border-2 transition-colors ${i === activeImg ? "border-brand" : "border-border hover:border-brand/50"}`}
+              >
+                <img src={src} alt={`${l.title} — Bild ${i + 1}`} className="h-full w-full object-cover" />
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
       <div>
-        {l.category && <span className="inline-block rounded-full bg-brand-soft px-3 py-1 text-xs font-bold uppercase tracking-widest text-brand">{l.category}</span>}
+        <div className="flex flex-wrap items-center gap-2">
+          {l.category && <span className="inline-block rounded-full bg-brand-soft px-3 py-1 text-xs font-bold uppercase tracking-widest text-brand">{l.category}</span>}
+          <span className="inline-block rounded-full border border-border bg-card px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+            {isDigital ? "Digital" : "Physisch"}
+          </span>
+        </div>
         <h1 className="mt-2 font-display text-4xl font-black text-brand-ink">{l.title}</h1>
         {l.seller && (
           <Link to="/shop/$handle" params={{ handle: l.seller.handle ?? "" }} className="mt-2 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-brand">
@@ -125,13 +170,24 @@ function ListingView({ l }: { l: NonNullable<Awaited<ReturnType<typeof fetchList
           <Star className="h-3 w-3" /> 0,0 · noch keine Bewertungen
         </div>
         <p className="mt-6 whitespace-pre-line text-sm leading-relaxed text-foreground/80">{l.description}</p>
+
+        <dl className="mt-6 grid grid-cols-2 gap-3 rounded-2xl border border-border bg-card p-4 text-sm">
+          <Detail icon={isDigital ? <Download className="h-3.5 w-3.5" /> : <Package className="h-3.5 w-3.5" />} label="Typ" value={isDigital ? "Digital" : "Physisch"} />
+          <Detail icon={<Truck className="h-3.5 w-3.5" />} label={isDigital ? "Lieferung" : "Versand"} value={shippingLabel} />
+          <Detail icon={<Shield className="h-3.5 w-3.5" />} label="Käuferschutz" value="Über CreaHQ" />
+          <Detail icon={<MessageCircle className="h-3.5 w-3.5" />} label="Support" value="Direkt vom Creator" />
+          {l.location && <Detail icon={<Package className="h-3.5 w-3.5" />} label="Ort" value={l.location} />}
+          {l.condition && <Detail icon={<Star className="h-3.5 w-3.5" />} label="Zustand" value={l.condition} />}
+          {typeof l.stock === "number" && <Detail icon={<Package className="h-3.5 w-3.5" />} label="Verfügbar" value={`${l.stock} Stück`} />}
+        </dl>
+
         <div className="mt-8 flex items-end gap-4">
           <div className="font-display text-4xl font-black text-brand">{(l.price_cents/100).toFixed(2)} €</div>
         </div>
-        <div className="mt-6 flex gap-2">
+        <div className="mt-6 flex flex-wrap gap-2">
           <button
             onClick={handleAddToCart}
-            className="flex-1 rounded-full bg-brand px-6 py-4 text-base font-bold text-primary-foreground brand-glow transition-transform hover:scale-[1.02]"
+            className="min-w-[200px] flex-1 rounded-full bg-brand px-6 py-4 text-base font-bold text-primary-foreground brand-glow transition-transform hover:scale-[1.02]"
           >
             In den Warenkorb
           </button>
@@ -139,7 +195,7 @@ function ListingView({ l }: { l: NonNullable<Awaited<ReturnType<typeof fetchList
             onClick={handleFavorite}
             aria-label="Favorisieren"
             title={isFav ? "Aus Favoriten entfernen" : "Favorisieren"}
-            className="grid h-14 w-14 shrink-0 place-items-center rounded-full border-2 border-border bg-card text-brand-ink hover:border-brand hover:text-brand transition-colors"
+            className="grid h-14 w-14 shrink-0 place-items-center rounded-full border-2 border-border bg-card text-brand-ink transition-colors hover:border-brand hover:text-brand"
           >
             <Heart className={`h-5 w-5 ${isFav ? "fill-red-500 text-red-500" : ""}`} />
           </button>
@@ -147,7 +203,7 @@ function ListingView({ l }: { l: NonNullable<Awaited<ReturnType<typeof fetchList
             onClick={handleOpenChat}
             aria-label="Chat mit Verkäufer"
             title="Chat mit Verkäufer"
-            className="grid h-14 w-14 shrink-0 place-items-center rounded-full border-2 border-border bg-card text-brand-ink hover:border-brand hover:text-brand transition-colors"
+            className="grid h-14 w-14 shrink-0 place-items-center rounded-full border-2 border-border bg-card text-brand-ink transition-colors hover:border-brand hover:text-brand"
           >
             <MessageCircle className="h-5 w-5" />
           </button>
@@ -155,99 +211,121 @@ function ListingView({ l }: { l: NonNullable<Awaited<ReturnType<typeof fetchList
             onClick={handleShare}
             aria-label="Teilen"
             title="Teilen"
-            className="grid h-14 w-14 shrink-0 place-items-center rounded-full border-2 border-border bg-card text-brand-ink hover:border-brand hover:text-brand transition-colors"
+            className="grid h-14 w-14 shrink-0 place-items-center rounded-full border-2 border-border bg-card text-brand-ink transition-colors hover:border-brand hover:text-brand"
           >
             <Share2 className="h-5 w-5" />
           </button>
         </div>
-        <p className="mt-2 text-center text-xs text-muted-foreground">Stripe Checkout folgt im nächsten Schritt.</p>
       </div>
-      <RelatedRails 
-        currentId={l.id} 
-        sellerName={l.seller?.display_name ?? "diesem Shop"} 
+
+      <RelatedRails
+        id={l.id}
+        sellerId={l.seller_id}
+        category={l.category}
+        sellerName={l.seller?.display_name ?? "diesem Shop"}
         sellerHandle={l.seller?.handle}
       />
     </div>
   );
 }
 
-function RelatedRails({ 
-  currentId, 
-  sellerName, 
-  sellerHandle 
-}: { 
-  currentId: string; 
-  sellerName: string; 
+function RelatedRails({
+  id,
+  sellerId,
+  category,
+  sellerName,
+  sellerHandle,
+}: {
+  id: string;
+  sellerId: string;
+  category: string | null;
+  sellerName: string;
   sellerHandle?: string | null;
 }) {
+  const { data } = useQuery({
+    queryKey: ["related", id],
+    queryFn: () => fetchRelatedListings({ data: { id, sellerId, category } }),
+  });
+
   return (
-    <div className="lg:col-span-2 space-y-12 pt-4">
-      <PlaceholderRail
+    <div className="space-y-12 pt-4 lg:col-span-2">
+      <Rail
         title={`Sachen vom Shop · ${sellerName}`}
         subtitle="Weitere Produkte von diesem Creator."
-        keyPrefix={`shop-${currentId}`}
         emoji="🏪"
-        viewAllLink={sellerHandle ? `/shop/${sellerHandle}` : "/browse"}
+        items={data?.fromShop ?? []}
+        empty={`${sellerName} hat aktuell keine weiteren Produkte online.`}
+        viewAll={sellerHandle ? { to: "/shop/$handle" as const, params: { handle: sellerHandle } } : null}
       />
-      <PlaceholderRail
-        title="Weitere Beispiele"
-        subtitle="Passt vielleicht auch — kuratierte Empfehlungen aus CreaHQ."
-        keyPrefix={`sim-${currentId}`}
+      <Rail
+        title="Ähnliche Produkte"
+        subtitle="Passt vielleicht auch — kuratiert aus CreaHQ."
         emoji="✨"
-        viewAllLink="/browse"
+        items={data?.similar ?? []}
+        empty="Noch nichts Ähnliches auf CreaHQ. Schau später nochmal rein."
+        viewAll={{ to: "/browse" as const, params: undefined }}
       />
     </div>
   );
 }
 
-function PlaceholderRail({ 
-  title, 
-  subtitle, 
-  keyPrefix, 
+function Rail({
+  title,
+  subtitle,
   emoji,
-  viewAllLink = "/browse"
-}: { 
-  title: string; 
-  subtitle: string; 
-  keyPrefix: string; 
+  items,
+  empty,
+  viewAll,
+}: {
+  title: string;
+  subtitle: string;
   emoji: string;
-  viewAllLink?: string;
+  items: ListingCard[];
+  empty: string;
+  viewAll: { to: "/browse"; params: undefined } | { to: "/shop/$handle"; params: { handle: string } } | null;
 }) {
   return (
     <section>
-      <div className="mb-4 flex items-end justify-between">
+      <div className="mb-4 flex items-end justify-between gap-4">
         <div>
           <h2 className="font-display text-2xl font-black text-brand-ink">
             <span className="mr-1">{emoji}</span>{title}
           </h2>
           <p className="text-sm text-muted-foreground">{subtitle}</p>
         </div>
-        <Link to={viewAllLink} className="text-xs font-semibold text-brand hover:underline">
-          Alle ansehen →
-        </Link>
+        {viewAll && items.length > 0 && (
+          viewAll.to === "/browse"
+            ? <Link to="/browse" className="text-xs font-semibold text-brand hover:underline">Alle ansehen →</Link>
+            : <Link to="/shop/$handle" params={viewAll.params} className="text-xs font-semibold text-brand hover:underline">Alle ansehen →</Link>
+        )}
       </div>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <Link
-            key={`${keyPrefix}-${i}`}
-            to="/listing/$id"
-            params={{ id: `beispiel-${keyPrefix}-${i + 1}` }}
-            className="group overflow-hidden rounded-2xl border border-border bg-card transition-all hover:-translate-y-1 hover:border-brand hover:shadow-lg"
-          >
-            <div className="flex aspect-square items-center justify-center bg-gradient-to-br from-brand-soft/60 via-transparent to-amber-100/40 text-4xl">
-              {"📦🎨🎧🧩".charAt(i)}
-            </div>
-            <div className="p-3">
-              <div className="text-xs font-bold uppercase tracking-widest text-brand/70">Platzhalter</div>
-              <div className="mt-0.5 truncate text-sm font-semibold text-brand-ink group-hover:text-brand">Beispiel #{i + 1}</div>
-              <div className="mt-1 text-xs text-muted-foreground">—,— €</div>
-            </div>
-          </Link>
-        ))}
-      </div>
+      {items.length === 0 ? (
+        <div className="rounded-3xl border-2 border-dashed border-brand/25 bg-card/40 p-8 text-center text-sm text-muted-foreground">{empty}</div>
+      ) : (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          {items.map((item) => (
+            <Link
+              key={item.id}
+              to="/listing/$id"
+              params={{ id: item.id }}
+              className="group overflow-hidden rounded-2xl border border-border bg-card transition-all hover:-translate-y-1 hover:border-brand hover:shadow-lg"
+            >
+              <div className="flex aspect-square items-center justify-center bg-gradient-to-br from-brand-soft/60 via-transparent to-amber-100/40 text-4xl">
+                {item.cover_url ? <img src={item.cover_url} alt={item.title} className="h-full w-full object-cover" /> : "🎨"}
+              </div>
+              <div className="p-3">
+                <div className="text-xs font-bold uppercase tracking-widest text-brand/70">{item.category ?? (item.kind === "digital" ? "Digital" : "Physisch")}</div>
+                <div className="mt-0.5 truncate text-sm font-semibold text-brand-ink group-hover:text-brand">{item.title}</div>
+                <div className="mt-1 text-xs text-muted-foreground">{(item.price_cents / 100).toFixed(2)} €</div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
     </section>
   );
 }
+
 
 function PlaceholderListing({ id }: { id: string }) {
   const nr = id.split("-").pop() ?? "01";

@@ -30,7 +30,9 @@ import { Route as ShopHandleRouteImport } from './routes/shop.$handle'
 import { Route as ListingIdRouteImport } from './routes/listing.$id'
 import { Route as KategorieSlugRouteImport } from './routes/kategorie.$slug'
 import { Route as AuthenticatedNachrichtenRouteImport } from './routes/_authenticated/nachrichten'
+import { Route as AuthenticatedEinstellungenRouteImport } from './routes/_authenticated/einstellungen'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedVerkaufenNeuRouteImport } from './routes/_authenticated/verkaufen.neu'
 
 const WarenkorbRoute = WarenkorbRouteImport.update({
   id: '/warenkorb',
@@ -137,11 +139,23 @@ const AuthenticatedNachrichtenRoute =
     path: '/nachrichten',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedEinstellungenRoute =
+  AuthenticatedEinstellungenRouteImport.update({
+    id: '/einstellungen',
+    path: '/einstellungen',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedVerkaufenNeuRoute =
+  AuthenticatedVerkaufenNeuRouteImport.update({
+    id: '/verkaufen/neu',
+    path: '/verkaufen/neu',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -160,11 +174,13 @@ export interface FileRoutesByFullPath {
   '/ueber': typeof UeberRoute
   '/warenkorb': typeof WarenkorbRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/einstellungen': typeof AuthenticatedEinstellungenRoute
   '/nachrichten': typeof AuthenticatedNachrichtenRoute
   '/kategorie/$slug': typeof KategorieSlugRoute
   '/listing/$id': typeof ListingIdRoute
   '/shop/$handle': typeof ShopHandleRoute
   '/verkaufen/guide': typeof VerkaufenGuideRoute
+  '/verkaufen/neu': typeof AuthenticatedVerkaufenNeuRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -183,11 +199,13 @@ export interface FileRoutesByTo {
   '/ueber': typeof UeberRoute
   '/warenkorb': typeof WarenkorbRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/einstellungen': typeof AuthenticatedEinstellungenRoute
   '/nachrichten': typeof AuthenticatedNachrichtenRoute
   '/kategorie/$slug': typeof KategorieSlugRoute
   '/listing/$id': typeof ListingIdRoute
   '/shop/$handle': typeof ShopHandleRoute
   '/verkaufen/guide': typeof VerkaufenGuideRoute
+  '/verkaufen/neu': typeof AuthenticatedVerkaufenNeuRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -208,11 +226,13 @@ export interface FileRoutesById {
   '/ueber': typeof UeberRoute
   '/warenkorb': typeof WarenkorbRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/einstellungen': typeof AuthenticatedEinstellungenRoute
   '/_authenticated/nachrichten': typeof AuthenticatedNachrichtenRoute
   '/kategorie/$slug': typeof KategorieSlugRoute
   '/listing/$id': typeof ListingIdRoute
   '/shop/$handle': typeof ShopHandleRoute
   '/verkaufen/guide': typeof VerkaufenGuideRoute
+  '/_authenticated/verkaufen/neu': typeof AuthenticatedVerkaufenNeuRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -233,11 +253,13 @@ export interface FileRouteTypes {
     | '/ueber'
     | '/warenkorb'
     | '/dashboard'
+    | '/einstellungen'
     | '/nachrichten'
     | '/kategorie/$slug'
     | '/listing/$id'
     | '/shop/$handle'
     | '/verkaufen/guide'
+    | '/verkaufen/neu'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -256,11 +278,13 @@ export interface FileRouteTypes {
     | '/ueber'
     | '/warenkorb'
     | '/dashboard'
+    | '/einstellungen'
     | '/nachrichten'
     | '/kategorie/$slug'
     | '/listing/$id'
     | '/shop/$handle'
     | '/verkaufen/guide'
+    | '/verkaufen/neu'
   id:
     | '__root__'
     | '/'
@@ -280,11 +304,13 @@ export interface FileRouteTypes {
     | '/ueber'
     | '/warenkorb'
     | '/_authenticated/dashboard'
+    | '/_authenticated/einstellungen'
     | '/_authenticated/nachrichten'
     | '/kategorie/$slug'
     | '/listing/$id'
     | '/shop/$handle'
     | '/verkaufen/guide'
+    | '/_authenticated/verkaufen/neu'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -459,6 +485,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedNachrichtenRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/einstellungen': {
+      id: '/_authenticated/einstellungen'
+      path: '/einstellungen'
+      fullPath: '/einstellungen'
+      preLoaderRoute: typeof AuthenticatedEinstellungenRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -466,17 +499,28 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/verkaufen/neu': {
+      id: '/_authenticated/verkaufen/neu'
+      path: '/verkaufen/neu'
+      fullPath: '/verkaufen/neu'
+      preLoaderRoute: typeof AuthenticatedVerkaufenNeuRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedEinstellungenRoute: typeof AuthenticatedEinstellungenRoute
   AuthenticatedNachrichtenRoute: typeof AuthenticatedNachrichtenRoute
+  AuthenticatedVerkaufenNeuRoute: typeof AuthenticatedVerkaufenNeuRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedEinstellungenRoute: AuthenticatedEinstellungenRoute,
   AuthenticatedNachrichtenRoute: AuthenticatedNachrichtenRoute,
+  AuthenticatedVerkaufenNeuRoute: AuthenticatedVerkaufenNeuRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

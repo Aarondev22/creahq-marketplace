@@ -1,17 +1,32 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { motion } from "motion/react";
-import { Plus, Trash2, Eye, Store, ShoppingBag, TrendingUp, Package, Wallet, ChevronRight, ChevronLeft, Check, Truck, Heart, X, ImagePlus } from "lucide-react";
+import { Plus, Trash2, Eye, Store, ShoppingBag, TrendingUp, Package, Wallet, Truck, Heart, Pause, Play } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { fetchMySales, addShipment, type MySale } from "@/lib/shipments.functions";
 
+const TABS = ["overview", "listings", "favorites", "orders", "sales"] as const;
+
 export const Route = createFileRoute("/_authenticated/dashboard")({
-  head: () => ({ meta: [{ title: "Dashboard — CreaHQ" }] }),
+  validateSearch: (search: Record<string, unknown>) => ({
+    tab: (TABS as readonly string[]).includes(String(search.tab)) ? (String(search.tab) as Tab) : ("overview" as Tab),
+  }),
+  head: () => ({
+    meta: [
+      { title: "Dashboard — CreaHQ" },
+      { name: "description", content: "Verwalte deine Listings, Verkäufe und Favoriten auf CreaHQ." },
+      { property: "og:title", content: "Dashboard — CreaHQ" },
+      { property: "og:description", content: "Verwalte deine Listings, Verkäufe und Favoriten auf CreaHQ." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: Dashboard,
 });
+
 
 type MyListing = { id: string; title: string; price_cents: number; status: string; cover_url: string | null; created_at: string };
 type MyOrder = { id: string; total_cents: number; status: string; created_at: string };
@@ -30,8 +45,10 @@ function Dashboard() {
   const [salesCount, setSalesCount] = useState(0);
   const [chartData, setChartData] = useState<{ date: string; revenue: number }[]>([]);
   const [loading, setLoading] = useState(true);
-  const [creating, setCreating] = useState(false);
-  const [tab, setTab] = useState<Tab>("overview");
+  const { tab } = Route.useSearch();
+  const navigate = useNavigate();
+  const setTab = (t: Tab) => navigate({ to: "/dashboard", search: { tab: t }, resetScroll: false });
+
 
   async function load() {
     setLoading(true);
@@ -70,6 +87,7 @@ function Dashboard() {
   }
 
   useEffect(() => { load(); }, []);
+  useEffect(() => { window.scrollTo(0, 0); }, []);
 
   async function deleteListing(id: string) {
     if (!confirm("Wirklich löschen?")) return;
@@ -78,6 +96,15 @@ function Dashboard() {
     toast.success("Gelöscht.");
     setListings((l) => l.filter((x) => x.id !== id));
   }
+
+  async function toggleListingStatus(id: string, status: string) {
+    const next = status === "published" ? "draft" : "published";
+    const { error } = await supabase.from("listings").update({ status: next }).eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success(next === "published" ? "Listing ist wieder aktiv." : "Listing pausiert.");
+    setListings((l) => l.map((x) => (x.id === id ? { ...x, status: next } : x)));
+  }
+
 
   async function removeFavorite(favId: string) {
     const { error } = await supabase.from("favorites").delete().eq("id", favId);
@@ -106,12 +133,12 @@ function Dashboard() {
           <h1 className="font-display text-4xl font-black text-brand-ink sm:text-5xl">Dashboard</h1>
           <p className="mt-1 text-sm text-muted-foreground">Verwalte deine Listings und siehe deine Käufe.</p>
         </div>
-        <button
-          onClick={() => setCreating(true)}
+        <Link
+          to="/verkaufen/neu"
           className="inline-flex items-center gap-2 rounded-full bg-brand px-5 py-3 text-sm font-bold text-primary-foreground brand-glow transition-transform hover:scale-105"
         >
           <Plus className="h-4 w-4" /> Neues Listing
-        </button>
+        </Link>
       </div>
 
       <div className="mt-8 grid gap-4 sm:grid-cols-3">
@@ -120,7 +147,6 @@ function Dashboard() {
         <StatCard icon={<Package className="h-5 w-5" />} label="Aktive Listings" value={`${publishedCount} / ${listings.length}`} />
       </div>
 
-      {creating && <ListingWizard onClose={() => setCreating(false)} onCreated={load} />}
 
       <div className="mt-10 flex flex-wrap gap-1 rounded-full border border-border bg-card p-1 w-fit">
         <TabBtn label="Übersicht" active={tab === "overview"} onClick={() => setTab("overview")} />
@@ -190,15 +216,21 @@ function Dashboard() {
                       <h3 className="line-clamp-2 font-display text-base font-bold text-brand-ink">{l.title}</h3>
                       <span className="shrink-0 rounded-full bg-brand/10 px-2 py-0.5 text-xs font-bold text-brand">{(l.price_cents / 100).toFixed(2)} €</span>
                     </div>
-                    <p className="mt-1 text-xs uppercase tracking-widest text-muted-foreground">{l.status}</p>
-                    <div className="mt-3 flex gap-2">
-                      <Link to="/listing/$id" params={{ id: l.id }} className="inline-flex items-center gap-1 rounded-full bg-brand-soft px-3 py-1.5 text-xs font-semibold text-brand-ink hover:bg-brand hover:text-primary-foreground">
-                        <Eye className="h-3 w-3" /> Ansehen
+                    <p className="mt-1 text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                      {l.status === "published" ? "Aktiv" : l.status === "draft" ? "Pausiert" : l.status}
+                    </p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <Link to="/listing/$id" params={{ id: l.id }} className="inline-flex min-h-11 items-center gap-1 rounded-full bg-brand-soft px-4 py-2 text-xs font-semibold text-brand-ink hover:bg-brand hover:text-primary-foreground">
+                        <Eye className="h-4 w-4" /> Ansehen
                       </Link>
-                      <button onClick={() => deleteListing(l.id)} className="inline-flex items-center gap-1 rounded-full bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-100">
-                        <Trash2 className="h-3 w-3" /> Löschen
+                      <button onClick={() => toggleListingStatus(l.id, l.status)} className="inline-flex min-h-11 items-center gap-1 rounded-full border border-border px-4 py-2 text-xs font-semibold text-brand-ink hover:border-brand hover:text-brand">
+                        {l.status === "published" ? <><Pause className="h-4 w-4" /> Pausieren</> : <><Play className="h-4 w-4" /> Aktivieren</>}
+                      </button>
+                      <button onClick={() => deleteListing(l.id)} className="inline-flex min-h-11 items-center gap-1 rounded-full bg-red-50 px-4 py-2 text-xs font-semibold text-red-600 hover:bg-red-100">
+                        <Trash2 className="h-4 w-4" /> Löschen
                       </button>
                     </div>
+
                   </div>
                 </motion.div>
               ))}
@@ -297,29 +329,33 @@ function SalesTab({ sales, onUpdated }: { sales: MySale[]; onUpdated: () => void
       </h2>
       <ul className="space-y-3">
         {sales.map((s) => (
-          <li key={s.order_item_id} className="rounded-2xl border border-border bg-card p-4">
-            <div className="flex items-center justify-between gap-2">
-              <div>
-                <div className="text-sm font-semibold text-brand-ink">{s.listing_title}</div>
+          <li key={s.order_item_id} className="rounded-3xl border border-border bg-card p-5">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="min-w-0">
+                <div className="truncate font-display text-base font-bold text-brand-ink">{s.listing_title}</div>
                 <div className="text-xs text-muted-foreground">{s.qty}× · {(s.unit_price_cents / 100).toFixed(2)} €</div>
               </div>
               {s.shipment ? (
-                <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-bold text-emerald-700">
-                  {s.shipment.carrier}: {s.shipment.tracking_number}
-                </span>
+                <div className="rounded-2xl bg-emerald-50 px-4 py-2.5 text-sm">
+                  <div className="text-[10px] font-bold uppercase tracking-widest text-emerald-700">Versendet mit {s.shipment.carrier}</div>
+                  <div className="font-mono text-sm font-bold text-emerald-800">{s.shipment.tracking_number}</div>
+                </div>
               ) : (
-                <button onClick={() => setOpenFor(s.order_id)} className="rounded-full bg-brand px-3 py-1.5 text-xs font-bold text-primary-foreground">
-                  Versandnummer eintragen
+                <button
+                  onClick={() => setOpenFor(openFor === s.order_id ? null : s.order_id)}
+                  className="inline-flex min-h-12 items-center gap-2 rounded-full bg-brand px-5 py-3 text-sm font-bold text-primary-foreground brand-glow"
+                >
+                  <Truck className="h-4 w-4" /> Versandnummer eintragen
                 </button>
               )}
             </div>
-            {openFor === s.order_id && (
-              <div className="mt-3 flex flex-wrap gap-2 border-t border-border pt-3">
-                <select value={carrier} onChange={(e) => setCarrier(e.target.value)} className="rounded-lg border border-border bg-surface px-3 py-2 text-sm">
+            {openFor === s.order_id && !s.shipment && (
+              <div className="mt-4 grid gap-3 border-t border-border pt-4 sm:grid-cols-[160px_1fr_auto]">
+                <select value={carrier} onChange={(e) => setCarrier(e.target.value)} className="min-h-12 rounded-2xl border border-border bg-surface px-4 text-sm">
                   <option>DHL</option><option>Hermes</option><option>DPD</option><option>UPS</option><option>Deutsche Post</option>
                 </select>
-                <input value={tracking} onChange={(e) => setTracking(e.target.value)} placeholder="Tracking-Nummer" className="flex-1 rounded-lg border border-border bg-surface px-3 py-2 text-sm" />
-                <button onClick={() => submit(s.order_id)} disabled={saving || !tracking} className="rounded-lg bg-brand px-3 py-2 text-sm font-bold text-primary-foreground disabled:opacity-50">
+                <input value={tracking} onChange={(e) => setTracking(e.target.value)} placeholder="Tracking-Nummer eingeben" className="min-h-12 rounded-2xl border border-border bg-surface px-4 text-sm" />
+                <button onClick={() => submit(s.order_id)} disabled={saving || !tracking} className="min-h-12 rounded-2xl bg-brand px-6 text-sm font-bold text-primary-foreground disabled:opacity-50">
                   {saving ? "…" : "Speichern"}
                 </button>
               </div>
@@ -327,6 +363,7 @@ function SalesTab({ sales, onUpdated }: { sales: MySale[]; onUpdated: () => void
           </li>
         ))}
       </ul>
+
     </section>
   );
 }
@@ -358,212 +395,4 @@ function EmptyListings() {
   );
 }
 
-type WizardData = {
-  title: string; description: string; category: string;
-  price: string; kind: "digital" | "service";
-  shippingMode: "included" | "extra" | "digital";
-  shippingPrice: string;
-  location: string; condition: string; stock: string;
-  files: File[];
-};
 
-const SIGNED_URL_TTL = 60 * 60 * 24 * 365; // 1 Jahr
-
-function ListingWizard({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
-  const [step, setStep] = useState(1);
-  const [saving, setSaving] = useState(false);
-  const [data, setData] = useState<WizardData>({
-    title: "", description: "", category: "", price: "9.00", kind: "digital",
-    shippingMode: "digital", shippingPrice: "0",
-    location: "", condition: "neu", stock: "",
-    files: [],
-  });
-  const totalSteps = 4;
-
-  function update<K extends keyof WizardData>(key: K, value: WizardData[K]) {
-    setData((d) => ({ ...d, [key]: value }));
-  }
-
-  const canNext =
-    (step === 1 && data.title.trim().length > 0) ||
-    (step === 2 && parseFloat(data.price.replace(",", ".")) > 0) ||
-    step === 3 || step === 4;
-
-  async function submit() {
-    setSaving(true);
-    try {
-      const { data: u } = await supabase.auth.getUser();
-      if (!u.user) throw new Error("Nicht eingeloggt");
-
-      await supabase.from("user_roles").insert({ user_id: u.user.id, role: "seller" }).then(() => {});
-
-      const urls: string[] = [];
-      for (const file of data.files.slice(0, 8)) {
-        const path = `${u.user.id}/${crypto.randomUUID()}-${file.name.replace(/[^\w.-]/g, "_")}`;
-        const { error: upErr } = await supabase.storage.from("listing-covers").upload(path, file, { upsert: false });
-        if (upErr) throw upErr;
-        const { data: signed } = await supabase.storage.from("listing-covers").createSignedUrl(path, SIGNED_URL_TTL);
-        if (signed?.signedUrl) urls.push(signed.signedUrl);
-      }
-
-      const price_cents = Math.round(parseFloat(data.price.replace(",", ".")) * 100);
-      const shipping_price_cents = Math.round(parseFloat(data.shippingPrice.replace(",", ".") || "0") * 100);
-      const stock = data.stock.trim() ? Math.max(0, parseInt(data.stock, 10)) : null;
-
-      const { error } = await supabase.from("listings").insert({
-        seller_id: u.user.id,
-        title: data.title, description: data.description, category: data.category,
-        kind: data.kind, price_cents,
-        shipping_mode: data.shippingMode, shipping_price_cents,
-        cover_url: urls[0] ?? null, images: urls,
-        location: data.location.trim() || null,
-        condition: data.condition || null,
-        stock,
-        status: "published",
-      });
-      if (error) throw error;
-      toast.success("Veröffentlicht!");
-      onCreated(); onClose();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Fehler");
-    } finally { setSaving(false); }
-  }
-
-  return (
-    <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mt-6 rounded-[2rem] border border-border bg-card p-6">
-      <div className="mb-4 flex items-center gap-2">
-        {Array.from({ length: totalSteps }).map((_, i) => (
-          <div key={i} className={`h-1.5 flex-1 rounded-full ${i + 1 <= step ? "bg-brand" : "bg-border"}`} />
-        ))}
-      </div>
-      <div className="mb-4 text-xs font-bold uppercase tracking-widest text-brand">Schritt {step} von {totalSteps}</div>
-
-      {step === 1 && (
-        <div className="space-y-3">
-          <h3 className="font-display text-xl font-bold text-brand-ink">Was verkaufst du?</h3>
-          <input autoFocus required placeholder="Titel" value={data.title} onChange={(e) => update("title", e.target.value)} className="w-full rounded-full border border-border bg-background px-4 py-2.5 text-sm focus:border-brand focus:outline-none" />
-          <textarea placeholder="Beschreibung" value={data.description} onChange={(e) => update("description", e.target.value)} rows={3} className="w-full rounded-2xl border border-border bg-background px-4 py-2.5 text-sm focus:border-brand focus:outline-none" />
-          <input placeholder="Kategorie (z.B. Prints)" value={data.category} onChange={(e) => update("category", e.target.value)} className="w-full rounded-full border border-border bg-background px-4 py-2.5 text-sm focus:border-brand focus:outline-none" />
-        </div>
-      )}
-
-      {step === 2 && (
-        <div className="space-y-3">
-          <h3 className="font-display text-xl font-bold text-brand-ink">Preis &amp; Art</h3>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <input required type="number" step="0.01" min="0" placeholder="Preis €" value={data.price} onChange={(e) => update("price", e.target.value)} className="rounded-full border border-border bg-background px-4 py-2.5 text-sm focus:border-brand focus:outline-none" />
-            <select value={data.kind} onChange={(e) => update("kind", e.target.value as "digital" | "service")} className="rounded-full border border-border bg-background px-4 py-2.5 text-sm focus:border-brand focus:outline-none">
-              <option value="digital">Digital</option>
-              <option value="service">Physisch</option>
-            </select>
-          </div>
-          {data.kind === "digital" ? (
-            <p className="rounded-xl bg-brand-soft/50 p-3 text-xs text-brand-ink">Digitale Produkte werden sofort nach Kauf zum Download bereitgestellt — kein Versand nötig.</p>
-          ) : (
-            <div className="grid gap-3 sm:grid-cols-2">
-              <select value={data.shippingMode} onChange={(e) => update("shippingMode", e.target.value as WizardData["shippingMode"])} className="rounded-full border border-border bg-background px-4 py-2.5 text-sm focus:border-brand focus:outline-none">
-                <option value="digital">Kein Versand</option>
-                <option value="included">Versand inklusive</option>
-                <option value="extra">Versand extra</option>
-              </select>
-              {data.shippingMode === "extra" && (
-                <input type="number" step="0.01" min="0" placeholder="Versandkosten €" value={data.shippingPrice} onChange={(e) => update("shippingPrice", e.target.value)} className="rounded-full border border-border bg-background px-4 py-2.5 text-sm focus:border-brand focus:outline-none" />
-              )}
-            </div>
-          )}
-        </div>
-      )}
-
-      {step === 3 && (
-        <div className="space-y-4">
-          <h3 className="font-display text-xl font-bold text-brand-ink">Bilder & Details</h3>
-          <div>
-            <label className="mb-1 block text-xs font-bold uppercase tracking-widest text-muted-foreground">Bilder (erstes = Titelbild, max. 8)</label>
-            <label className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-brand px-5 py-2.5 text-sm font-bold text-primary-foreground transition-transform hover:scale-105">
-              <ImagePlus className="h-4 w-4" />
-              Bilder auswählen
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={(e) => update("files", [...data.files, ...Array.from(e.target.files ?? [])].slice(0, 8))}
-                className="sr-only"
-              />
-            </label>
-            <span className="ml-3 text-xs text-muted-foreground">{data.files.length > 0 ? `${data.files.length} ausgewählt` : "Noch keine Bilder"}</span>
-          </div>
-          {data.files.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {data.files.map((f, i) => (
-                <div key={`${f.name}-${i}`} className="relative overflow-hidden rounded-xl border border-border">
-                  <img src={URL.createObjectURL(f)} alt={f.name} className="h-20 w-20 object-cover" />
-                  {i === 0 && <span className="absolute bottom-0 left-0 right-0 bg-brand/90 px-1 text-center text-[9px] font-bold text-primary-foreground">Titelbild</span>}
-                  <button
-                    type="button"
-                    onClick={() => update("files", data.files.filter((_, j) => j !== i))}
-                    className="absolute right-0 top-0 grid h-5 w-5 place-items-center rounded-bl-lg bg-red-500 text-white"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-          <div className="grid gap-3 sm:grid-cols-3">
-            <input placeholder="Ort / Stadt (optional)" value={data.location} onChange={(e) => update("location", e.target.value)} className="rounded-full border border-border bg-background px-4 py-2.5 text-sm focus:border-brand focus:outline-none" />
-            <select value={data.condition} onChange={(e) => update("condition", e.target.value)} className="rounded-full border border-border bg-background px-4 py-2.5 text-sm focus:border-brand focus:outline-none">
-              <option value="neu">Neu</option>
-              <option value="handgemacht">Handgemacht</option>
-              <option value="gebraucht">Gebraucht</option>
-              <option value="digital">Digital / unbegrenzt</option>
-            </select>
-            <input type="number" min="0" placeholder="Lagerbestand (optional)" value={data.stock} onChange={(e) => update("stock", e.target.value)} className="rounded-full border border-border bg-background px-4 py-2.5 text-sm focus:border-brand focus:outline-none" />
-          </div>
-        </div>
-      )}
-
-      {step === 4 && (
-        <div className="space-y-3">
-          <h3 className="font-display text-xl font-bold text-brand-ink">Übersicht</h3>
-          <div className="rounded-2xl bg-surface p-4 text-sm space-y-1">
-            <div><strong>{data.title || "—"}</strong></div>
-            <div className="text-muted-foreground">{data.description || "Keine Beschreibung"}</div>
-            <div>Preis: <strong>{data.price} €</strong> · {data.kind === "digital" ? "Digital" : "Physisch"}</div>
-            <div>Bilder: {data.files.length} · Zustand: {data.condition}{data.location ? ` · ${data.location}` : ""}{data.stock ? ` · ${data.stock} Stück` : ""}</div>
-            {data.kind === "service" && <div>Versand: {data.shippingMode}{data.shippingMode === "extra" ? ` (${data.shippingPrice} €)` : ""}</div>}
-          </div>
-        </div>
-      )}
-
-
-      <div className="mt-6 flex justify-between gap-2">
-        <button
-          type="button"
-          onClick={() => (step === 1 ? onClose() : setStep((s) => s - 1))}
-          className="inline-flex items-center gap-1 rounded-full border border-border px-4 py-2.5 text-sm font-semibold"
-        >
-          <ChevronLeft className="h-4 w-4" /> {step === 1 ? "Abbrechen" : "Zurück"}
-        </button>
-        {step < totalSteps ? (
-          <button
-            type="button"
-            disabled={!canNext}
-            onClick={() => setStep((s) => s + 1)}
-            className="inline-flex items-center gap-1 rounded-full bg-brand px-5 py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-50"
-          >
-            Weiter <ChevronRight className="h-4 w-4" />
-          </button>
-        ) : (
-          <button
-            type="button"
-            disabled={saving}
-            onClick={submit}
-            className="inline-flex items-center gap-1 rounded-full bg-brand px-5 py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-60"
-          >
-            <Check className="h-4 w-4" /> {saving ? "Speichere …" : "Veröffentlichen"}
-          </button>
-        )}
-      </div>
-    </motion.div>
-  );
-}
