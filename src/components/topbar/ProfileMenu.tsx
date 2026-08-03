@@ -24,16 +24,35 @@ export function ProfileMenu() {
   const [displayName, setDisplayName] = useState<string | null>(null);
 
   useEffect(() => {
-    let active = true;
-    if (!user) { setDisplayName(null); return; }
-    supabase
+  let active = true;
+
+  async function load() {
+    if (!user) {
+      setDisplayName(null);
+      return;
+    }
+    const { data } = await supabase
       .from("profiles")
       .select("display_name")
       .eq("id", user.id)
-      .maybeSingle()
-      .then(({ data }) => { if (active) setDisplayName(data?.display_name ?? null); });
-    return () => { active = false; };
-  }, [user?.id]);
+      .maybeSingle();
+    if (active) setDisplayName(data?.display_name ?? null);
+  }
+
+  void load();
+
+  function onProfileUpdated(e: Event) {
+    const detail = (e as CustomEvent<{ display_name?: string }>).detail;
+    if (detail?.display_name) setDisplayName(detail.display_name);
+    else void load();
+  }
+
+  window.addEventListener("creahq:profile-updated", onProfileUpdated);
+  return () => {
+    active = false;
+    window.removeEventListener("creahq:profile-updated", onProfileUpdated);
+  };
+}, [user?.id]);
 
   async function handleSignOut() {
     await qc.cancelQueries();
