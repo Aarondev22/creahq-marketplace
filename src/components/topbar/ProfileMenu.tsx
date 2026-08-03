@@ -62,7 +62,10 @@ export function ProfileMenu() {
     navigate({ to: "/", replace: true });
   }
 
-  const shownName = displayName ?? (user?.user_metadata?.display_name as string | undefined) ?? user?.email ?? "";
+  const shownName =
+  displayName ??
+  (user?.user_metadata?.display_name as string | undefined) ??
+  "";
   const initial = (shownName || "?").toString().slice(0, 1).toUpperCase();
 
   return (
