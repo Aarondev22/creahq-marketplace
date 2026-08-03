@@ -81,8 +81,16 @@ export const searchListings = createServerFn({ method: "GET" })
 export type ListingDetail = ListingCard & {
   description: string | null;
   tags: string[];
+  images: string[];
+  shipping_mode: string;
+  shipping_price_cents: number;
+  location: string | null;
+  condition: string | null;
+  stock: number | null;
   seller: { id: string; handle: string | null; display_name: string | null; avatar_url: string | null } | null;
 };
+
+const DETAIL_COLS = `${SAFE_COLS},description,tags,images,shipping_mode,shipping_price_cents,location,condition,stock`;
 
 export const fetchListingById = createServerFn({ method: "GET" })
   .inputValidator((d: { id: string }) => ({ id: String(d.id) }))
@@ -90,7 +98,7 @@ export const fetchListingById = createServerFn({ method: "GET" })
     const supa = serverPublic();
     const { data: row } = await supa
       .from("listings")
-      .select(`${SAFE_COLS},description,tags`)
+      .select(DETAIL_COLS)
       .eq("id", data.id)
       .eq("status", "published")
       .maybeSingle();
@@ -100,8 +108,38 @@ export const fetchListingById = createServerFn({ method: "GET" })
       .select("id,handle,display_name,avatar_url")
       .eq("id", row.seller_id)
       .maybeSingle();
-    return { ...(row as ListingCard & { description: string | null; tags: string[] }), seller: seller ?? null };
+    return { ...(row as unknown as Omit<ListingDetail, "seller">), seller: seller ?? null };
   });
+
+export const fetchRelatedListings = createServerFn({ method: "GET" })
+  .inputValidator((d: { id: string; sellerId: string; category?: string | null }) => ({
+    id: String(d.id),
+    sellerId: String(d.sellerId),
+    category: d.category ? String(d.category) : null,
+  }))
+  .handler(async ({ data }): Promise<{ fromShop: ListingCard[]; similar: ListingCard[] }> => {
+    const supa = serverPublic();
+    const { data: fromShop } = await supa
+      .from("listings")
+      .select(SAFE_COLS)
+      .eq("seller_id", data.sellerId)
+      .eq("status", "published")
+      .neq("id", data.id)
+      .order("created_at", { ascending: false })
+      .limit(4);
+
+    let similarQuery = supa
+      .from("listings")
+      .select(SAFE_COLS)
+      .eq("status", "published")
+      .neq("id", data.id)
+      .neq("seller_id", data.sellerId);
+    if (data.category) similarQuery = similarQuery.eq("category", data.category);
+    const { data: similar } = await similarQuery.order("created_at", { ascending: false }).limit(4);
+
+    return { fromShop: (fromShop ?? []) as ListingCard[], similar: (similar ?? []) as ListingCard[] };
+  });
+
 
 export const fetchShopByHandle = createServerFn({ method: "GET" })
   .inputValidator((d: { handle: string }) => ({ handle: String(d.handle) }))

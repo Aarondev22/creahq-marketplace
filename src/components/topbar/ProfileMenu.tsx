@@ -7,7 +7,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { User, LogIn, UserPlus, LayoutDashboard, LogOut, ShoppingCart } from "lucide-react";
+import { User, LogIn, UserPlus, LayoutDashboard, LogOut, ShoppingCart, Settings } from "lucide-react";
 import { Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -64,13 +64,16 @@ export function ProfileMenu() {
           <>
             <DropdownMenuLabel className="flex flex-col gap-1">
               <span className="truncate text-sm font-bold text-brand-ink">{shownName}</span>
-              {shownName !== user.email && <span className="truncate text-[11px] font-normal text-muted-foreground">{user.email}</span>}
               {isFounder && <FounderBadge />}
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
               <Link to="/dashboard"><LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard</Link>
             </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link to="/einstellungen"><Settings className="mr-2 h-4 w-4" /> Einstellungen</Link>
+            </DropdownMenuItem>
+
             <DropdownMenuItem asChild>
               <Link to="/warenkorb">
                 <ShoppingCart className="mr-2 h-4 w-4" />

@@ -25,13 +25,15 @@ export async function getOrCreateConversation(sellerId: string, listingId?: stri
   if (!u.user) throw new Error("Nicht eingeloggt");
   if (u.user.id === sellerId) throw new Error("Du kannst dir nicht selbst schreiben");
 
-  const { data: existing } = await supabase
+  // Ein Chat pro Produkt (bzw. ein allgemeiner Chat ohne Produkt)
+  let existingQuery = supabase
     .from("conversations")
     .select("id")
     .eq("buyer_id", u.user.id)
-    .eq("seller_id", sellerId)
-    .maybeSingle();
+    .eq("seller_id", sellerId);
+  existingQuery = listingId ? existingQuery.eq("listing_id", listingId) : existingQuery.is("listing_id", null);
 
+  const { data: existing } = await existingQuery.maybeSingle();
   if (existing) return existing.id;
 
   const { data: created, error } = await supabase
@@ -43,6 +45,7 @@ export async function getOrCreateConversation(sellerId: string, listingId?: stri
   if (error) throw error;
   return created.id;
 }
+
 
 export async function fetchConversations(): Promise<Conversation[]> {
   const { data: u } = await supabase.auth.getUser();
