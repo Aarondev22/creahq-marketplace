@@ -18,6 +18,8 @@ export function AdminPanel({ open, onClose }: { open: boolean; onClose: () => vo
   const resizeRef = useRef<{ startX: number; startY: number; origW: number; origH: number } | null>(null);
   const sizeRef = useRef(size);
   sizeRef.current = size;
+  const posRef = useRef(pos);
+  posRef.current = pos;
 
   // Gespeicherte Position laden
   useEffect(() => {
@@ -86,9 +88,6 @@ export function AdminPanel({ open, onClose }: { open: boolean; onClose: () => vo
       window.removeEventListener("resize", onResizeWindow);
     };
   }, []);
-
-  const posRef = useRef(pos);
-  posRef.current = pos;
 
   if (!open) return null;
 
