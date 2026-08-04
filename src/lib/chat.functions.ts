@@ -117,62 +117,17 @@ export async function sendMessage(conversationId: string, body: string) {
   const { data: u } = await supabase.auth.getUser();
   if (!u.user) throw new Error("Nicht eingeloggt");
 
-  const { error: msgError } = await supabase.from("messages").insert({
+  const { error } = await supabase.from("messages").insert({
     conversation_id: conversationId,
     sender_id: u.user.id,
     body: body.trim(),
     kind: "text",
   });
 
-  if (msgError) {
-    console.error("messages insert", msgError);
-    throw new Error(msgError.message || "Nachricht konnte nicht gespeichert werden");
-  }
+  if (error) throw new Error(error.message);
 
   await supabase
     .from("conversations")
     .update({ last_message_at: new Date().toISOString() })
     .eq("id", conversationId);
-
-  // Glocke — Fehler blockieren Senden nicht
-  try {
-    const { data: conv } = await supabase
-      .from("conversations")
-      .select("buyer_id,seller_id,listing_id")
-      .eq("id", conversationId)
-      .maybeSingle();
-
-    if (!conv) return;
-
-    const recipientId =
-      conv.buyer_id === u.user.id ? conv.seller_id : conv.buyer_id;
-
-    let title = "Neue Nachricht";
-    if (conv.listing_id) {
-      const { data: listing } = await supabase
-        .from("listings")
-        .select("title")
-        .eq("id", conv.listing_id)
-        .maybeSingle();
-      if (listing?.title) title = listing.title;
-    }
-
-    const { data: me } = await supabase
-      .from("profiles")
-      .select("display_name")
-      .eq("id", u.user.id)
-      .maybeSingle();
-
-    const { error: notifError } = await supabase.from("notifications").insert({
-      user_id: recipientId,
-      title,
-      body: `${me?.display_name ?? "Jemand"}: ${body.slice(0, 120)}`,
-      category: "message",
-      link: `/nachrichten?c=${conversationId}`,
-    });
-
-    if (notifError) console.warn("notification:", notifError.message);
-  } catch (e) {
-    console.warn("notification failed", e);
-  }
 }
