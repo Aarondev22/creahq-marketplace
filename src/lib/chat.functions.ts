@@ -8,7 +8,9 @@ export type Conversation = {
   last_message_at: string;
   other_name: string;
   other_id: string;
+  other_handle: string | null;
   listing_title: string | null;
+  listing_cover: string | null;
 };
 
 export type ChatMessage = {
@@ -25,27 +27,32 @@ export async function getOrCreateConversation(sellerId: string, listingId?: stri
   if (!u.user) throw new Error("Nicht eingeloggt");
   if (u.user.id === sellerId) throw new Error("Du kannst dir nicht selbst schreiben");
 
-  // Ein Chat pro Produkt (bzw. ein allgemeiner Chat ohne Produkt)
   let existingQuery = supabase
     .from("conversations")
     .select("id")
     .eq("buyer_id", u.user.id)
     .eq("seller_id", sellerId);
-  existingQuery = listingId ? existingQuery.eq("listing_id", listingId) : existingQuery.is("listing_id", null);
+
+  existingQuery = listingId
+    ? existingQuery.eq("listing_id", listingId)
+    : existingQuery.is("listing_id", null);
 
   const { data: existing } = await existingQuery.maybeSingle();
   if (existing) return existing.id;
 
   const { data: created, error } = await supabase
     .from("conversations")
-    .insert({ buyer_id: u.user.id, seller_id: sellerId, listing_id: listingId ?? null })
+    .insert({
+      buyer_id: u.user.id,
+      seller_id: sellerId,
+      listing_id: listingId ?? null,
+    })
     .select("id")
     .single();
 
   if (error) throw error;
   return created.id;
 }
-
 
 export async function fetchConversations(): Promise<Conversation[]> {
   const { data: u } = await supabase.auth.getUser();
@@ -61,12 +68,22 @@ export async function fetchConversations(): Promise<Conversation[]> {
   if (error) throw error;
   if (!convs || convs.length === 0) return [];
 
-  const otherIds = Array.from(new Set(convs.map((c) => (c.buyer_id === myId ? c.seller_id : c.buyer_id))));
-  const listingIds = Array.from(new Set(convs.map((c) => c.listing_id).filter(Boolean))) as string[];
+  const otherIds = Array.from(
+    new Set(convs.map((c) => (c.buyer_id === myId ? c.seller_id : c.buyer_id)))
+  );
+  const listingIds = Array.from(
+    new Set(convs.map((c) => c.listing_id).filter(Boolean))
+  ) as string[];
 
   const [{ data: profiles }, { data: listings }] = await Promise.all([
-    supabase.from("profiles").select("id,display_name").in("id", otherIds.length ? otherIds : ["-"]),
-    supabase.from("listings").select("id,title").in("id", listingIds.length ? listingIds : ["-"]),
+    supabase
+      .from("profiles")
+      .select("id,display_name,handle")
+      .in("id", otherIds.length ? otherIds : ["-"]),
+    supabase
+      .from("listings")
+      .select("id,title,cover_url")
+      .in("id", listingIds.length ? listingIds : ["-"]),
   ]);
 
   return convs.map((c) => {
@@ -81,7 +98,9 @@ export async function fetchConversations(): Promise<Conversation[]> {
       last_message_at: c.last_message_at,
       other_id: otherId,
       other_name: profile?.display_name ?? "Unbekannt",
+      other_handle: profile?.handle ?? null,
       listing_title: listing?.title ?? null,
+      listing_cover: listing?.cover_url ?? null,
     };
   });
 }
@@ -105,5 +124,8 @@ export async function sendMessage(conversationId: string, body: string) {
     body,
   });
   if (error) throw error;
-  await supabase.from("conversations").update({ last_message_at: new Date().toISOString() }).eq("id", conversationId);
+  await supabase
+    .from("conversations")
+    .update({ last_message_at: new Date().toISOString() })
+    .eq("id", conversationId);
 }
