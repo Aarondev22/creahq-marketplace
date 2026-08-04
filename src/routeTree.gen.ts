@@ -29,6 +29,7 @@ import { Route as VerkaufenGuideRouteImport } from './routes/verkaufen.guide'
 import { Route as ShopHandleRouteImport } from './routes/shop.$handle'
 import { Route as ListingIdRouteImport } from './routes/listing.$id'
 import { Route as KategorieSlugRouteImport } from './routes/kategorie.$slug'
+import { Route as CheckoutErfolgRouteImport } from './routes/checkout.erfolg'
 import { Route as AuthenticatedNachrichtenRouteImport } from './routes/_authenticated/nachrichten'
 import { Route as AuthenticatedEinstellungenRouteImport } from './routes/_authenticated/einstellungen'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -134,6 +135,11 @@ const KategorieSlugRoute = KategorieSlugRouteImport.update({
   path: '/kategorie/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CheckoutErfolgRoute = CheckoutErfolgRouteImport.update({
+  id: '/checkout/erfolg',
+  path: '/checkout/erfolg',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedNachrichtenRoute =
   AuthenticatedNachrichtenRouteImport.update({
     id: '/nachrichten',
@@ -182,6 +188,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/einstellungen': typeof AuthenticatedEinstellungenRoute
   '/nachrichten': typeof AuthenticatedNachrichtenRoute
+  '/checkout/erfolg': typeof CheckoutErfolgRoute
   '/kategorie/$slug': typeof KategorieSlugRoute
   '/listing/$id': typeof ListingIdRoute
   '/shop/$handle': typeof ShopHandleRoute
@@ -208,6 +215,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/einstellungen': typeof AuthenticatedEinstellungenRoute
   '/nachrichten': typeof AuthenticatedNachrichtenRoute
+  '/checkout/erfolg': typeof CheckoutErfolgRoute
   '/kategorie/$slug': typeof KategorieSlugRoute
   '/listing/$id': typeof ListingIdRoute
   '/shop/$handle': typeof ShopHandleRoute
@@ -236,6 +244,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/einstellungen': typeof AuthenticatedEinstellungenRoute
   '/_authenticated/nachrichten': typeof AuthenticatedNachrichtenRoute
+  '/checkout/erfolg': typeof CheckoutErfolgRoute
   '/kategorie/$slug': typeof KategorieSlugRoute
   '/listing/$id': typeof ListingIdRoute
   '/shop/$handle': typeof ShopHandleRoute
@@ -264,6 +273,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/einstellungen'
     | '/nachrichten'
+    | '/checkout/erfolg'
     | '/kategorie/$slug'
     | '/listing/$id'
     | '/shop/$handle'
@@ -290,6 +300,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/einstellungen'
     | '/nachrichten'
+    | '/checkout/erfolg'
     | '/kategorie/$slug'
     | '/listing/$id'
     | '/shop/$handle'
@@ -317,6 +328,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/einstellungen'
     | '/_authenticated/nachrichten'
+    | '/checkout/erfolg'
     | '/kategorie/$slug'
     | '/listing/$id'
     | '/shop/$handle'
@@ -342,6 +354,7 @@ export interface RootRouteChildren {
   SpielenRoute: typeof SpielenRoute
   UeberRoute: typeof UeberRoute
   WarenkorbRoute: typeof WarenkorbRoute
+  CheckoutErfolgRoute: typeof CheckoutErfolgRoute
   KategorieSlugRoute: typeof KategorieSlugRoute
   ListingIdRoute: typeof ListingIdRoute
   ShopHandleRoute: typeof ShopHandleRoute
@@ -491,6 +504,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof KategorieSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/checkout/erfolg': {
+      id: '/checkout/erfolg'
+      path: '/checkout/erfolg'
+      fullPath: '/checkout/erfolg'
+      preLoaderRoute: typeof CheckoutErfolgRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/nachrichten': {
       id: '/_authenticated/nachrichten'
       path: '/nachrichten'
@@ -563,6 +583,7 @@ const rootRouteChildren: RootRouteChildren = {
   SpielenRoute: SpielenRoute,
   UeberRoute: UeberRoute,
   WarenkorbRoute: WarenkorbRoute,
+  CheckoutErfolgRoute: CheckoutErfolgRoute,
   KategorieSlugRoute: KategorieSlugRoute,
   ListingIdRoute: ListingIdRoute,
   ShopHandleRoute: ShopHandleRoute,
