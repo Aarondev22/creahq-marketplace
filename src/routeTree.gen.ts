@@ -32,6 +32,7 @@ import { Route as KategorieSlugRouteImport } from './routes/kategorie.$slug'
 import { Route as AuthenticatedNachrichtenRouteImport } from './routes/_authenticated/nachrichten'
 import { Route as AuthenticatedEinstellungenRouteImport } from './routes/_authenticated/einstellungen'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api/public/stripe-webhook'
 import { Route as AuthenticatedVerkaufenNeuRouteImport } from './routes/_authenticated/verkaufen.neu'
 
 const WarenkorbRoute = WarenkorbRouteImport.update({
@@ -150,6 +151,11 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiPublicStripeWebhookRoute = ApiPublicStripeWebhookRouteImport.update({
+  id: '/api/public/stripe-webhook',
+  path: '/api/public/stripe-webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedVerkaufenNeuRoute =
   AuthenticatedVerkaufenNeuRouteImport.update({
     id: '/verkaufen/neu',
@@ -181,6 +187,7 @@ export interface FileRoutesByFullPath {
   '/shop/$handle': typeof ShopHandleRoute
   '/verkaufen/guide': typeof VerkaufenGuideRoute
   '/verkaufen/neu': typeof AuthenticatedVerkaufenNeuRoute
+  '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -206,6 +213,7 @@ export interface FileRoutesByTo {
   '/shop/$handle': typeof ShopHandleRoute
   '/verkaufen/guide': typeof VerkaufenGuideRoute
   '/verkaufen/neu': typeof AuthenticatedVerkaufenNeuRoute
+  '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -233,6 +241,7 @@ export interface FileRoutesById {
   '/shop/$handle': typeof ShopHandleRoute
   '/verkaufen/guide': typeof VerkaufenGuideRoute
   '/_authenticated/verkaufen/neu': typeof AuthenticatedVerkaufenNeuRoute
+  '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -260,6 +269,7 @@ export interface FileRouteTypes {
     | '/shop/$handle'
     | '/verkaufen/guide'
     | '/verkaufen/neu'
+    | '/api/public/stripe-webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -285,6 +295,7 @@ export interface FileRouteTypes {
     | '/shop/$handle'
     | '/verkaufen/guide'
     | '/verkaufen/neu'
+    | '/api/public/stripe-webhook'
   id:
     | '__root__'
     | '/'
@@ -311,6 +322,7 @@ export interface FileRouteTypes {
     | '/shop/$handle'
     | '/verkaufen/guide'
     | '/_authenticated/verkaufen/neu'
+    | '/api/public/stripe-webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -334,6 +346,7 @@ export interface RootRouteChildren {
   ListingIdRoute: typeof ListingIdRoute
   ShopHandleRoute: typeof ShopHandleRoute
   VerkaufenGuideRoute: typeof VerkaufenGuideRoute
+  ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -499,6 +512,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/stripe-webhook': {
+      id: '/api/public/stripe-webhook'
+      path: '/api/public/stripe-webhook'
+      fullPath: '/api/public/stripe-webhook'
+      preLoaderRoute: typeof ApiPublicStripeWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/verkaufen/neu': {
       id: '/_authenticated/verkaufen/neu'
       path: '/verkaufen/neu'
@@ -547,6 +567,7 @@ const rootRouteChildren: RootRouteChildren = {
   ListingIdRoute: ListingIdRoute,
   ShopHandleRoute: ShopHandleRoute,
   VerkaufenGuideRoute: VerkaufenGuideRoute,
+  ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
