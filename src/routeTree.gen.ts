@@ -30,6 +30,7 @@ import { Route as ShopHandleRouteImport } from './routes/shop.$handle'
 import { Route as ListingIdRouteImport } from './routes/listing.$id'
 import { Route as KategorieSlugRouteImport } from './routes/kategorie.$slug'
 import { Route as CheckoutErfolgRouteImport } from './routes/checkout.erfolg'
+import { Route as CheckoutAbbruchRouteImport } from './routes/checkout.abbruch'
 import { Route as AuthenticatedNachrichtenRouteImport } from './routes/_authenticated/nachrichten'
 import { Route as AuthenticatedEinstellungenRouteImport } from './routes/_authenticated/einstellungen'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -140,6 +141,11 @@ const CheckoutErfolgRoute = CheckoutErfolgRouteImport.update({
   path: '/checkout/erfolg',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CheckoutAbbruchRoute = CheckoutAbbruchRouteImport.update({
+  id: '/checkout/abbruch',
+  path: '/checkout/abbruch',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedNachrichtenRoute =
   AuthenticatedNachrichtenRouteImport.update({
     id: '/nachrichten',
@@ -188,6 +194,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/einstellungen': typeof AuthenticatedEinstellungenRoute
   '/nachrichten': typeof AuthenticatedNachrichtenRoute
+  '/checkout/abbruch': typeof CheckoutAbbruchRoute
   '/checkout/erfolg': typeof CheckoutErfolgRoute
   '/kategorie/$slug': typeof KategorieSlugRoute
   '/listing/$id': typeof ListingIdRoute
@@ -215,6 +222,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/einstellungen': typeof AuthenticatedEinstellungenRoute
   '/nachrichten': typeof AuthenticatedNachrichtenRoute
+  '/checkout/abbruch': typeof CheckoutAbbruchRoute
   '/checkout/erfolg': typeof CheckoutErfolgRoute
   '/kategorie/$slug': typeof KategorieSlugRoute
   '/listing/$id': typeof ListingIdRoute
@@ -244,6 +252,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/einstellungen': typeof AuthenticatedEinstellungenRoute
   '/_authenticated/nachrichten': typeof AuthenticatedNachrichtenRoute
+  '/checkout/abbruch': typeof CheckoutAbbruchRoute
   '/checkout/erfolg': typeof CheckoutErfolgRoute
   '/kategorie/$slug': typeof KategorieSlugRoute
   '/listing/$id': typeof ListingIdRoute
@@ -273,6 +282,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/einstellungen'
     | '/nachrichten'
+    | '/checkout/abbruch'
     | '/checkout/erfolg'
     | '/kategorie/$slug'
     | '/listing/$id'
@@ -300,6 +310,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/einstellungen'
     | '/nachrichten'
+    | '/checkout/abbruch'
     | '/checkout/erfolg'
     | '/kategorie/$slug'
     | '/listing/$id'
@@ -328,6 +339,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/einstellungen'
     | '/_authenticated/nachrichten'
+    | '/checkout/abbruch'
     | '/checkout/erfolg'
     | '/kategorie/$slug'
     | '/listing/$id'
@@ -354,6 +366,7 @@ export interface RootRouteChildren {
   SpielenRoute: typeof SpielenRoute
   UeberRoute: typeof UeberRoute
   WarenkorbRoute: typeof WarenkorbRoute
+  CheckoutAbbruchRoute: typeof CheckoutAbbruchRoute
   CheckoutErfolgRoute: typeof CheckoutErfolgRoute
   KategorieSlugRoute: typeof KategorieSlugRoute
   ListingIdRoute: typeof ListingIdRoute
@@ -511,6 +524,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CheckoutErfolgRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/checkout/abbruch': {
+      id: '/checkout/abbruch'
+      path: '/checkout/abbruch'
+      fullPath: '/checkout/abbruch'
+      preLoaderRoute: typeof CheckoutAbbruchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/nachrichten': {
       id: '/_authenticated/nachrichten'
       path: '/nachrichten'
@@ -583,6 +603,7 @@ const rootRouteChildren: RootRouteChildren = {
   SpielenRoute: SpielenRoute,
   UeberRoute: UeberRoute,
   WarenkorbRoute: WarenkorbRoute,
+  CheckoutAbbruchRoute: CheckoutAbbruchRoute,
   CheckoutErfolgRoute: CheckoutErfolgRoute,
   KategorieSlugRoute: KategorieSlugRoute,
   ListingIdRoute: ListingIdRoute,
