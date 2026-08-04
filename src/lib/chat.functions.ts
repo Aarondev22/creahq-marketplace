@@ -118,14 +118,51 @@ export async function fetchMessages(conversationId: string): Promise<ChatMessage
 export async function sendMessage(conversationId: string, body: string) {
   const { data: u } = await supabase.auth.getUser();
   if (!u.user) throw new Error("Nicht eingeloggt");
+
   const { error } = await supabase.from("messages").insert({
     conversation_id: conversationId,
     sender_id: u.user.id,
     body,
   });
   if (error) throw error;
+
   await supabase
     .from("conversations")
     .update({ last_message_at: new Date().toISOString() })
     .eq("id", conversationId);
+
+  const { data: conv } = await supabase
+    .from("conversations")
+    .select("buyer_id,seller_id,listing_id")
+    .eq("id", conversationId)
+    .maybeSingle();
+
+  if (conv) {
+    const recipientId =
+      conv.buyer_id === u.user.id ? conv.seller_id : conv.buyer_id;
+
+    let title = "Neue Nachricht";
+    if (conv.listing_id) {
+      const { data: listing } = await supabase
+        .from("listings")
+        .select("title")
+        .eq("id", conv.listing_id)
+        .maybeSingle();
+      if (listing?.title) title = listing.title;
+    }
+
+    const { data: me } = await supabase
+      .from("profiles")
+      .select("display_name")
+      .eq("id", u.user.id)
+      .maybeSingle();
+
+    await supabase.from("notifications").insert({
+      user_id: recipientId,
+      title,
+      body: `${me?.display_name ?? "Jemand"}: ${body.slice(0, 120)}`,
+      category: "chat",
+      link: `/nachrichten?c=${conversationId}`,
+    });
+  }
 }
