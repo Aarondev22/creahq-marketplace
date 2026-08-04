@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { motion } from "motion/react";
-import { X, Minus, GripHorizontal, Users, Store, Tag, Star, Megaphone, BarChart3, Search, Ban, ShieldCheck, ArrowUp, ArrowDown, Trash2, AlertTriangle } from "lucide-react";
+import { X, Minus, GripHorizontal, Users, Store, Tag, Star, Megaphone, BarChart3, Search, Ban, ShieldCheck, ArrowUp, ArrowDown, Trash2, AlertTriangle, Package, Lock, Unlock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { AppRole } from "@/hooks/useAuth";
 
-type Tab = "overview" | "users" | "shops" | "codes" | "featured" | "broadcast" | "disputes";
+type Tab = "overview" | "users" | "listings" | "shops" | "codes" | "featured" | "broadcast" | "disputes";
 
 const POS_KEY = "creahq-admin-panel-pos";
 
@@ -132,6 +132,7 @@ export function AdminPanel({ open, onClose }: { open: boolean; onClose: () => vo
         <div className="flex w-44 shrink-0 flex-col gap-0.5 overflow-y-auto border-r border-border bg-surface p-2">
           <TabBtn icon={<BarChart3 className="h-4 w-4" />} label="Übersicht" active={tab === "overview"} onClick={() => setTab("overview")} />
           <TabBtn icon={<Users className="h-4 w-4" />} label="Nutzer" active={tab === "users"} onClick={() => setTab("users")} />
+          <TabBtn icon={<Package className="h-4 w-4" />} label="Produkte" active={tab === "listings"} onClick={() => setTab("listings")} />
           <TabBtn icon={<Store className="h-4 w-4" />} label="Shops" active={tab === "shops"} onClick={() => setTab("shops")} />
           <TabBtn icon={<AlertTriangle className="h-4 w-4" />} label="Streitfälle" active={tab === "disputes"} onClick={() => setTab("disputes")} />
           <TabBtn icon={<Tag className="h-4 w-4" />} label="Rabatt-Codes" active={tab === "codes"} onClick={() => setTab("codes")} />
@@ -141,6 +142,7 @@ export function AdminPanel({ open, onClose }: { open: boolean; onClose: () => vo
         <div className="flex-1 overflow-y-auto overscroll-contain p-4">
           {tab === "overview" && <OverviewTab />}
           {tab === "users" && <UsersTab />}
+          {tab === "listings" && <ListingsTab />}
           {tab === "shops" && <ShopsTab />}
           {tab === "disputes" && <DisputesTab />}
           {tab === "codes" && <CodesTab />}
@@ -216,19 +218,19 @@ function UsersTab() {
 
   async function search() {
     setLoading(true);
-    let query = supabase.from("profiles").select("id,display_name,handle,banned").limit(20);
-    if (q.trim()) query = query.or(`display_name.ilike.%${q}%,handle.ilike.%${q}%`);
+    let query = supabase.from("profiles").select("id,display_name,handle,banned").limit(100);
+    const term = q.trim().replace(/[%,()]/g, "");
+    if (term) query = query.or(`display_name.ilike.%${term}%,handle.ilike.%${term}%`);
     const { data: profiles, error } = await query;
     if (error) { toast.error(error.message); setLoading(false); return; }
 
     const ids = (profiles ?? []).map((p) => p.id);
     const { data: roles } = await supabase.from("user_roles").select("user_id,role").in("user_id", ids.length ? ids : ["-"]);
 
-    const rows: UserRow[] = (profiles ?? []).map((p) => ({
+    setUsers((profiles ?? []).map((p) => ({
       ...p,
       roles: (roles ?? []).filter((r) => r.user_id === p.id).map((r) => r.role),
-    }));
-    setUsers(rows);
+    })));
     setLoading(false);
   }
 
@@ -264,43 +266,46 @@ function UsersTab() {
           value={q}
           onChange={(e) => setQ(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && search()}
-          placeholder="Name oder Handle suchen…"
-          className="flex-1 rounded-lg border border-border bg-surface px-3 py-2 text-sm"
+          placeholder="Anzeigename oder @handle suchen…"
+          className="min-h-11 flex-1 rounded-xl border border-border bg-surface px-4 text-sm"
         />
-        <button onClick={search} className="inline-flex items-center gap-1 rounded-lg bg-brand px-3 py-2 text-sm font-bold text-primary-foreground">
-          <Search className="h-3.5 w-3.5" /> Suchen
+        <button onClick={search} className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-xl bg-brand px-4 text-sm font-bold text-primary-foreground">
+          <Search className="h-4 w-4" /> Suchen
         </button>
       </div>
       {loading ? (
-        <div className="text-sm text-muted-foreground">Lade …</div>
+        <RowsSkeleton />
       ) : users.length === 0 ? (
-        <div className="text-sm text-muted-foreground">Keine Nutzer gefunden.</div>
+        <EmptyBox emoji="🕵️" text="Keine Nutzer gefunden." />
       ) : (
         <ul className="space-y-2">
           {users.map((u) => (
-            <li key={u.id} className="rounded-xl border border-border bg-surface p-3">
-              <div className="flex items-center justify-between gap-2">
+            <li key={u.id} className="rounded-2xl border border-border bg-surface p-3">
+              <div className="flex min-h-12 items-center justify-between gap-3">
                 <div className="min-w-0">
-                  <div className="truncate text-sm font-semibold text-brand-ink">{u.display_name ?? "Unbenannt"}</div>
+                  <div className="truncate text-sm font-bold text-brand-ink">
+                    {u.display_name ?? "Unbenannt"}
+                    {u.banned && <span className="ml-2 rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-black uppercase text-red-700">Gesperrt</span>}
+                  </div>
                   <div className="truncate text-xs text-muted-foreground">@{u.handle ?? "—"}</div>
                 </div>
                 <button
                   onClick={() => toggleBan(u)}
-                  className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold ${u.banned ? "bg-red-100 text-red-700" : "bg-brand-soft text-brand-ink"}`}
+                  className={`inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full px-4 text-xs font-bold ${u.banned ? "bg-emerald-100 text-emerald-700" : "bg-red-50 text-red-600 hover:bg-red-100"}`}
                 >
-                  <Ban className="h-3 w-3" /> {u.banned ? "Entsperren" : "Sperren"}
+                  <Ban className="h-3.5 w-3.5" /> {u.banned ? "Entsperren" : "Sperren"}
                 </button>
               </div>
-              <div className="mt-2 flex flex-wrap gap-1.5">
+              <div className="mt-2 flex flex-wrap gap-2">
                 {(["seller", "admin", "founder"] as AppRole[]).map((role) => (
                   <button
                     key={role}
                     onClick={() => toggleRole(u, role)}
-                    className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
+                    className={`inline-flex min-h-10 items-center gap-1.5 rounded-full border px-3.5 text-[11px] font-black uppercase tracking-wide ${
                       u.roles.includes(role) ? "border-brand bg-brand text-primary-foreground" : "border-border text-muted-foreground hover:border-brand hover:text-brand"
                     }`}
                   >
-                    <ShieldCheck className="h-2.5 w-2.5" /> {role}
+                    <ShieldCheck className="h-3 w-3" /> {role}
                   </button>
                 ))}
               </div>
@@ -308,6 +313,142 @@ function UsersTab() {
           ))}
         </ul>
       )}
+    </div>
+  );
+}
+
+type AdminListingRow = {
+  id: string;
+  title: string;
+  price_cents: number;
+  status: string;
+  seller_id: string;
+  seller_name: string;
+  seller_handle: string;
+};
+
+function ListingsTab() {
+  const [q, setQ] = useState("");
+  const [rows, setRows] = useState<AdminListingRow[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  async function load() {
+    setLoading(true);
+    const term = q.trim().replace(/[%,()]/g, "");
+
+    let sellerIds: string[] | null = null;
+    if (term) {
+      const { data: profs } = await supabase
+        .from("profiles")
+        .select("id")
+        .or(`display_name.ilike.%${term}%,handle.ilike.%${term}%`)
+        .limit(100);
+      sellerIds = (profs ?? []).map((p) => p.id);
+    }
+
+    let query = supabase.from("listings").select("id,title,price_cents,status,seller_id").order("created_at", { ascending: false }).limit(200);
+    if (term) {
+      const parts = [`title.ilike.%${term}%`];
+      if (sellerIds && sellerIds.length > 0) parts.push(`seller_id.in.(${sellerIds.join(",")})`);
+      query = query.or(parts.join(","));
+    }
+    const { data: listings, error } = await query;
+    if (error) { toast.error(error.message); setLoading(false); return; }
+
+    const ids = Array.from(new Set((listings ?? []).map((l) => l.seller_id)));
+    const { data: profiles } = await supabase.from("profiles").select("id,display_name,handle").in("id", ids.length ? ids : ["-"]);
+
+    setRows((listings ?? []).map((l) => {
+      const p = (profiles ?? []).find((x) => x.id === l.seller_id);
+      return {
+        ...l,
+        seller_name: p?.display_name ?? "Unbenannt",
+        seller_handle: p?.handle ?? "—",
+      };
+    }));
+    setLoading(false);
+  }
+
+  useEffect(() => { load(); }, []);
+
+  async function setStatus(row: AdminListingRow, status: "archived" | "published") {
+    const { error } = await supabase.from("listings").update({ status }).eq("id", row.id);
+    if (error) return toast.error(error.message);
+    toast.success(status === "archived" ? "Produkt gesperrt" : "Produkt freigegeben");
+    setRows((arr) => arr.map((x) => (x.id === row.id ? { ...x, status } : x)));
+  }
+
+  const STATUS: Record<string, { label: string; cls: string }> = {
+    published: { label: "Online", cls: "bg-emerald-100 text-emerald-700" },
+    draft: { label: "Pausiert", cls: "bg-amber-100 text-amber-800" },
+    archived: { label: "Gesperrt", cls: "bg-red-100 text-red-700" },
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="flex gap-2">
+        <input
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && load()}
+          placeholder="Titel, Verkäufer oder @handle suchen…"
+          className="min-h-11 flex-1 rounded-xl border border-border bg-surface px-4 text-sm"
+        />
+        <button onClick={load} className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-xl bg-brand px-4 text-sm font-bold text-primary-foreground">
+          <Search className="h-4 w-4" /> Suchen
+        </button>
+      </div>
+
+      {loading ? (
+        <RowsSkeleton />
+      ) : rows.length === 0 ? (
+        <EmptyBox emoji="📦" text="Keine Produkte gefunden." />
+      ) : (
+        <ul className="space-y-2">
+          {rows.map((r) => {
+            const st = STATUS[r.status] ?? { label: r.status, cls: "bg-gray-100 text-gray-600" };
+            const blocked = r.status === "archived";
+            return (
+              <li key={r.id} className="flex min-h-16 flex-wrap items-center gap-3 rounded-2xl border border-border bg-surface p-3">
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-sm font-bold text-brand-ink">{r.title}</div>
+                  <div className="truncate text-xs text-muted-foreground">
+                    {(r.price_cents / 100).toFixed(2)} € · {r.seller_name} (@{r.seller_handle})
+                  </div>
+                </div>
+                <span className={`shrink-0 rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-wide ${st.cls}`}>{st.label}</span>
+                <button
+                  onClick={() => setStatus(r, blocked ? "published" : "archived")}
+                  className={`inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full px-4 text-xs font-bold ${
+                    blocked ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200" : "bg-red-50 text-red-600 hover:bg-red-100"
+                  }`}
+                >
+                  {blocked ? <><Unlock className="h-3.5 w-3.5" /> Freigeben</> : <><Lock className="h-3.5 w-3.5" /> Sperren</>}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function RowsSkeleton() {
+  return (
+    <ul className="space-y-2">
+      {[0, 1, 2, 3].map((i) => (
+        <li key={i} className="h-16 animate-pulse rounded-2xl bg-surface" />
+      ))}
+    </ul>
+  );
+}
+
+function EmptyBox({ emoji, text }: { emoji: string; text: string }) {
+  return (
+    <div className="rounded-2xl border-2 border-dashed border-brand/30 bg-brand-soft/20 p-8 text-center">
+      <div className="text-3xl">{emoji}</div>
+      <p className="mt-2 text-sm font-semibold text-brand-ink">{text}</p>
     </div>
   );
 }

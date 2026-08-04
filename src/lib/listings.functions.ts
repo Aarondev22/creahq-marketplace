@@ -62,21 +62,57 @@ export const fetchFresh = createServerFn({ method: "GET" }).handler(async (): Pr
   return (data ?? []) as ListingCard[];
 });
 
+export type SearchInput = {
+  q?: string;
+  kind?: "digital" | "service" | "";
+  category?: string;
+  min?: number;
+  max?: number;
+  sort?: "new" | "price_asc" | "price_desc";
+  limit?: number;
+};
+
 export const searchListings = createServerFn({ method: "GET" })
-  .inputValidator((d: { q: string; limit?: number }) => ({
-    q: String(d.q ?? "").trim().slice(0, 120),
-    limit: Math.min(Math.max(Number(d.limit ?? 24), 1), 50),
+  .inputValidator((d: SearchInput) => ({
+    q: String(d?.q ?? "").trim().slice(0, 120),
+    kind: (d?.kind === "digital" || d?.kind === "service" ? d.kind : "") as "digital" | "service" | "",
+    category: String(d?.category ?? "").slice(0, 80),
+    min: Number.isFinite(Number(d?.min)) ? Math.max(0, Number(d?.min)) : 0,
+    max: Number.isFinite(Number(d?.max)) && Number(d?.max) > 0 ? Number(d?.max) : 0,
+    sort: (d?.sort === "price_asc" || d?.sort === "price_desc" ? d.sort : "new") as "new" | "price_asc" | "price_desc",
+    limit: Math.min(Math.max(Number(d?.limit ?? 48), 1), 100),
   }))
   .handler(async ({ data }): Promise<ListingCard[]> => {
     const supa = serverPublic();
     let query = supa.from("listings").select(SAFE_COLS).eq("status", "published");
     if (data.q) {
-      const like = `%${data.q.replace(/[%_]/g, "")}%`;
-      query = query.or(`title.ilike.${like},description.ilike.${like},category.ilike.${like}`);
+      const clean = data.q.replace(/[%_,()]/g, "");
+      const like = `%${clean}%`;
+      query = query.or(
+        `title.ilike.${like},description.ilike.${like},category.ilike.${like},tags.cs.{${clean}}`,
+      );
     }
-    const { data: rows } = await query.order("created_at", { ascending: false }).limit(data.limit);
+    if (data.kind) query = query.eq("kind", data.kind);
+    if (data.category) query = query.eq("category", data.category);
+    if (data.min > 0) query = query.gte("price_cents", Math.round(data.min * 100));
+    if (data.max > 0) query = query.lte("price_cents", Math.round(data.max * 100));
+
+    if (data.sort === "price_asc") query = query.order("price_cents", { ascending: true });
+    else if (data.sort === "price_desc") query = query.order("price_cents", { ascending: false });
+    else query = query.order("created_at", { ascending: false });
+
+    const { data: rows } = await query.limit(data.limit);
     return (rows ?? []) as ListingCard[];
   });
+
+export const fetchCategories = createServerFn({ method: "GET" }).handler(async (): Promise<string[]> => {
+  const supa = serverPublic();
+  const { data } = await supa.from("listings").select("category").eq("status", "published").limit(500);
+  const set = new Set<string>();
+  for (const r of data ?? []) if (r.category) set.add(r.category);
+  return [...set].sort((a, b) => a.localeCompare(b, "de"));
+});
+
 
 export type ListingDetail = ListingCard & {
   description: string | null;

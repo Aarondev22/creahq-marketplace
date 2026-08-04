@@ -29,9 +29,12 @@ import { Route as VerkaufenGuideRouteImport } from './routes/verkaufen.guide'
 import { Route as ShopHandleRouteImport } from './routes/shop.$handle'
 import { Route as ListingIdRouteImport } from './routes/listing.$id'
 import { Route as KategorieSlugRouteImport } from './routes/kategorie.$slug'
+import { Route as CheckoutErfolgRouteImport } from './routes/checkout.erfolg'
+import { Route as CheckoutAbbruchRouteImport } from './routes/checkout.abbruch'
 import { Route as AuthenticatedNachrichtenRouteImport } from './routes/_authenticated/nachrichten'
 import { Route as AuthenticatedEinstellungenRouteImport } from './routes/_authenticated/einstellungen'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api/public/stripe-webhook'
 import { Route as AuthenticatedVerkaufenNeuRouteImport } from './routes/_authenticated/verkaufen.neu'
 
 const WarenkorbRoute = WarenkorbRouteImport.update({
@@ -133,6 +136,16 @@ const KategorieSlugRoute = KategorieSlugRouteImport.update({
   path: '/kategorie/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CheckoutErfolgRoute = CheckoutErfolgRouteImport.update({
+  id: '/checkout/erfolg',
+  path: '/checkout/erfolg',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CheckoutAbbruchRoute = CheckoutAbbruchRouteImport.update({
+  id: '/checkout/abbruch',
+  path: '/checkout/abbruch',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedNachrichtenRoute =
   AuthenticatedNachrichtenRouteImport.update({
     id: '/nachrichten',
@@ -149,6 +162,11 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const ApiPublicStripeWebhookRoute = ApiPublicStripeWebhookRouteImport.update({
+  id: '/api/public/stripe-webhook',
+  path: '/api/public/stripe-webhook',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedVerkaufenNeuRoute =
   AuthenticatedVerkaufenNeuRouteImport.update({
@@ -176,11 +194,14 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/einstellungen': typeof AuthenticatedEinstellungenRoute
   '/nachrichten': typeof AuthenticatedNachrichtenRoute
+  '/checkout/abbruch': typeof CheckoutAbbruchRoute
+  '/checkout/erfolg': typeof CheckoutErfolgRoute
   '/kategorie/$slug': typeof KategorieSlugRoute
   '/listing/$id': typeof ListingIdRoute
   '/shop/$handle': typeof ShopHandleRoute
   '/verkaufen/guide': typeof VerkaufenGuideRoute
   '/verkaufen/neu': typeof AuthenticatedVerkaufenNeuRoute
+  '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -201,11 +222,14 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/einstellungen': typeof AuthenticatedEinstellungenRoute
   '/nachrichten': typeof AuthenticatedNachrichtenRoute
+  '/checkout/abbruch': typeof CheckoutAbbruchRoute
+  '/checkout/erfolg': typeof CheckoutErfolgRoute
   '/kategorie/$slug': typeof KategorieSlugRoute
   '/listing/$id': typeof ListingIdRoute
   '/shop/$handle': typeof ShopHandleRoute
   '/verkaufen/guide': typeof VerkaufenGuideRoute
   '/verkaufen/neu': typeof AuthenticatedVerkaufenNeuRoute
+  '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -228,11 +252,14 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/einstellungen': typeof AuthenticatedEinstellungenRoute
   '/_authenticated/nachrichten': typeof AuthenticatedNachrichtenRoute
+  '/checkout/abbruch': typeof CheckoutAbbruchRoute
+  '/checkout/erfolg': typeof CheckoutErfolgRoute
   '/kategorie/$slug': typeof KategorieSlugRoute
   '/listing/$id': typeof ListingIdRoute
   '/shop/$handle': typeof ShopHandleRoute
   '/verkaufen/guide': typeof VerkaufenGuideRoute
   '/_authenticated/verkaufen/neu': typeof AuthenticatedVerkaufenNeuRoute
+  '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -255,11 +282,14 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/einstellungen'
     | '/nachrichten'
+    | '/checkout/abbruch'
+    | '/checkout/erfolg'
     | '/kategorie/$slug'
     | '/listing/$id'
     | '/shop/$handle'
     | '/verkaufen/guide'
     | '/verkaufen/neu'
+    | '/api/public/stripe-webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -280,11 +310,14 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/einstellungen'
     | '/nachrichten'
+    | '/checkout/abbruch'
+    | '/checkout/erfolg'
     | '/kategorie/$slug'
     | '/listing/$id'
     | '/shop/$handle'
     | '/verkaufen/guide'
     | '/verkaufen/neu'
+    | '/api/public/stripe-webhook'
   id:
     | '__root__'
     | '/'
@@ -306,11 +339,14 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/einstellungen'
     | '/_authenticated/nachrichten'
+    | '/checkout/abbruch'
+    | '/checkout/erfolg'
     | '/kategorie/$slug'
     | '/listing/$id'
     | '/shop/$handle'
     | '/verkaufen/guide'
     | '/_authenticated/verkaufen/neu'
+    | '/api/public/stripe-webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -330,10 +366,13 @@ export interface RootRouteChildren {
   SpielenRoute: typeof SpielenRoute
   UeberRoute: typeof UeberRoute
   WarenkorbRoute: typeof WarenkorbRoute
+  CheckoutAbbruchRoute: typeof CheckoutAbbruchRoute
+  CheckoutErfolgRoute: typeof CheckoutErfolgRoute
   KategorieSlugRoute: typeof KategorieSlugRoute
   ListingIdRoute: typeof ListingIdRoute
   ShopHandleRoute: typeof ShopHandleRoute
   VerkaufenGuideRoute: typeof VerkaufenGuideRoute
+  ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -478,6 +517,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof KategorieSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/checkout/erfolg': {
+      id: '/checkout/erfolg'
+      path: '/checkout/erfolg'
+      fullPath: '/checkout/erfolg'
+      preLoaderRoute: typeof CheckoutErfolgRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/checkout/abbruch': {
+      id: '/checkout/abbruch'
+      path: '/checkout/abbruch'
+      fullPath: '/checkout/abbruch'
+      preLoaderRoute: typeof CheckoutAbbruchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/nachrichten': {
       id: '/_authenticated/nachrichten'
       path: '/nachrichten'
@@ -498,6 +551,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard'
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/public/stripe-webhook': {
+      id: '/api/public/stripe-webhook'
+      path: '/api/public/stripe-webhook'
+      fullPath: '/api/public/stripe-webhook'
+      preLoaderRoute: typeof ApiPublicStripeWebhookRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/verkaufen/neu': {
       id: '/_authenticated/verkaufen/neu'
@@ -543,10 +603,13 @@ const rootRouteChildren: RootRouteChildren = {
   SpielenRoute: SpielenRoute,
   UeberRoute: UeberRoute,
   WarenkorbRoute: WarenkorbRoute,
+  CheckoutAbbruchRoute: CheckoutAbbruchRoute,
+  CheckoutErfolgRoute: CheckoutErfolgRoute,
   KategorieSlugRoute: KategorieSlugRoute,
   ListingIdRoute: ListingIdRoute,
   ShopHandleRoute: ShopHandleRoute,
   VerkaufenGuideRoute: VerkaufenGuideRoute,
+  ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
