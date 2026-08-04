@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { motion } from "motion/react";
-import { X, Minus, GripHorizontal, Users, Store, Tag, Star, Megaphone, BarChart3, Search, Ban, ShieldCheck, ArrowUp, ArrowDown, Trash2, AlertTriangle } from "lucide-react";
+import { X, Minus, GripHorizontal, Users, Store, Tag, Star, Megaphone, BarChart3, Search, Ban, ShieldCheck, ArrowUp, ArrowDown, Trash2, AlertTriangle, Package, Lock, Unlock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { AppRole } from "@/hooks/useAuth";
 
-type Tab = "overview" | "users" | "shops" | "codes" | "featured" | "broadcast" | "disputes";
+type Tab = "overview" | "users" | "listings" | "shops" | "codes" | "featured" | "broadcast" | "disputes";
 
 const POS_KEY = "creahq-admin-panel-pos";
 
@@ -132,6 +132,7 @@ export function AdminPanel({ open, onClose }: { open: boolean; onClose: () => vo
         <div className="flex w-44 shrink-0 flex-col gap-0.5 overflow-y-auto border-r border-border bg-surface p-2">
           <TabBtn icon={<BarChart3 className="h-4 w-4" />} label="Übersicht" active={tab === "overview"} onClick={() => setTab("overview")} />
           <TabBtn icon={<Users className="h-4 w-4" />} label="Nutzer" active={tab === "users"} onClick={() => setTab("users")} />
+          <TabBtn icon={<Package className="h-4 w-4" />} label="Produkte" active={tab === "listings"} onClick={() => setTab("listings")} />
           <TabBtn icon={<Store className="h-4 w-4" />} label="Shops" active={tab === "shops"} onClick={() => setTab("shops")} />
           <TabBtn icon={<AlertTriangle className="h-4 w-4" />} label="Streitfälle" active={tab === "disputes"} onClick={() => setTab("disputes")} />
           <TabBtn icon={<Tag className="h-4 w-4" />} label="Rabatt-Codes" active={tab === "codes"} onClick={() => setTab("codes")} />
@@ -141,6 +142,7 @@ export function AdminPanel({ open, onClose }: { open: boolean; onClose: () => vo
         <div className="flex-1 overflow-y-auto overscroll-contain p-4">
           {tab === "overview" && <OverviewTab />}
           {tab === "users" && <UsersTab />}
+          {tab === "listings" && <ListingsTab />}
           {tab === "shops" && <ShopsTab />}
           {tab === "disputes" && <DisputesTab />}
           {tab === "codes" && <CodesTab />}
