@@ -119,25 +119,35 @@ export async function sendMessage(conversationId: string, body: string) {
   const { data: u } = await supabase.auth.getUser();
   if (!u.user) throw new Error("Nicht eingeloggt");
 
-  const { error } = await supabase.from("messages").insert({
+  // 1) Nachricht speichern
+  const { error: msgError } = await supabase.from("messages").insert({
     conversation_id: conversationId,
     sender_id: u.user.id,
-    body,
+    body: body.trim(),
+    kind: "text",
   });
-  if (error) throw error;
 
+  if (msgError) {
+    console.error("messages insert", msgError);
+    throw new Error(msgError.message || "Nachricht konnte nicht gespeichert werden");
+  }
+
+  // 2) Conversation aktualisieren (Fehler ignorieren)
   await supabase
     .from("conversations")
     .update({ last_message_at: new Date().toISOString() })
     .eq("id", conversationId);
 
-  const { data: conv } = await supabase
-    .from("conversations")
-    .select("buyer_id,seller_id,listing_id")
-    .eq("id", conversationId)
-    .maybeSingle();
+  // 3) Notification — darf NIE das Senden killen
+  try {
+    const { data: conv } = await supabase
+      .from("conversations")
+      .select("buyer_id,seller_id,listing_id")
+      .eq("id", conversationId)
+      .maybeSingle();
 
-  if (conv) {
+    if (!conv) return;
+
     const recipientId =
       conv.buyer_id === u.user.id ? conv.seller_id : conv.buyer_id;
 
@@ -157,12 +167,18 @@ export async function sendMessage(conversationId: string, body: string) {
       .eq("id", u.user.id)
       .maybeSingle();
 
-    await supabase.from("notifications").insert({
+    const { error: notifError } = await supabase.from("notifications").insert({
       user_id: recipientId,
       title,
       body: `${me?.display_name ?? "Jemand"}: ${body.slice(0, 120)}`,
       category: "chat",
       link: `/nachrichten?c=${conversationId}`,
     });
+
+    if (notifError) {
+      console.warn("notification insert (ignoriert)", notifError);
+    }
+  } catch (e) {
+    console.warn("notification failed (ignoriert)", e);
   }
 }
