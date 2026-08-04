@@ -77,15 +77,32 @@ function MessagesPage() {
     el.scrollTop = el.scrollHeight;
   }, [messages]);
 
-  async function submit(e: React.FormEvent) {
+    async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!c || !draft.trim()) return;
-    const text = draft;
+    const text = draft.trim();
     setDraft("");
     try {
       await sendMessage(c, text);
+      const { data: u } = await supabase.auth.getUser();
+      if (u.user) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: crypto.randomUUID(),
+            conversation_id: c,
+            sender_id: u.user!.id,
+            body: text,
+            kind: "text",
+            created_at: new Date().toISOString(),
+          },
+        ]);
+      }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Senden fehlgeschlagen");
+      setDraft(text);
+      const msg = err instanceof Error ? err.message : "Senden fehlgeschlagen";
+      toast.error(msg);
+      console.error(err);
     }
   }
 
