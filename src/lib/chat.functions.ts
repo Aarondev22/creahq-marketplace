@@ -27,17 +27,15 @@ export async function getOrCreateConversation(sellerId: string, listingId?: stri
   if (!u.user) throw new Error("Nicht eingeloggt");
   if (u.user.id === sellerId) throw new Error("Du kannst dir nicht selbst schreiben");
 
-  let existingQuery = supabase
+  let q = supabase
     .from("conversations")
     .select("id")
     .eq("buyer_id", u.user.id)
     .eq("seller_id", sellerId);
 
-  existingQuery = listingId
-    ? existingQuery.eq("listing_id", listingId)
-    : existingQuery.is("listing_id", null);
+  q = listingId ? q.eq("listing_id", listingId) : q.is("listing_id", null);
 
-  const { data: existing } = await existingQuery.maybeSingle();
+  const { data: existing } = await q.maybeSingle();
   if (existing) return existing.id;
 
   const { data: created, error } = await supabase
@@ -66,7 +64,7 @@ export async function fetchConversations(): Promise<Conversation[]> {
     .order("last_message_at", { ascending: false });
 
   if (error) throw error;
-  if (!convs || convs.length === 0) return [];
+  if (!convs?.length) return [];
 
   const otherIds = Array.from(
     new Set(convs.map((c) => (c.buyer_id === myId ? c.seller_id : c.buyer_id)))
@@ -119,7 +117,6 @@ export async function sendMessage(conversationId: string, body: string) {
   const { data: u } = await supabase.auth.getUser();
   if (!u.user) throw new Error("Nicht eingeloggt");
 
-  // 1) Nachricht speichern
   const { error: msgError } = await supabase.from("messages").insert({
     conversation_id: conversationId,
     sender_id: u.user.id,
@@ -132,13 +129,12 @@ export async function sendMessage(conversationId: string, body: string) {
     throw new Error(msgError.message || "Nachricht konnte nicht gespeichert werden");
   }
 
-  // 2) Conversation aktualisieren (Fehler ignorieren)
   await supabase
     .from("conversations")
     .update({ last_message_at: new Date().toISOString() })
     .eq("id", conversationId);
 
-  // 3) Notification — darf NIE das Senden killen
+  // Glocke — Fehler blockieren Senden nicht
   try {
     const { data: conv } = await supabase
       .from("conversations")
@@ -171,14 +167,12 @@ export async function sendMessage(conversationId: string, body: string) {
       user_id: recipientId,
       title,
       body: `${me?.display_name ?? "Jemand"}: ${body.slice(0, 120)}`,
-      category: "chat",
+      category: "message",
       link: `/nachrichten?c=${conversationId}`,
     });
 
-    if (notifError) {
-      console.warn("notification insert (ignoriert)", notifError);
-    }
+    if (notifError) console.warn("notification:", notifError.message);
   } catch (e) {
-    console.warn("notification failed (ignoriert)", e);
+    console.warn("notification failed", e);
   }
 }
