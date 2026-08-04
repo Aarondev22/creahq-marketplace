@@ -75,11 +75,11 @@ export type SearchInput = {
 export const searchListings = createServerFn({ method: "GET" })
   .inputValidator((d: SearchInput) => ({
     q: String(d?.q ?? "").trim().slice(0, 120),
-    kind: d?.kind === "digital" || d?.kind === "service" ? d.kind : "",
+    kind: (d?.kind === "digital" || d?.kind === "service" ? d.kind : "") as "digital" | "service" | "",
     category: String(d?.category ?? "").slice(0, 80),
     min: Number.isFinite(Number(d?.min)) ? Math.max(0, Number(d?.min)) : 0,
     max: Number.isFinite(Number(d?.max)) && Number(d?.max) > 0 ? Number(d?.max) : 0,
-    sort: d?.sort === "price_asc" || d?.sort === "price_desc" ? d.sort : ("new" as const),
+    sort: (d?.sort === "price_asc" || d?.sort === "price_desc" ? d.sort : "new") as "new" | "price_asc" | "price_desc",
     limit: Math.min(Math.max(Number(d?.limit ?? 48), 1), 100),
   }))
   .handler(async ({ data }): Promise<ListingCard[]> => {
