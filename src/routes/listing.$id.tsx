@@ -1,18 +1,33 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useSuspenseQuery, useQuery, queryOptions } from "@tanstack/react-query";
 import { motion } from "motion/react";
-import { ArrowLeft, Heart, Share2, Shield, Truck, Download, MessageCircle, Star, Package } from "lucide-react";
+import {
+  ArrowLeft,
+  Heart,
+  Share2,
+  Shield,
+  Truck,
+  Download,
+  MessageCircle,
+  Star,
+  Package,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchListingById, fetchRelatedListings, type ListingCard } from "@/lib/listings.functions";
+import {
+  fetchListingById,
+  fetchRelatedListings,
+  type ListingCard,
+} from "@/lib/listings.functions";
 import { getOrCreateConversation } from "@/lib/chat.functions";
 import { useCart } from "@/lib/cart";
 import { toast } from "sonner";
 
-const listingQuery = (id: string) => queryOptions({
-  queryKey: ["listing", id],
-  queryFn: () => fetchListingById({ data: { id } }),
-});
+const listingQuery = (id: string) =>
+  queryOptions({
+    queryKey: ["listing", id],
+    queryFn: () => fetchListingById({ data: { id } }),
+  });
 
 function isPlaceholder(id: string) {
   return id.startsWith("beispiel");
@@ -34,13 +49,19 @@ export const Route = createFileRoute("/listing/$id")({
     ],
   }),
   component: ListingPage,
-  errorComponent: ({ error }) => <div className="p-10 text-center text-sm text-muted-foreground">{error.message}</div>,
-  notFoundComponent: () => <div className="p-10 text-center text-sm text-muted-foreground">Listing nicht gefunden.</div>,
+  errorComponent: ({ error }) => (
+    <div className="p-10 text-center text-sm text-muted-foreground">{error.message}</div>
+  ),
+  notFoundComponent: () => (
+    <div className="p-10 text-center text-sm text-muted-foreground">Listing nicht gefunden.</div>
+  ),
 });
 
 function ListingPage() {
   const { id } = Route.useParams();
-  useEffect(() => { window.scrollTo(0, 0); }, [id]);
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [id]);
   if (isPlaceholder(id)) return <PlaceholderListing id={id} />;
   return <RealListing id={id} />;
 }
@@ -51,7 +72,11 @@ function RealListing({ id }: { id: string }) {
   return <ListingView l={data} />;
 }
 
-function ListingView({ l }: { l: NonNullable<Awaited<ReturnType<typeof fetchListingById>>> }) {
+function ListingView({
+  l,
+}: {
+  l: NonNullable<Awaited<ReturnType<typeof fetchListingById>>>;
+}) {
   const navigate = useNavigate();
   const { addItem } = useCart();
   const [isFav, setIsFav] = useState(false);
@@ -66,16 +91,28 @@ function ListingView({ l }: { l: NonNullable<Awaited<ReturnType<typeof fetchList
     (async () => {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) return;
-      const { data } = await supabase.from("favorites").select("id").eq("user_id", u.user.id).eq("listing_id", l.id).maybeSingle();
+      const { data } = await supabase
+        .from("favorites")
+        .select("id")
+        .eq("user_id", u.user.id)
+        .eq("listing_id", l.id)
+        .maybeSingle();
       if (!active) return;
       setFavId(data?.id ?? null);
       setIsFav(Boolean(data));
     })();
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, [l.id]);
 
   function handleAddToCart() {
-    addItem({ id: l.id, title: l.title, price_cents: l.price_cents, cover_url: l.cover_url });
+    addItem({
+      id: l.id,
+      title: l.title,
+      price_cents: l.price_cents,
+      cover_url: l.cover_url,
+    });
     toast.success("In den Warenkorb gelegt!");
   }
 
@@ -89,12 +126,18 @@ function ListingView({ l }: { l: NonNullable<Awaited<ReturnType<typeof fetchList
     if (isFav && favId) {
       const { error } = await supabase.from("favorites").delete().eq("id", favId);
       if (error) return toast.error(error.message);
-      setIsFav(false); setFavId(null);
+      setIsFav(false);
+      setFavId(null);
       toast.success("Aus Favoriten entfernt");
     } else {
-      const { data, error } = await supabase.from("favorites").insert({ user_id: u.user.id, listing_id: l.id }).select("id").single();
+      const { data, error } = await supabase
+        .from("favorites")
+        .insert({ user_id: u.user.id, listing_id: l.id })
+        .select("id")
+        .single();
       if (error) return toast.error(error.message);
-      setIsFav(true); setFavId(data.id);
+      setIsFav(true);
+      setFavId(data.id);
       toast.success("Zu Favoriten hinzugefügt!");
     }
   }
@@ -106,13 +149,15 @@ function ListingView({ l }: { l: NonNullable<Awaited<ReturnType<typeof fetchList
       const convId = await getOrCreateConversation(sellerId, l.id);
       navigate({ to: "/nachrichten", search: { c: convId } });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Unbekannter Fehler beim Chat öffnen");
+      toast.error(err instanceof Error ? err.message : "Chat konnte nicht geöffnet werden");
     }
   }
 
   function handleShare() {
     if (navigator.share) {
-      navigator.share({ title: l.title, text: l.description ?? "", url: window.location.href }).catch(() => {});
+      navigator
+        .share({ title: l.title, text: l.description ?? "", url: window.location.href })
+        .catch(() => {});
     } else {
       navigator.clipboard.writeText(window.location.href);
       toast.success("Link kopiert!");
@@ -129,7 +174,11 @@ function ListingView({ l }: { l: NonNullable<Awaited<ReturnType<typeof fetchList
   return (
     <div className="mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:px-6 lg:grid-cols-2">
       <div className="space-y-3">
-        <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="aspect-square overflow-hidden rounded-[2rem] border border-border bg-gradient-to-br from-brand-soft to-amber-100/40">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.98 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="aspect-square overflow-hidden rounded-[2rem] border border-border bg-gradient-to-br from-brand-soft to-amber-100/40"
+        >
           {allImages[activeImg] ? (
             <img src={allImages[activeImg]} alt={l.title} className="h-full w-full object-cover" />
           ) : (
@@ -140,10 +189,13 @@ function ListingView({ l }: { l: NonNullable<Awaited<ReturnType<typeof fetchList
           <div className="grid grid-cols-4 gap-2">
             {allImages.map((src, i) => (
               <button
-                key={src}
+                key={`${src}-${i}`}
+                type="button"
                 onClick={() => setActiveImg(i)}
                 aria-label={`Bild ${i + 1} anzeigen`}
-                className={`aspect-square overflow-hidden rounded-xl border-2 transition-colors ${i === activeImg ? "border-brand" : "border-border hover:border-brand/50"}`}
+                className={`aspect-square overflow-hidden rounded-xl border-2 transition-colors ${
+                  i === activeImg ? "border-brand" : "border-border hover:border-brand/50"
+                }`}
               >
                 <img src={src} alt={`${l.title} — Bild ${i + 1}`} className="h-full w-full object-cover" />
               </button>
@@ -154,44 +206,78 @@ function ListingView({ l }: { l: NonNullable<Awaited<ReturnType<typeof fetchList
 
       <div>
         <div className="flex flex-wrap items-center gap-2">
-          {l.category && <span className="inline-block rounded-full bg-brand-soft px-3 py-1 text-xs font-bold uppercase tracking-widest text-brand">{l.category}</span>}
+          {l.category && (
+            <span className="inline-block rounded-full bg-brand-soft px-3 py-1 text-xs font-bold uppercase tracking-widest text-brand">
+              {l.category}
+            </span>
+          )}
           <span className="inline-block rounded-full border border-border bg-card px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
             {isDigital ? "Digital" : "Physisch"}
           </span>
         </div>
+
         <h1 className="mt-2 font-display text-4xl font-black text-brand-ink">{l.title}</h1>
+
         {l.seller && (
-          <Link to="/shop/$handle" params={{ handle: l.seller.handle ?? "" }} className="mt-2 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-brand">
-            <span className="grid h-7 w-7 place-items-center rounded-full bg-brand/15 text-xs font-bold text-brand">{(l.seller.display_name ?? "?").slice(0,1).toUpperCase()}</span>
-            von {l.seller.display_name}
+          <Link
+            to="/shop/$handle"
+            params={{ handle: l.seller.handle ?? "" }}
+            className="mt-3 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-sm font-semibold text-brand-ink transition-colors hover:border-brand hover:bg-brand-soft hover:text-brand"
+          >
+            <span className="grid h-7 w-7 place-items-center rounded-full bg-brand/15 text-xs font-bold text-brand">
+              {(l.seller.display_name ?? "?").slice(0, 1).toUpperCase()}
+            </span>
+            Shop: {l.seller.display_name}
+            {l.seller.handle ? (
+              <span className="text-xs font-medium text-muted-foreground">@{l.seller.handle}</span>
+            ) : null}
           </Link>
         )}
+
         <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-900">
           <Star className="h-3 w-3" /> 0,0 · noch keine Bewertungen
         </div>
-        <p className="mt-6 whitespace-pre-line text-sm leading-relaxed text-foreground/80">{l.description}</p>
+
+        <p className="mt-6 whitespace-pre-line text-sm leading-relaxed text-foreground/80">
+          {l.description}
+        </p>
 
         <dl className="mt-6 grid grid-cols-2 gap-3 rounded-2xl border border-border bg-card p-4 text-sm">
-          <Detail icon={isDigital ? <Download className="h-3.5 w-3.5" /> : <Package className="h-3.5 w-3.5" />} label="Typ" value={isDigital ? "Digital" : "Physisch"} />
-          <Detail icon={<Truck className="h-3.5 w-3.5" />} label={isDigital ? "Lieferung" : "Versand"} value={shippingLabel} />
+          <Detail
+            icon={isDigital ? <Download className="h-3.5 w-3.5" /> : <Package className="h-3.5 w-3.5" />}
+            label="Typ"
+            value={isDigital ? "Digital" : "Physisch"}
+          />
+          <Detail
+            icon={<Truck className="h-3.5 w-3.5" />}
+            label={isDigital ? "Lieferung" : "Versand"}
+            value={shippingLabel}
+          />
           <Detail icon={<Shield className="h-3.5 w-3.5" />} label="Käuferschutz" value="Über CreaHQ" />
           <Detail icon={<MessageCircle className="h-3.5 w-3.5" />} label="Support" value="Direkt vom Creator" />
           {l.location && <Detail icon={<Package className="h-3.5 w-3.5" />} label="Ort" value={l.location} />}
           {l.condition && <Detail icon={<Star className="h-3.5 w-3.5" />} label="Zustand" value={l.condition} />}
-          {typeof l.stock === "number" && <Detail icon={<Package className="h-3.5 w-3.5" />} label="Verfügbar" value={`${l.stock} Stück`} />}
+          {typeof l.stock === "number" && (
+            <Detail icon={<Package className="h-3.5 w-3.5" />} label="Verfügbar" value={`${l.stock} Stück`} />
+          )}
         </dl>
 
         <div className="mt-8 flex items-end gap-4">
-          <div className="font-display text-4xl font-black text-brand">{(l.price_cents/100).toFixed(2)} €</div>
+          <div className="font-display text-4xl font-black text-brand">
+            {(l.price_cents / 100).toFixed(2)} €
+          </div>
         </div>
+
         <div className="mt-6 flex flex-wrap gap-2">
           <button
+            type="button"
             onClick={handleAddToCart}
             className="min-w-[200px] flex-1 rounded-full bg-brand px-6 py-4 text-base font-bold text-primary-foreground brand-glow transition-transform hover:scale-[1.02]"
           >
             In den Warenkorb
           </button>
           <button
+            type="button"
             onClick={handleFavorite}
             aria-label="Favorisieren"
             title={isFav ? "Aus Favoriten entfernen" : "Favorisieren"}
@@ -200,6 +286,7 @@ function ListingView({ l }: { l: NonNullable<Awaited<ReturnType<typeof fetchList
             <Heart className={`h-5 w-5 ${isFav ? "fill-red-500 text-red-500" : ""}`} />
           </button>
           <button
+            type="button"
             onClick={handleOpenChat}
             aria-label="Chat mit Verkäufer"
             title="Chat mit Verkäufer"
@@ -208,6 +295,7 @@ function ListingView({ l }: { l: NonNullable<Awaited<ReturnType<typeof fetchList
             <MessageCircle className="h-5 w-5" />
           </button>
           <button
+            type="button"
             onClick={handleShare}
             aria-label="Teilen"
             title="Teilen"
@@ -255,7 +343,11 @@ function RelatedRails({
         emoji="🏪"
         items={data?.fromShop ?? []}
         empty={`${sellerName} hat aktuell keine weiteren Produkte online.`}
-        viewAll={sellerHandle ? { to: "/shop/$handle" as const, params: { handle: sellerHandle } } : null}
+        viewAll={
+          sellerHandle
+            ? { to: "/shop/$handle" as const, params: { handle: sellerHandle } }
+            : null
+        }
       />
       <Rail
         title="Ähnliche Produkte"
@@ -282,25 +374,41 @@ function Rail({
   emoji: string;
   items: ListingCard[];
   empty: string;
-  viewAll: { to: "/browse"; params: undefined } | { to: "/shop/$handle"; params: { handle: string } } | null;
+  viewAll:
+    | { to: "/browse"; params: undefined }
+    | { to: "/shop/$handle"; params: { handle: string } }
+    | null;
 }) {
   return (
     <section>
       <div className="mb-4 flex items-end justify-between gap-4">
         <div>
           <h2 className="font-display text-2xl font-black text-brand-ink">
-            <span className="mr-1">{emoji}</span>{title}
+            <span className="mr-1">{emoji}</span>
+            {title}
           </h2>
           <p className="text-sm text-muted-foreground">{subtitle}</p>
         </div>
         {viewAll && items.length > 0 && (
-          viewAll.to === "/browse"
-            ? <Link to="/browse" className="text-xs font-semibold text-brand hover:underline">Alle ansehen →</Link>
-            : <Link to="/shop/$handle" params={viewAll.params} className="text-xs font-semibold text-brand hover:underline">Alle ansehen →</Link>
+          viewAll.to === "/browse" ? (
+            <Link to="/browse" className="text-xs font-semibold text-brand hover:underline">
+              Alle ansehen →
+            </Link>
+          ) : (
+            <Link
+              to="/shop/$handle"
+              params={viewAll.params}
+              className="text-xs font-semibold text-brand hover:underline"
+            >
+              Alle ansehen →
+            </Link>
+          )
         )}
       </div>
       {items.length === 0 ? (
-        <div className="rounded-3xl border-2 border-dashed border-brand/25 bg-card/40 p-8 text-center text-sm text-muted-foreground">{empty}</div>
+        <div className="rounded-3xl border-2 border-dashed border-brand/25 bg-card/40 p-8 text-center text-sm text-muted-foreground">
+          {empty}
+        </div>
       ) : (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
           {items.map((item) => (
@@ -311,12 +419,22 @@ function Rail({
               className="group overflow-hidden rounded-2xl border border-border bg-card transition-all hover:-translate-y-1 hover:border-brand hover:shadow-lg"
             >
               <div className="flex aspect-square items-center justify-center bg-gradient-to-br from-brand-soft/60 via-transparent to-amber-100/40 text-4xl">
-                {item.cover_url ? <img src={item.cover_url} alt={item.title} className="h-full w-full object-cover" /> : "🎨"}
+                {item.cover_url ? (
+                  <img src={item.cover_url} alt={item.title} className="h-full w-full object-cover" />
+                ) : (
+                  "🎨"
+                )}
               </div>
               <div className="p-3">
-                <div className="text-xs font-bold uppercase tracking-widest text-brand/70">{item.category ?? (item.kind === "digital" ? "Digital" : "Physisch")}</div>
-                <div className="mt-0.5 truncate text-sm font-semibold text-brand-ink group-hover:text-brand">{item.title}</div>
-                <div className="mt-1 text-xs text-muted-foreground">{(item.price_cents / 100).toFixed(2)} €</div>
+                <div className="text-xs font-bold uppercase tracking-widest text-brand/70">
+                  {item.category ?? (item.kind === "digital" ? "Digital" : "Physisch")}
+                </div>
+                <div className="mt-0.5 truncate text-sm font-semibold text-brand-ink group-hover:text-brand">
+                  {item.title}
+                </div>
+                <div className="mt-1 text-xs text-muted-foreground">
+                  {(item.price_cents / 100).toFixed(2)} €
+                </div>
               </div>
             </Link>
           ))}
@@ -326,14 +444,13 @@ function Rail({
   );
 }
 
-
 function PlaceholderListing({ id }: { id: string }) {
   const nr = id.split("-").pop() ?? "01";
   const [fav, setFav] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
 
   const isVerpackung = id.startsWith("beispiel-verpackung-");
-  const kind = id.includes("-verpackung-") ? "Verpackung" : "Digital · Service · Chatbot · Physisch";
+  const kind = id.includes("-verpackung-") ? "Verpackung" : "Digital · Physisch";
   const shopHandle = isVerpackung ? "packshop" : "creator";
   const shopName = isVerpackung ? "PackShop" : "Creator-Shop";
   const productTitle = isVerpackung
@@ -342,18 +459,29 @@ function PlaceholderListing({ id }: { id: string }) {
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-10">
-      <Link to="/" className="inline-flex items-center gap-1 rounded-full bg-brand-soft px-3 py-1.5 text-xs font-bold text-brand-ink hover:bg-brand hover:text-primary-foreground">
+      <Link
+        to="/"
+        className="inline-flex items-center gap-1 rounded-full bg-brand-soft px-3 py-1.5 text-xs font-bold text-brand-ink hover:bg-brand hover:text-primary-foreground"
+      >
         <ArrowLeft className="h-3.5 w-3.5" /> Zurück zur Startseite
       </Link>
 
       <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-        <Link to="/shop/$handle" params={{ handle: shopHandle }} className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 font-semibold text-brand-ink hover:border-brand hover:text-brand">
-          <span className="grid h-5 w-5 place-items-center rounded-full bg-brand/15 text-[10px] font-bold text-brand">{shopName.slice(0,1)}</span>
-          {shopName}
+        <Link
+          to="/shop/$handle"
+          params={{ handle: shopHandle }}
+          className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 font-semibold text-brand-ink hover:border-brand hover:bg-brand-soft hover:text-brand"
+        >
+          <span className="grid h-5 w-5 place-items-center rounded-full bg-brand/15 text-[10px] font-bold text-brand">
+            {shopName.slice(0, 1)}
+          </span>
+          Shop: {shopName}
         </Link>
         <span>›</span>
         <span className="font-semibold text-brand-ink">{productTitle}</span>
-        <span className="ml-auto rounded-full bg-brand/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-brand">Platzhalter</span>
+        <span className="ml-auto rounded-full bg-brand/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-brand">
+          Platzhalter
+        </span>
       </div>
 
       <div className="mt-6 grid gap-8 lg:grid-cols-2">
@@ -364,13 +492,18 @@ function PlaceholderListing({ id }: { id: string }) {
             className="relative flex aspect-square items-center justify-center overflow-hidden rounded-[2rem] border-2 border-dashed border-brand/30 bg-gradient-to-br from-brand-soft/60 via-transparent to-amber-100/40"
           >
             <div className="text-center">
-              <div className="text-7xl">{isVerpackung ? "📦" : "📦"}</div>
-              <p className="mt-4 text-xs font-bold uppercase tracking-widest text-brand/70">Platzhalter #{String(nr).padStart(2, "0")}</p>
+              <div className="text-7xl">📦</div>
+              <p className="mt-4 text-xs font-bold uppercase tracking-widest text-brand/70">
+                Platzhalter #{String(nr).padStart(2, "0")}
+              </p>
             </div>
           </motion.div>
           <div className="grid grid-cols-4 gap-2">
-            {[0,1,2,3].map((i) => (
-              <div key={i} className="aspect-square rounded-xl border border-dashed border-brand/20 bg-brand-soft/40" />
+            {[0, 1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="aspect-square rounded-xl border border-dashed border-brand/20 bg-brand-soft/40"
+              />
             ))}
           </div>
         </div>
@@ -385,18 +518,23 @@ function PlaceholderListing({ id }: { id: string }) {
             </span>
           </div>
 
-          <h1 className="mt-2 font-display text-4xl font-black text-brand-ink">
-            {productTitle}
-          </h1>
+          <h1 className="mt-2 font-display text-4xl font-black text-brand-ink">{productTitle}</h1>
 
-          <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-            <Link to="/shop/$handle" params={{ handle: shopHandle }} className="inline-flex items-center gap-2 hover:text-brand">
-              <span className="grid h-7 w-7 place-items-center rounded-full bg-brand/15 text-xs font-bold text-brand">{shopName.slice(0,1)}</span>
-              von {shopName}
+          <div className="mt-3">
+            <Link
+              to="/shop/$handle"
+              params={{ handle: shopHandle }}
+              className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-sm font-semibold text-brand-ink hover:border-brand hover:bg-brand-soft hover:text-brand"
+            >
+              <span className="grid h-7 w-7 place-items-center rounded-full bg-brand/15 text-xs font-bold text-brand">
+                {shopName.slice(0, 1)}
+              </span>
+              Shop: {shopName}
             </Link>
-            <div className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-900">
-              <Star className="h-3 w-3 fill-current" /> 0,0 · noch keine Bewertungen
-            </div>
+          </div>
+
+          <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-900">
+            <Star className="h-3 w-3 fill-current" /> 0,0 · noch keine Bewertungen
           </div>
 
           <div className="mt-6 space-y-2">
@@ -408,74 +546,87 @@ function PlaceholderListing({ id }: { id: string }) {
 
           <dl className="mt-6 grid grid-cols-2 gap-3 rounded-2xl border border-border bg-card p-4 text-sm">
             <Detail icon={<Download className="h-3.5 w-3.5" />} label="Typ" value={kind} />
-            <Detail icon={<Truck className="h-3.5 w-3.5" />} label="Lieferzeit" value={isVerpackung ? "2–4 Werktage" : "Sofort verfügbar"} />
+            <Detail
+              icon={<Truck className="h-3.5 w-3.5" />}
+              label="Lieferzeit"
+              value={isVerpackung ? "2–4 Werktage" : "Sofort verfügbar"}
+            />
             <Detail icon={<Shield className="h-3.5 w-3.5" />} label="Käuferschutz" value="Über CreaHQ" />
             <Detail icon={<MessageCircle className="h-3.5 w-3.5" />} label="Support" value="Direkt vom Creator" />
           </dl>
 
           <div className="mt-8 flex items-end gap-4">
             <div className="font-display text-4xl font-black text-brand">—,— €</div>
-            <span className="pb-2 text-xs text-muted-foreground">Preis, sobald ein Creator drückt auf „Veröffentlichen".</span>
+            <span className="pb-2 text-xs text-muted-foreground">
+              Preis, sobald ein Creator auf „Veröffentlichen“ drückt.
+            </span>
           </div>
 
           <div className="mt-6 flex gap-2">
             <button
+              type="button"
               disabled
               className="flex-1 cursor-not-allowed rounded-full bg-brand/60 px-6 py-4 text-base font-bold text-primary-foreground brand-glow"
             >
               In den Warenkorb
             </button>
             <button
+              type="button"
               onClick={() => setFav((v) => !v)}
               aria-pressed={fav}
               aria-label="Favorisieren"
-              title={fav ? "Favorit entfernen" : "Favorisieren"}
               className={`grid h-14 w-14 shrink-0 place-items-center rounded-full border-2 transition-colors ${
-                fav ? "border-red-500 bg-red-50 text-red-500" : "border-border bg-card text-brand-ink hover:border-brand hover:text-brand"
+                fav
+                  ? "border-red-500 bg-red-50 text-red-500"
+                  : "border-border bg-card text-brand-ink hover:border-brand hover:text-brand"
               }`}
             >
               <Heart className={`h-5 w-5 ${fav ? "fill-current" : ""}`} />
             </button>
-            {!isVerpackung && (
-              <button
-                onClick={() => setChatOpen(true)}
-                aria-label="Chat mit Verkäufer"
-                title="Chat mit Verkäufer"
-                className="grid h-14 w-14 shrink-0 place-items-center rounded-full border-2 border-border bg-card text-brand-ink hover:border-brand hover:text-brand transition-colors"
-              >
-                <MessageCircle className="h-5 w-5" />
-              </button>
-            )}
             <button
+              type="button"
+              onClick={() => setChatOpen(true)}
+              aria-label="Chat mit Verkäufer"
+              className="grid h-14 w-14 shrink-0 place-items-center rounded-full border-2 border-border bg-card text-brand-ink transition-colors hover:border-brand hover:text-brand"
+            >
+              <MessageCircle className="h-5 w-5" />
+            </button>
+            <button
+              type="button"
               aria-label="Teilen"
-              title="Teilen"
-              className="grid h-14 w-14 shrink-0 place-items-center rounded-full border-2 border-border bg-card text-brand-ink hover:border-brand hover:text-brand transition-colors"
+              className="grid h-14 w-14 shrink-0 place-items-center rounded-full border-2 border-border bg-card text-brand-ink transition-colors hover:border-brand hover:text-brand"
             >
               <Share2 className="h-5 w-5" />
             </button>
           </div>
 
-          {isVerpackung && (
-            <button
-              onClick={() => setChatOpen(true)}
-              className="mt-3 inline-flex items-center gap-2 rounded-full bg-brand-soft px-4 py-2 text-xs font-bold text-brand-ink hover:bg-brand hover:text-primary-foreground"
-            >
-              <MessageCircle className="h-3.5 w-3.5" /> Chat mit {shopName} öffnen
-            </button>
-          )}
-
           <div className="mt-6 rounded-2xl border border-border bg-card p-4 text-sm text-muted-foreground">
-            Das ist ein <strong className="text-brand-ink">Platzhalter-Produkt</strong> — du siehst die Struktur einer echten Produktseite. Sobald Creator hier reinstellen, ersetzt echtes Zeug diese Ansicht.
+            Das ist ein <strong className="text-brand-ink">Platzhalter-Produkt</strong> — Struktur
+            einer echten Produktseite.
           </div>
         </div>
       </div>
 
       {chatOpen && (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4" onClick={() => setChatOpen(false)}>
-          <div onClick={(e) => e.stopPropagation()} className="w-full max-w-md rounded-3xl border border-border bg-card p-6 shadow-2xl">
+        <div
+          className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4"
+          onClick={() => setChatOpen(false)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-md rounded-3xl border border-border bg-card p-6 shadow-2xl"
+          >
             <h3 className="font-display text-xl font-black text-brand-ink">Chat mit {shopName}</h3>
-            <p className="mt-2 text-sm text-muted-foreground">Sobald der Shop live ist, schreibst du hier direkt mit dem Creator. Vorerst ein Platzhalter.</p>
-            <button onClick={() => setChatOpen(false)} className="mt-4 w-full rounded-full bg-brand px-4 py-2 text-sm font-bold text-primary-foreground">Schließen</button>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Sobald der Shop live ist, schreibst du hier direkt mit dem Creator.
+            </p>
+            <button
+              type="button"
+              onClick={() => setChatOpen(false)}
+              className="mt-4 w-full rounded-full bg-brand px-4 py-2 text-sm font-bold text-primary-foreground"
+            >
+              Schließen
+            </button>
           </div>
         </div>
       )}
@@ -483,7 +634,15 @@ function PlaceholderListing({ id }: { id: string }) {
   );
 }
 
-function Detail({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+function Detail({
+  icon,
+  label,
+  value,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+}) {
   return (
     <div>
       <dt className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
