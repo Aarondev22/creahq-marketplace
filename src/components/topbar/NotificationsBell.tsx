@@ -13,7 +13,7 @@ const ICONS: Record<string, React.ReactNode> = {
 
 const FILTERS = [
   ["all", "Alle"],
-  ["chat", "Chat"],
+  ["chat", "Nachrichten"],
   ["order", "Bestellung"],
   ["sale", "Verkauf"],
   ["shipment", "Versand"],
@@ -39,7 +39,19 @@ export function NotificationsBell() {
 
   function open(n: AppNotification) {
     if (!n.read_at) markRead(n.id);
-    if (n.link) navigate({ to: n.link });
+    if (!n.link) return;
+
+    if (n.link.startsWith("/nachrichten")) {
+      try {
+        const url = new URL(n.link, window.location.origin);
+        const conv = url.searchParams.get("c") ?? undefined;
+        navigate({ to: "/nachrichten", search: { c: conv } });
+      } catch {
+        navigate({ to: n.link });
+      }
+      return;
+    }
+    navigate({ to: n.link });
   }
 
   return (
@@ -67,6 +79,7 @@ export function NotificationsBell() {
           </div>
           {unread > 0 && (
             <button
+              type="button"
               onClick={markAllRead}
               className="inline-flex min-h-9 shrink-0 items-center gap-1 rounded-full bg-card px-3 text-[11px] font-bold text-brand-ink hover:bg-brand hover:text-primary-foreground"
             >
@@ -75,7 +88,7 @@ export function NotificationsBell() {
           )}
         </div>
 
-        {signedIn && items.length > 0 && (
+        {signedIn && (
           <div className="flex flex-wrap gap-1.5 border-b border-border px-3 py-2">
             {FILTERS.map(([key, label]) => (
               <button
@@ -123,6 +136,7 @@ export function NotificationsBell() {
             {filtered.map((n) => (
               <li key={n.id}>
                 <button
+                  type="button"
                   onClick={() => open(n)}
                   className={`flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-brand-soft/50 ${
                     n.read_at ? "" : "bg-brand-soft/25"
