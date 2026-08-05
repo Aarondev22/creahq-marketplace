@@ -54,23 +54,36 @@ export function NotificationsBell() {
     navigate({ to: n.link });
   }
 
+  const CAT_STYLE: Record<string, string> = {
+    chat: "bg-sky-100 text-sky-700",
+    order: "bg-amber-100 text-amber-700",
+    sale: "bg-emerald-100 text-emerald-700",
+    shipment: "bg-violet-100 text-violet-700",
+  };
+
   return (
     <Popover>
       <PopoverTrigger asChild>
         <button
           aria-label="Benachrichtigungen"
-          className="relative grid h-10 w-10 shrink-0 place-items-center rounded-full border border-border bg-card text-brand-ink transition-all hover:scale-105 hover:bg-brand-soft"
+          className="relative grid h-10 w-10 shrink-0 place-items-center rounded-full border border-border bg-card text-brand-ink transition-all hover:scale-105 hover:bg-brand-soft active:scale-95"
         >
-          <Bell className="h-5 w-5" />
+          <Bell className={`h-5 w-5 ${unread > 0 ? "animate-[wiggle_1.2s_ease-in-out_infinite]" : ""}`} />
           {unread > 0 && (
-            <span className="absolute -right-0.5 -top-0.5 grid h-5 min-w-5 place-items-center rounded-full bg-brand px-1 text-[10px] font-black text-primary-foreground shadow">
-              {unread > 9 ? "9+" : unread}
-            </span>
+            <>
+              <span className="absolute inset-0 animate-ping rounded-full bg-brand/20" />
+              <span className="absolute -right-0.5 -top-0.5 grid h-5 min-w-5 place-items-center rounded-full bg-brand px-1 text-[10px] font-black text-primary-foreground shadow">
+                {unread > 9 ? "9+" : unread}
+              </span>
+            </>
           )}
         </button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-[22rem] overflow-hidden rounded-3xl p-0">
-        <div className="flex items-center justify-between gap-2 border-b border-border bg-brand-soft/40 px-4 py-3">
+      <PopoverContent
+        align="end"
+        className="w-[min(22rem,calc(100vw-1.5rem))] overflow-hidden rounded-3xl border-border p-0 shadow-xl"
+      >
+        <div className="flex items-center justify-between gap-2 border-b border-border bg-gradient-to-r from-brand-soft/70 to-transparent px-4 py-3">
           <div>
             <div className="font-display text-lg font-black text-brand-ink">Benachrichtigungen</div>
             <div className="text-xs text-muted-foreground">
@@ -81,7 +94,7 @@ export function NotificationsBell() {
             <button
               type="button"
               onClick={markAllRead}
-              className="inline-flex min-h-9 shrink-0 items-center gap-1 rounded-full bg-card px-3 text-[11px] font-bold text-brand-ink hover:bg-brand hover:text-primary-foreground"
+              className="inline-flex min-h-9 shrink-0 items-center gap-1 rounded-full bg-card px-3 text-[11px] font-bold text-brand-ink shadow-sm transition-colors hover:bg-brand hover:text-primary-foreground"
             >
               <CheckCheck className="h-3.5 w-3.5" /> Alle
             </button>
@@ -90,20 +103,25 @@ export function NotificationsBell() {
 
         {signedIn && (
           <div className="flex flex-wrap gap-1.5 border-b border-border px-3 py-2">
-            {FILTERS.map(([key, label]) => (
-              <button
-                key={key}
-                type="button"
-                onClick={() => setFilter(key)}
-                className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${
-                  filter === key
-                    ? "bg-brand text-primary-foreground"
-                    : "bg-surface text-brand-ink hover:bg-brand-soft"
-                }`}
-              >
-                {label}
-              </button>
-            ))}
+            {FILTERS.map(([key, label]) => {
+              const count =
+                key === "all" ? items.length : items.filter((n) => n.category === key).length;
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setFilter(key)}
+                  className={`min-h-8 rounded-full px-2.5 py-1 text-[11px] font-bold transition-colors ${
+                    filter === key
+                      ? "bg-brand text-primary-foreground"
+                      : "bg-surface text-brand-ink hover:bg-brand-soft"
+                  }`}
+                >
+                  {label}
+                  {count > 0 && <span className="ml-1 opacity-70">{count}</span>}
+                </button>
+              );
+            })}
           </div>
         )}
 
@@ -138,11 +156,15 @@ export function NotificationsBell() {
                 <button
                   type="button"
                   onClick={() => open(n)}
-                  className={`flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-brand-soft/50 ${
+                  className={`group flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-brand-soft/50 ${
                     n.read_at ? "" : "bg-brand-soft/25"
                   }`}
                 >
-                  <span className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full bg-brand-soft text-brand">
+                  <span
+                    className={`mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-full transition-transform group-hover:scale-105 ${
+                      CAT_STYLE[n.category] ?? "bg-brand-soft text-brand"
+                    }`}
+                  >
                     {ICONS[n.category] ?? <Bell className="h-4 w-4" />}
                   </span>
                   <span className="min-w-0 flex-1">
