@@ -113,21 +113,28 @@ export async function fetchMessages(conversationId: string): Promise<ChatMessage
   return data ?? [];
 }
 
-export async function sendMessage(conversationId: string, body: string) {
-  const { data: u } = await supabase.auth.getUser();
-  if (!u.user) throw new Error("Nicht eingeloggt");
+export async function sendMessage(conversationId: string, body: string): Promise<ChatMessage> {
+  const { data: u, error: authErr } = await supabase.auth.getUser();
+  if (authErr || !u.user) throw new Error("Nicht eingeloggt – bitte neu anmelden.");
 
-  const { error } = await supabase.from("messages").insert({
-    conversation_id: conversationId,
-    sender_id: u.user.id,
-    body: body.trim(),
-    kind: "text",
-  });
+  const { data, error } = await supabase
+    .from("messages")
+    .insert({
+      conversation_id: conversationId,
+      sender_id: u.user.id,
+      body: body.trim(),
+      kind: "text",
+    })
+    .select("id,conversation_id,sender_id,body,kind,created_at")
+    .single();
 
-  if (error) throw new Error(error.message);
+  if (error) throw new Error(error.message || "Nachricht konnte nicht gesendet werden.");
 
-  await supabase
+  // Best-effort: Sortierung der Chatliste aktualisieren (darf den Versand nie blockieren)
+  void supabase
     .from("conversations")
     .update({ last_message_at: new Date().toISOString() })
     .eq("id", conversationId);
+
+  return data as ChatMessage;
 }
