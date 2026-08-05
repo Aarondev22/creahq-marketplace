@@ -525,35 +525,50 @@ export type Database = {
       }
       private_offers: {
         Row: {
+          accepted_at: string | null
           buyer_id: string
           conversation_id: string
           created_at: string
+          created_by: string | null
+          declined_at: string | null
           expires_at: string
           id: string
           listing_id: string
+          note: string | null
           price_cents: number
+          qty: number
           redeemed_at: string | null
           seller_id: string
         }
         Insert: {
+          accepted_at?: string | null
           buyer_id: string
           conversation_id: string
           created_at?: string
+          created_by?: string | null
+          declined_at?: string | null
           expires_at: string
           id?: string
           listing_id: string
+          note?: string | null
           price_cents: number
+          qty?: number
           redeemed_at?: string | null
           seller_id: string
         }
         Update: {
+          accepted_at?: string | null
           buyer_id?: string
           conversation_id?: string
           created_at?: string
+          created_by?: string | null
+          declined_at?: string | null
           expires_at?: string
           id?: string
           listing_id?: string
+          note?: string | null
           price_cents?: number
+          qty?: number
           redeemed_at?: string | null
           seller_id?: string
         }
