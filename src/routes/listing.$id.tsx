@@ -147,7 +147,7 @@ function ListingView({
       const sellerId = l.seller_id ?? l.seller?.id;
       if (!sellerId) throw new Error("Keine Verkäufer-ID gefunden");
       const convId = await getOrCreateConversation(sellerId, l.id);
-      navigate({ to: "/nachrichten", search: { c: convId } });
+      navigate({ to: "/chat/$id", params: { id: convId } });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Chat konnte nicht geöffnet werden");
     }

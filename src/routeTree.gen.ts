@@ -36,6 +36,7 @@ import { Route as AuthenticatedEinstellungenRouteImport } from './routes/_authen
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api/public/stripe-webhook'
 import { Route as AuthenticatedVerkaufenNeuRouteImport } from './routes/_authenticated/verkaufen.neu'
+import { Route as AuthenticatedChatIdRouteImport } from './routes/_authenticated/chat.$id'
 
 const WarenkorbRoute = WarenkorbRouteImport.update({
   id: '/warenkorb',
@@ -174,6 +175,11 @@ const AuthenticatedVerkaufenNeuRoute =
     path: '/verkaufen/neu',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedChatIdRoute = AuthenticatedChatIdRouteImport.update({
+  id: '/chat/$id',
+  path: '/chat/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -200,6 +206,7 @@ export interface FileRoutesByFullPath {
   '/listing/$id': typeof ListingIdRoute
   '/shop/$handle': typeof ShopHandleRoute
   '/verkaufen/guide': typeof VerkaufenGuideRoute
+  '/chat/$id': typeof AuthenticatedChatIdRoute
   '/verkaufen/neu': typeof AuthenticatedVerkaufenNeuRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
 }
@@ -228,6 +235,7 @@ export interface FileRoutesByTo {
   '/listing/$id': typeof ListingIdRoute
   '/shop/$handle': typeof ShopHandleRoute
   '/verkaufen/guide': typeof VerkaufenGuideRoute
+  '/chat/$id': typeof AuthenticatedChatIdRoute
   '/verkaufen/neu': typeof AuthenticatedVerkaufenNeuRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
 }
@@ -258,6 +266,7 @@ export interface FileRoutesById {
   '/listing/$id': typeof ListingIdRoute
   '/shop/$handle': typeof ShopHandleRoute
   '/verkaufen/guide': typeof VerkaufenGuideRoute
+  '/_authenticated/chat/$id': typeof AuthenticatedChatIdRoute
   '/_authenticated/verkaufen/neu': typeof AuthenticatedVerkaufenNeuRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
 }
@@ -288,6 +297,7 @@ export interface FileRouteTypes {
     | '/listing/$id'
     | '/shop/$handle'
     | '/verkaufen/guide'
+    | '/chat/$id'
     | '/verkaufen/neu'
     | '/api/public/stripe-webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -316,6 +326,7 @@ export interface FileRouteTypes {
     | '/listing/$id'
     | '/shop/$handle'
     | '/verkaufen/guide'
+    | '/chat/$id'
     | '/verkaufen/neu'
     | '/api/public/stripe-webhook'
   id:
@@ -345,6 +356,7 @@ export interface FileRouteTypes {
     | '/listing/$id'
     | '/shop/$handle'
     | '/verkaufen/guide'
+    | '/_authenticated/chat/$id'
     | '/_authenticated/verkaufen/neu'
     | '/api/public/stripe-webhook'
   fileRoutesById: FileRoutesById
@@ -566,6 +578,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedVerkaufenNeuRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/chat/$id': {
+      id: '/_authenticated/chat/$id'
+      path: '/chat/$id'
+      fullPath: '/chat/$id'
+      preLoaderRoute: typeof AuthenticatedChatIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -573,6 +592,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedEinstellungenRoute: typeof AuthenticatedEinstellungenRoute
   AuthenticatedNachrichtenRoute: typeof AuthenticatedNachrichtenRoute
+  AuthenticatedChatIdRoute: typeof AuthenticatedChatIdRoute
   AuthenticatedVerkaufenNeuRoute: typeof AuthenticatedVerkaufenNeuRoute
 }
 
@@ -580,6 +600,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedEinstellungenRoute: AuthenticatedEinstellungenRoute,
   AuthenticatedNachrichtenRoute: AuthenticatedNachrichtenRoute,
+  AuthenticatedChatIdRoute: AuthenticatedChatIdRoute,
   AuthenticatedVerkaufenNeuRoute: AuthenticatedVerkaufenNeuRoute,
 }
 

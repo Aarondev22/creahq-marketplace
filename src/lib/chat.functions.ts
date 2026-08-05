@@ -19,6 +19,7 @@ export type ChatMessage = {
   sender_id: string;
   body: string;
   kind: string;
+  offer_id?: string | null;
   created_at: string;
 };
 
@@ -172,7 +173,7 @@ export async function fetchConversationDetail(id: string): Promise<ConversationD
 export async function fetchMessages(conversationId: string): Promise<ChatMessage[]> {
   const { data, error } = await supabase
     .from("messages")
-    .select("id,conversation_id,sender_id,body,kind,created_at")
+    .select("id,conversation_id,sender_id,body,kind,offer_id,created_at")
     .eq("conversation_id", conversationId)
     .order("created_at", { ascending: true });
   if (error) throw error;
@@ -191,7 +192,7 @@ export async function sendMessage(conversationId: string, body: string): Promise
       body: body.trim(),
       kind: "text",
     })
-    .select("id,conversation_id,sender_id,body,kind,created_at")
+    .select("id,conversation_id,sender_id,body,kind,offer_id,created_at")
     .single();
 
   if (error) throw new Error(error.message || "Nachricht konnte nicht gesendet werden.");
