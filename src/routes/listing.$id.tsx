@@ -1,97 +1,51 @@
+*** Begin Patch
+*** Update File: src/routes/listing.$id.tsx
 @@
---- a/src/routes/listing.$id.tsx
-+++ b/src/routes/listing.$id.tsx
+-import {
+-  ArrowLeft,
+-  Heart,
+-  Share2,
+-  Shield,
+-  Truck,
+-  Download,
+-  MessageCircle,
+-  Star,
+-  Package,
+-} from "lucide-react";
++import {
++  ArrowLeft,
++  Heart,
++  Share2,
++  Shield,
++  Truck,
++  Download,
++  MessageCircle,
++  Star,
++  Package,
++} from "lucide-react";
++import { ReportButton } from "@/components/ReportButton";
 @@
--        {allImages.length > 1 && (
--          <div className="grid grid-cols-4 gap-2">
--            {allImages.map((src, i) => (
--              <button
--                key={`${src}-${i}`}
--                type="button"
--                onClick={() => setActiveImg(i)}
--                aria-label={`Bild ${i + 1} anzeigen`}
--                className={`aspect-square overflow-hidden rounded-xl border-2 transition-colors ${
--                  i === activeImg ? "border-brand" : "border-border hover:border-brand/50"
--                }`}
--              >
--                <img src={src} alt={`${l.title} — Bild ${i + 1}`} className="h-full w-full object-cover" />
--              </button>
--            ))}
--          </div>
--        )}
-+        {allImages.length > 1 && (
-+          <GalleryThumbnails
-+            images={allImages}
-+            activeIndex={activeImg}
-+            onActivate={(i) => setActiveImg(i)}
-+            maxVisible={4}
-+          />
-+        )}
+-          <div className="mt-6 flex flex-wrap gap-2">
++          <div className="mt-6 flex flex-wrap gap-2">
+             <button
+               type="button"
+               onClick={handleAddToCart}
+               className="min-w-[200px] flex-1 rounded-full bg-brand px-6 py-4 text-base font-bold text-primary-foreground brand-glow transition-transform hover:scale-[1.02]"
+             >
+               In den Warenkorb
+             </button>
 @@
-+// Simple one-row thumbnail viewport component
-+function GalleryThumbnails({
-+  images,
-+  activeIndex,
-+  onActivate,
-+  maxVisible = 4,
-+}: {
-+  images: string[];
-+  activeIndex: number;
-+  onActivate: (i: number) => void;
-+  maxVisible?: number;
-+}) {
-+  const visible = Math.min(maxVisible, images.length);
-+  const [start, setStart] = useState(0);
-+
-+  // clamp start
-+  if (start > images.length - visible) setStart(Math.max(0, images.length - visible));
-+
-+  const canLeft = start > 0;
-+  const canRight = start + visible < images.length;
-+
-+  return (
-+    <div className="flex items-center gap-2">
-+      {canLeft && (
-+        <button
-+          type="button"
-+          aria-label="Vorherige Thumbnails"
-+          onClick={() => setStart((s) => Math.max(0, s - visible))}
-+          className="grid h-10 w-10 place-items-center rounded-full border border-border bg-card"
-+        >
-+          ‹
-+        </button>
-+      )}
-+
-+      <div className="grid grid-flow-col gap-2">
-+        {images.slice(start, start + visible).map((src, i) => {
-+          const idx = start + i;
-+          return (
-+            <button
-+              key={`${src}-${idx}`}
-+              type="button"
-+              onClick={() => onActivate(idx)}
-+              aria-label={`Bild ${idx + 1} anzeigen`}
-+              className={`aspect-square h-20 w-20 overflow-hidden rounded-xl border-2 transition-colors ${
-+                idx === activeIndex ? "border-brand" : "border-border hover:border-brand/50"
-+              }`}
-+            >
-+              <img src={src} alt={`Vorschaubild ${idx + 1}`} className="h-full w-full object-cover" />
-+            </button>
-+          );
-+        })}
-+      </div>
-+
-+      {canRight && (
-+        <button
-+          type="button"
-+          aria-label="Nächste Thumbnails"
-+          onClick={() => setStart((s) => Math.min(images.length - visible, s + visible))}
-+          className="grid h-10 w-10 place-items-center rounded-full border border-border bg-card"
-+        >
-+          ›
-+        </button>
-+      )}
-+    </div>
-+  );
-+}
-+
+           <button
+             type="button"
+             onClick={handleShare}
+             aria-label="Teilen"
+             title="Teilen"
+             className="grid h-14 w-14 shrink-0 place-items-center rounded-full border-2 border-border bg-card text-brand-ink transition-colors hover:border-brand hover:text-brand"
+           >
+             <Share2 className="h-5 w-5" />
+           </button>
++          <div className="ml-1 mt-1">
++            <ReportButton targetType="listing" targetId={l.id} />
++          </div>
+         </div>
+*** End Patch
