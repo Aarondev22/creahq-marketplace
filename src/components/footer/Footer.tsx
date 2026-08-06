@@ -15,6 +15,7 @@ const columns: { title: string; items: Item[] }[] = [
     { label: "Shop eröffnen", to: "/auth" },
     { label: "Gebühren", to: "/gebuehren" },
     { label: "Dashboard", to: "/dashboard" },
+    { label: "Verkaufs-Guide", to: "/verkaufen/guide" },
   ]},
   { title: "Hilfe", items: [
     { label: "FAQ", to: "/hilfe" },
@@ -30,6 +31,7 @@ const legal: Item[] = [
   { label: "AGB", to: "/agb" },
   { label: "Datenschutz", to: "/datenschutz" },
   { label: "Cookies", to: "/cookies" },
+  { label: "Regeln", to: "/regeln" },
 ];
 
 const socials = [
