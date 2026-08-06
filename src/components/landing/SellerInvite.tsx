@@ -46,7 +46,7 @@ export function SellerInvite() {
 
             <div className="mt-6 flex flex-wrap items-center gap-3">
               <Link
-                to="/auth"
+                to="/auth" search={{ mode: "signup" as const }}
                 className="group inline-flex items-center gap-2 rounded-full bg-brand-ink px-6 py-3 text-sm font-bold text-primary-foreground transition-transform hover:scale-105"
               >
                 Shop eröffnen

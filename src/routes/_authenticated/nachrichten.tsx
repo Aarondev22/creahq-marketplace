@@ -200,7 +200,7 @@ function MessagesPage() {
             <header className="flex items-center gap-3 border-b border-border bg-brand-soft/30 px-4 py-3">
               <button
                 type="button"
-                onClick={() => navigate({ to: "/nachrichten", search: {} })}
+                onClick={() => navigate({ to: "/nachrichten", search: { c: undefined } })}
                 className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-xl bg-brand-soft md:pointer-events-none"
                 aria-label="Zurück zur Chatliste"
               >

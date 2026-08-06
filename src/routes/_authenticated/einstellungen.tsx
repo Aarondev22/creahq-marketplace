@@ -186,7 +186,7 @@ function SettingsPage() {
   return (
     <div className="mx-auto max-w-2xl px-4 pb-24 pt-8 sm:px-6">
       <Link
-        to="/dashboard"
+        to="/dashboard" search={{ tab: "overview" as const }}
         className="inline-flex items-center gap-2 rounded-full bg-brand-soft px-4 py-2.5 text-sm font-bold text-brand-ink hover:bg-brand hover:text-primary-foreground"
       >
         <ArrowLeft className="h-4 w-4" /> Zum Dashboard

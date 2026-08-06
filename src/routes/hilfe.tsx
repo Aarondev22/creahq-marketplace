@@ -25,7 +25,7 @@ export const Route = createFileRoute("/hilfe")({
 
       <h2>Konto</h2>
       <h3>Wie ändere ich mein Passwort?</h3>
-      <p>Auf der <Link to="/auth">Anmeldeseite</Link> über „Passwort vergessen".</p>
+      <p>Auf der <Link to="/auth" search={{ mode: "signin" as const }}>Anmeldeseite</Link> über „Passwort vergessen".</p>
     </PageShell>
   ),
 });
