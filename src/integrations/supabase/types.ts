@@ -303,6 +303,8 @@ export type Database = {
           images: string[]
           kind: Database["public"]["Enums"]["listing_kind"]
           location: string | null
+          moderation_note: string | null
+          moderation_status: string
           price_cents: number
           seller_id: string
           shipping_mode: string
@@ -327,6 +329,8 @@ export type Database = {
           images?: string[]
           kind?: Database["public"]["Enums"]["listing_kind"]
           location?: string | null
+          moderation_note?: string | null
+          moderation_status?: string
           price_cents: number
           seller_id: string
           shipping_mode?: string
@@ -351,6 +355,8 @@ export type Database = {
           images?: string[]
           kind?: Database["public"]["Enums"]["listing_kind"]
           location?: string | null
+          moderation_note?: string | null
+          moderation_status?: string
           price_cents?: number
           seller_id?: string
           shipping_mode?: string
@@ -593,12 +599,15 @@ export type Database = {
         Row: {
           avatar_url: string | null
           banned: boolean
+          banner_url: string | null
           bio: string | null
           created_at: string
           display_name: string | null
           handle: string | null
+          highlight_listing_id: string | null
           id: string
           onboarding_completed: boolean
+          shop_sections: string[]
           shop_shipping_default: string | null
           theme_color: string | null
           updated_at: string
@@ -606,12 +615,15 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           banned?: boolean
+          banner_url?: string | null
           bio?: string | null
           created_at?: string
           display_name?: string | null
           handle?: string | null
+          highlight_listing_id?: string | null
           id: string
           onboarding_completed?: boolean
+          shop_sections?: string[]
           shop_shipping_default?: string | null
           theme_color?: string | null
           updated_at?: string
@@ -619,17 +631,116 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           banned?: boolean
+          banner_url?: string | null
           bio?: string | null
           created_at?: string
           display_name?: string | null
           handle?: string | null
+          highlight_listing_id?: string | null
           id?: string
           onboarding_completed?: boolean
+          shop_sections?: string[]
           shop_shipping_default?: string | null
           theme_color?: string | null
           updated_at?: string
         }
         Relationships: []
+      }
+      reports: {
+        Row: {
+          admin_note: string | null
+          created_at: string
+          id: string
+          note: string | null
+          reason: string
+          reporter_id: string
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string
+          target_id: string
+          target_type: string
+          updated_at: string
+        }
+        Insert: {
+          admin_note?: string | null
+          created_at?: string
+          id?: string
+          note?: string | null
+          reason: string
+          reporter_id: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          target_id: string
+          target_type: string
+          updated_at?: string
+        }
+        Update: {
+          admin_note?: string | null
+          created_at?: string
+          id?: string
+          note?: string | null
+          reason?: string
+          reporter_id?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          target_id?: string
+          target_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      reviews: {
+        Row: {
+          body: string | null
+          buyer_id: string
+          created_at: string
+          id: string
+          listing_id: string
+          order_id: string
+          rating: number
+          seller_id: string
+          updated_at: string
+        }
+        Insert: {
+          body?: string | null
+          buyer_id: string
+          created_at?: string
+          id?: string
+          listing_id: string
+          order_id: string
+          rating: number
+          seller_id: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string | null
+          buyer_id?: string
+          created_at?: string
+          id?: string
+          listing_id?: string
+          order_id?: string
+          rating?: number
+          seller_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       seller_payment_accounts: {
         Row: {
@@ -729,6 +840,13 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      listing_rating: {
+        Args: { _listing_id: string }
+        Returns: {
+          avg_rating: number
+          review_count: number
+        }[]
       }
       redeem_founder_code: {
         Args: { _code: string }
