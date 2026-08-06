@@ -4,6 +4,7 @@ import { ArrowLeft, Check, Settings as SettingsIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
+import { ShopEditor } from "@/components/ShopEditor";
 
 export const Route = createFileRoute("/_authenticated/einstellungen")({
   head: () => ({
@@ -272,6 +273,8 @@ function SettingsPage() {
           </button>
         </form>
       )}
+
+      {!loading && userId && <ShopEditor userId={userId} />}
     </div>
   );
 }
