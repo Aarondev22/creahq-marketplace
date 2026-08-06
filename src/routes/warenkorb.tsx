@@ -29,7 +29,7 @@ function CartPage() {
   async function checkout() {
     if (!user) {
       toast.error("Bitte melde dich zuerst an.");
-      navigate({ to: "/auth" });
+      navigate({ to: "/auth", search: { mode: "signin" as const } });
       return;
     }
     setBusy(true);

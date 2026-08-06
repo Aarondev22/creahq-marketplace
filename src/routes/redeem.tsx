@@ -26,7 +26,7 @@ function RedeemPage() {
     e.preventDefault();
     if (!user) {
       toast.error("Bitte zuerst anmelden.");
-      navigate({ to: "/auth" });
+      navigate({ to: "/auth", search: { mode: "signin" as const } });
       return;
     }
     setLoading(true);
@@ -78,7 +78,7 @@ function RedeemPage() {
             </button>
             {!user && (
               <p className="mt-3 text-center text-xs text-muted-foreground">
-                Du musst <Link to="/auth" className="font-semibold text-brand hover:underline">angemeldet</Link> sein.
+                Du musst <Link to="/auth" search={{ mode: "signin" as const }} className="font-semibold text-brand hover:underline">angemeldet</Link> sein.
               </p>
             )}
           </form>

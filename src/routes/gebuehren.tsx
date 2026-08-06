@@ -97,7 +97,7 @@ function FeesPage() {
       </ul>
 
       <div className="not-prose mt-10 flex flex-wrap items-center gap-3">
-        <Link to="/auth" className="group inline-flex items-center gap-2 rounded-full bg-brand-ink px-6 py-3 text-sm font-bold text-primary-foreground transition-transform hover:scale-105">
+        <Link to="/auth" search={{ mode: "signin" as const }} className="group inline-flex items-center gap-2 rounded-full bg-brand-ink px-6 py-3 text-sm font-bold text-primary-foreground transition-transform hover:scale-105">
           <Store className="h-4 w-4" /> Shop kostenlos eröffnen
           <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
         </Link>

@@ -37,7 +37,7 @@ export const fetchTopWeek = createServerFn({ method: "GET" }).handler(async (): 
     for (const r of agg) counts.set(r.listing_id, (counts.get(r.listing_id) ?? 0) + (r.qty ?? 1));
     const topIds = [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 20).map(([id]) => id);
     if (topIds.length > 0) {
-      const { data } = await supa.from("listings").select(SAFE_COLS).in("id", topIds).eq("status", "published");
+      const { data } = await supa.from("listings").select(SAFE_COLS).in("id", topIds).eq("status", "published").eq("moderation_status", "approved");
       return (data ?? []) as ListingCard[];
     }
   }
@@ -45,7 +45,7 @@ export const fetchTopWeek = createServerFn({ method: "GET" }).handler(async (): 
   const { data } = await supa
     .from("listings")
     .select(SAFE_COLS)
-    .eq("status", "published")
+    .eq("status", "published").eq("moderation_status", "approved")
     .order("created_at", { ascending: false })
     .limit(20);
   return (data ?? []) as ListingCard[];
@@ -56,7 +56,7 @@ export const fetchFresh = createServerFn({ method: "GET" }).handler(async (): Pr
   const { data } = await supa
     .from("listings")
     .select(SAFE_COLS)
-    .eq("status", "published")
+    .eq("status", "published").eq("moderation_status", "approved")
     .order("created_at", { ascending: false })
     .limit(12);
   return (data ?? []) as ListingCard[];
@@ -84,7 +84,7 @@ export const searchListings = createServerFn({ method: "GET" })
   }))
   .handler(async ({ data }): Promise<ListingCard[]> => {
     const supa = serverPublic();
-    let query = supa.from("listings").select(SAFE_COLS).eq("status", "published");
+    let query = supa.from("listings").select(SAFE_COLS).eq("status", "published").eq("moderation_status", "approved");
     if (data.q) {
       const clean = data.q.replace(/[%_,()]/g, "");
       const like = `%${clean}%`;
@@ -107,7 +107,7 @@ export const searchListings = createServerFn({ method: "GET" })
 
 export const fetchCategories = createServerFn({ method: "GET" }).handler(async (): Promise<string[]> => {
   const supa = serverPublic();
-  const { data } = await supa.from("listings").select("category").eq("status", "published").limit(500);
+  const { data } = await supa.from("listings").select("category").eq("status", "published").eq("moderation_status", "approved").limit(500);
   const set = new Set<string>();
   for (const r of data ?? []) if (r.category) set.add(r.category);
   return [...set].sort((a, b) => a.localeCompare(b, "de"));
@@ -136,7 +136,7 @@ export const fetchListingById = createServerFn({ method: "GET" })
       .from("listings")
       .select(DETAIL_COLS)
       .eq("id", data.id)
-      .eq("status", "published")
+      .eq("status", "published").eq("moderation_status", "approved")
       .maybeSingle();
     if (!row) return null;
     const { data: seller } = await supa
@@ -159,7 +159,7 @@ export const fetchRelatedListings = createServerFn({ method: "GET" })
       .from("listings")
       .select(SAFE_COLS)
       .eq("seller_id", data.sellerId)
-      .eq("status", "published")
+      .eq("status", "published").eq("moderation_status", "approved")
       .neq("id", data.id)
       .order("created_at", { ascending: false })
       .limit(4);
@@ -167,7 +167,7 @@ export const fetchRelatedListings = createServerFn({ method: "GET" })
     let similarQuery = supa
       .from("listings")
       .select(SAFE_COLS)
-      .eq("status", "published")
+      .eq("status", "published").eq("moderation_status", "approved")
       .neq("id", data.id)
       .neq("seller_id", data.sellerId);
     if (data.category) similarQuery = similarQuery.eq("category", data.category);
@@ -183,7 +183,7 @@ export const fetchShopByHandle = createServerFn({ method: "GET" })
     const supa = serverPublic();
     const { data: profile } = await supa
       .from("profiles")
-      .select("id,handle,display_name,bio,avatar_url,theme_color")
+      .select("id,handle,display_name,bio,avatar_url,theme_color,banner_url,shop_sections,highlight_listing_id")
       .eq("handle", data.handle)
       .maybeSingle();
     if (!profile) return null;
@@ -191,7 +191,12 @@ export const fetchShopByHandle = createServerFn({ method: "GET" })
       .from("listings")
       .select(SAFE_COLS)
       .eq("seller_id", profile.id)
-      .eq("status", "published")
+      .eq("status", "published").eq("moderation_status", "approved")
       .order("created_at", { ascending: false });
-    return { profile, listings: (listings ?? []) as ListingCard[] };
+
+    const { data: reviews } = await supa.from("reviews").select("rating").eq("seller_id", profile.id);
+    const count = reviews?.length ?? 0;
+    const avg = count > 0 ? Math.round((reviews!.reduce((a, r) => a + (r.rating ?? 0), 0) / count) * 10) / 10 : 0;
+
+    return { profile, listings: (listings ?? []) as ListingCard[], rating: { avg, count } };
   });

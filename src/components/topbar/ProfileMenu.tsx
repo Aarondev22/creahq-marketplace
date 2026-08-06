@@ -90,7 +90,7 @@ export function ProfileMenu() {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              <Link to="/dashboard"><LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard</Link>
+              <Link to="/dashboard" search={{ tab: "overview" as const }}><LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard</Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link to="/einstellungen"><Settings className="mr-2 h-4 w-4" /> Einstellungen</Link>

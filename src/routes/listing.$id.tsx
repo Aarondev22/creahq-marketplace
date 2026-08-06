@@ -120,7 +120,7 @@ function ListingView({
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) {
       toast.error("Melde dich an, um zu favorisieren.");
-      navigate({ to: "/auth" });
+      navigate({ to: "/auth", search: { mode: "signin" as const } });
       return;
     }
     if (isFav && favId) {
@@ -391,7 +391,7 @@ function Rail({
         </div>
         {viewAll && items.length > 0 && (
           viewAll.to === "/browse" ? (
-            <Link to="/browse" className="text-xs font-semibold text-brand hover:underline">
+            <Link to="/browse" search={{ q: "", kind: "" as const, cat: "", min: "", max: "", sort: "new" as const }} className="text-xs font-semibold text-brand hover:underline">
               Alle ansehen →
             </Link>
           ) : (

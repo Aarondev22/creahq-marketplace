@@ -33,7 +33,7 @@ function AuthPage() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/dashboard" });
+      if (data.session) navigate({ to: "/dashboard", search: { tab: "overview" as const } });
     });
   }, [navigate]);
 
@@ -52,7 +52,7 @@ function AuthPage() {
         });
         if (error) throw error;
         toast.success("Willkommen! Du bist eingeloggt.");
-        navigate({ to: "/dashboard" });
+        navigate({ to: "/dashboard", search: { tab: "overview" as const } });
       } else if (mode === "reset") {
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
           redirectTo: window.location.origin + "/auth",
@@ -64,7 +64,7 @@ function AuthPage() {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         toast.success("Eingeloggt.");
-        navigate({ to: "/dashboard" });
+        navigate({ to: "/dashboard", search: { tab: "overview" as const } });
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Hat nicht geklappt");
@@ -82,7 +82,7 @@ function AuthPage() {
       return;
     }
     if (result.redirected) return;
-    navigate({ to: "/dashboard" });
+    navigate({ to: "/dashboard", search: { tab: "overview" as const } });
   }
 
   return (
