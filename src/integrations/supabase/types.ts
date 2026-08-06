@@ -841,13 +841,6 @@ export type Database = {
         }
         Returns: boolean
       }
-      listing_rating: {
-        Args: { _listing_id: string }
-        Returns: {
-          avg_rating: number
-          review_count: number
-        }[]
-      }
       redeem_founder_code: {
         Args: { _code: string }
         Returns: {
