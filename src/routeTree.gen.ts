@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as WarenkorbRouteImport } from './routes/warenkorb'
 import { Route as UeberRouteImport } from './routes/ueber'
 import { Route as SpielenRouteImport } from './routes/spielen'
+import { Route as RegelnRouteImport } from './routes/regeln'
 import { Route as RedeemRouteImport } from './routes/redeem'
 import { Route as KontaktRouteImport } from './routes/kontakt'
 import { Route as KategorienRouteImport } from './routes/kategorien'
@@ -51,6 +52,11 @@ const UeberRoute = UeberRouteImport.update({
 const SpielenRoute = SpielenRouteImport.update({
   id: '/spielen',
   path: '/spielen',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RegelnRoute = RegelnRouteImport.update({
+  id: '/regeln',
+  path: '/regeln',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RedeemRoute = RedeemRouteImport.update({
@@ -194,6 +200,7 @@ export interface FileRoutesByFullPath {
   '/kategorien': typeof KategorienRoute
   '/kontakt': typeof KontaktRoute
   '/redeem': typeof RedeemRoute
+  '/regeln': typeof RegelnRoute
   '/spielen': typeof SpielenRoute
   '/ueber': typeof UeberRoute
   '/warenkorb': typeof WarenkorbRoute
@@ -223,6 +230,7 @@ export interface FileRoutesByTo {
   '/kategorien': typeof KategorienRoute
   '/kontakt': typeof KontaktRoute
   '/redeem': typeof RedeemRoute
+  '/regeln': typeof RegelnRoute
   '/spielen': typeof SpielenRoute
   '/ueber': typeof UeberRoute
   '/warenkorb': typeof WarenkorbRoute
@@ -254,6 +262,7 @@ export interface FileRoutesById {
   '/kategorien': typeof KategorienRoute
   '/kontakt': typeof KontaktRoute
   '/redeem': typeof RedeemRoute
+  '/regeln': typeof RegelnRoute
   '/spielen': typeof SpielenRoute
   '/ueber': typeof UeberRoute
   '/warenkorb': typeof WarenkorbRoute
@@ -285,6 +294,7 @@ export interface FileRouteTypes {
     | '/kategorien'
     | '/kontakt'
     | '/redeem'
+    | '/regeln'
     | '/spielen'
     | '/ueber'
     | '/warenkorb'
@@ -314,6 +324,7 @@ export interface FileRouteTypes {
     | '/kategorien'
     | '/kontakt'
     | '/redeem'
+    | '/regeln'
     | '/spielen'
     | '/ueber'
     | '/warenkorb'
@@ -344,6 +355,7 @@ export interface FileRouteTypes {
     | '/kategorien'
     | '/kontakt'
     | '/redeem'
+    | '/regeln'
     | '/spielen'
     | '/ueber'
     | '/warenkorb'
@@ -375,6 +387,7 @@ export interface RootRouteChildren {
   KategorienRoute: typeof KategorienRoute
   KontaktRoute: typeof KontaktRoute
   RedeemRoute: typeof RedeemRoute
+  RegelnRoute: typeof RegelnRoute
   SpielenRoute: typeof SpielenRoute
   UeberRoute: typeof UeberRoute
   WarenkorbRoute: typeof WarenkorbRoute
@@ -408,6 +421,13 @@ declare module '@tanstack/react-router' {
       path: '/spielen'
       fullPath: '/spielen'
       preLoaderRoute: typeof SpielenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/regeln': {
+      id: '/regeln'
+      path: '/regeln'
+      fullPath: '/regeln'
+      preLoaderRoute: typeof RegelnRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/redeem': {
@@ -621,6 +641,7 @@ const rootRouteChildren: RootRouteChildren = {
   KategorienRoute: KategorienRoute,
   KontaktRoute: KontaktRoute,
   RedeemRoute: RedeemRoute,
+  RegelnRoute: RegelnRoute,
   SpielenRoute: SpielenRoute,
   UeberRoute: UeberRoute,
   WarenkorbRoute: WarenkorbRoute,
