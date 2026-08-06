@@ -4,6 +4,7 @@ import { motion } from "motion/react";
 import { ArrowLeft, ChevronLeft, ChevronRight, Check, ImagePlus, X, Download, Truck, Star, MoveLeft, MoveRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { createListing, fetchSellerStatus, resendConfirmationEmail } from "@/lib/seller.functions";
 
 export const Route = createFileRoute("/_authenticated/verkaufen/neu")({
   head: () => ({
@@ -32,6 +33,7 @@ type WizardData = {
   condition: string;
   stock: string;
   files: File[];
+  acceptedRules: boolean;
 };
 
 const SIGNED_URL_TTL = 60 * 60 * 24 * 365;
@@ -46,8 +48,27 @@ function NewListingPage() {
   const [data, setData] = useState<WizardData>({
     title: "", description: "", category: "", price: "9.00", kind: "digital",
     shippingMode: "digital", shippingPrice: "0",
-    location: "", condition: "neu", stock: "", files: [],
+    location: "", condition: "neu", stock: "", files: [], acceptedRules: false,
   });
+  const [sellerStatus, setSellerStatus] = useState<{ email: string | null; emailConfirmed: boolean; todayCount: number } | null>(null);
+  const [resending, setResending] = useState(false);
+
+  useEffect(() => {
+    fetchSellerStatus().then(setSellerStatus).catch(() => undefined);
+  }, []);
+
+  async function resendMail() {
+    setResending(true);
+    try {
+      const r = await resendConfirmationEmail();
+      toast.success(r.already ? "Deine E-Mail ist schon bestätigt \u2705" : "Bestätigungsmail verschickt \u2709\ufe0f");
+      if (r.already) setSellerStatus((s) => (s ? { ...s, emailConfirmed: true } : s));
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Konnte Mail nicht senden");
+    } finally {
+      setResending(false);
+    }
+  }
 
   // Immer oben starten – keine Scroll-Sprünge
   useEffect(() => { window.scrollTo(0, 0); }, []);
@@ -87,6 +108,11 @@ function NewListingPage() {
 
   async function submit() {
     if (!validate(TOTAL_STEPS + 1)) { setStep(1); return; }
+    if (!data.acceptedRules) { toast.error("Bitte akzeptiere die Verkaufsregeln."); return; }
+    if (sellerStatus && !sellerStatus.emailConfirmed) {
+      toast.error("Bitte bestätige zuerst deine E-Mail-Adresse.");
+      return;
+    }
     setSaving(true);
     try {
       const { data: u } = await supabase.auth.getUser();
@@ -107,20 +133,27 @@ function NewListingPage() {
       const shipping_price_cents = Math.round(parseFloat(data.shippingPrice.replace(",", ".") || "0") * 100);
       const stock = data.stock.trim() ? Math.max(0, parseInt(data.stock, 10)) : null;
 
-      const { error } = await supabase.from("listings").insert({
-        seller_id: u.user.id,
-        title: data.title, description: data.description, category: data.category,
-        kind: data.kind, price_cents,
-        shipping_mode: data.kind === "digital" ? "digital" : data.shippingMode,
-        shipping_price_cents: data.kind === "digital" ? 0 : shipping_price_cents,
-        cover_url: urls[0] ?? null, images: urls,
-        location: data.location.trim() || null,
-        condition: data.condition || null,
-        stock,
-        status: "published",
+      const result = await createListing({
+        data: {
+          title: data.title,
+          description: data.description,
+          category: data.category,
+          kind: data.kind,
+          priceCents: price_cents,
+          shippingMode: data.kind === "digital" ? "digital" : data.shippingMode,
+          shippingPriceCents: shipping_price_cents,
+          location: data.location,
+          condition: data.condition,
+          stock,
+          images: urls,
+          acceptedRules: data.acceptedRules,
+        },
       });
-      if (error) throw error;
-      toast.success("Veröffentlicht!");
+      if (result.moderation === "pending") {
+        toast.warning("Dein Listing wird kurz von uns geprüft \u2014 danach ist es öffentlich sichtbar.");
+      } else {
+        toast.success("Veröffentlicht! \ud83c\udf89");
+      }
       navigate({ to: "/dashboard", search: { tab: "listings" } });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Fehler");
@@ -308,6 +341,42 @@ function NewListingPage() {
                   {data.category && <li>Kategorie: {data.category}</li>}
                 </ul>
               </div>
+
+              {sellerStatus && !sellerStatus.emailConfirmed && (
+                <div className="rounded-3xl border-2 border-amber-400/60 bg-amber-50/60 p-5 text-sm dark:bg-amber-500/10">
+                  <p className="font-display text-lg font-black text-brand-ink">E-Mail bestätigen \u2709\ufe0f</p>
+                  <p className="mt-1 text-muted-foreground">
+                    Bevor du verkaufen kannst, musst du deine E-Mail-Adresse{sellerStatus.email ? ` (${sellerStatus.email})` : ""} bestätigen.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={resendMail}
+                    disabled={resending}
+                    className="mt-3 min-h-11 rounded-full bg-brand px-5 text-sm font-bold text-primary-foreground disabled:opacity-60"
+                  >
+                    {resending ? "Sende \u2026" : "Bestätigungsmail erneut senden"}
+                  </button>
+                </div>
+              )}
+
+              <label className="flex items-start gap-3 rounded-3xl border border-border bg-surface p-5">
+                <input
+                  type="checkbox"
+                  checked={data.acceptedRules}
+                  onChange={(e) => update("acceptedRules", e.target.checked)}
+                  className="mt-0.5 h-6 w-6 shrink-0 accent-[var(--brand,#7c3aed)]"
+                />
+                <span className="text-sm text-brand-ink">
+                  Ich akzeptiere die{" "}
+                  <Link to="/regeln" className="font-bold text-brand underline">Verkaufsregeln</Link>{" "}
+                  und bestätige, dass mein Angebot echt und erlaubt ist.
+                  {sellerStatus && (
+                    <span className="mt-1 block text-xs text-muted-foreground">
+                      Heute angelegt: {sellerStatus.todayCount}/3 Listings
+                    </span>
+                  )}
+                </span>
+              </label>
             </div>
           )}
 
@@ -326,7 +395,7 @@ function NewListingPage() {
                 Weiter <ChevronRight className="h-4 w-4" />
               </button>
             ) : (
-              <button type="button" disabled={saving} onClick={submit} className="inline-flex items-center gap-1 rounded-full bg-brand px-6 py-3 text-sm font-bold text-primary-foreground brand-glow disabled:opacity-60">
+              <button type="button" disabled={saving || !data.acceptedRules} onClick={submit} className="inline-flex items-center gap-1 rounded-full bg-brand px-6 py-3 text-sm font-bold text-primary-foreground brand-glow disabled:opacity-60">
                 <Check className="h-4 w-4" /> {saving ? "Speichere …" : "Veröffentlichen"}
               </button>
             )}
