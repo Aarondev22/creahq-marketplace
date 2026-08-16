@@ -10,12 +10,45 @@ function createSupabaseClient() {
 
   if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
     const missing = [
-      ...(!SUPABASE_URL ? ['SUPABASE_URL'] : []),
-      ...(!SUPABASE_PUBLISHABLE_KEY ? ['SUPABASE_PUBLISHABLE_KEY'] : []),
+      ...(!SUPABASE_URL ? ['VITE_SUPABASE_URL / SUPABASE_URL'] : []),
+      ...(!SUPABASE_PUBLISHABLE_KEY ? ['VITE_SUPABASE_PUBLISHABLE_KEY / SUPABASE_PUBLISHABLE_KEY'] : []),
     ];
-    const message = `Missing Supabase environment variable(s): ${missing.join(', ')}. Connect Supabase in Lovable Cloud.`;
-    console.error(`[Supabase] ${message}`);
-    throw new Error(message);
+    const message = `Missing Supabase environment variable(s): ${missing.join(', ')}. Running in degraded mode.`;
+    console.warn(`[Supabase] ${message}`);
+
+    // Return a no-op supabase-like client that safely returns empty responses instead of throwing.
+    // This prevents hard crashes when env vars are not set in local dev.
+    const noopAuth = {
+      getSession: async () => ({ data: { session: null } }),
+      getUser: async () => ({ data: { user: null } }),
+      signInWithPassword: async () => ({ error: new Error('Supabase not configured') }),
+      signUp: async () => ({ error: new Error('Supabase not configured') }),
+      resetPasswordForEmail: async () => ({ error: new Error('Supabase not configured') }),
+      onAuthStateChange: () => ({ subscription: { unsubscribe: () => {} }, data: { } }),
+      getClaims: async () => ({ data: null, error: new Error('Supabase not configured') }),
+    } as any;
+
+    const genericHandler = {
+      apply() {
+        return Promise.resolve({ data: null, error: null });
+      },
+      get() {
+        return () => Promise.resolve({ data: null, error: null });
+      },
+    } as any;
+
+    const noop = new Proxy(
+      {},
+      {
+        get(target, prop) {
+          if (prop === 'auth') return noopAuth;
+          // Return a function/chainable proxy for calls like supabase.from(...).select(...)
+          return new Proxy(() => {}, genericHandler);
+        },
+      },
+    ) as unknown as ReturnType<typeof createClient>;
+
+    return noop;
   }
 
   return createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
@@ -34,7 +67,6 @@ let _supabase: ReturnType<typeof createSupabaseClient> | undefined;
 export const supabase = new Proxy({} as ReturnType<typeof createSupabaseClient>, {
   get(_, prop, receiver) {
     if (!_supabase) _supabase = createSupabaseClient();
-    return Reflect.get(_supabase, prop, receiver);
+    return Reflect.get(_supabase as any, prop, receiver);
   },
 });
-
