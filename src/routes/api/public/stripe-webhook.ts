@@ -1,6 +1,4 @@
-*** Begin Patch
-*** Update File: src/routes/api/public/stripe-webhook.ts
-@@
+
 -        const { default: Stripe } = await import("stripe");
 -        const stripe = new Stripe(secret, { apiVersion: "2022-11-15" });
 -
