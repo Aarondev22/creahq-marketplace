@@ -1,8 +1,4 @@
-*** Begin Patch
-*** Update File: src/lib/chat.functions.ts
-@@
- export async function fetchConversations(): Promise<Conversation[]> {
-@@
+
 -  const { data: convs, error } = await supabase
 +  const { data: convs, error } = await supabase
      .from("conversations")
