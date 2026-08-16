@@ -1,6 +1,6 @@
 export type ServerResponse<T = unknown> = { ok: boolean; error?: string; data?: T };
 async function post<T = unknown>(path: string, body: unknown) {
-  const res = await fetch(path, {
+ const res = await fetch(path, {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify(body),
