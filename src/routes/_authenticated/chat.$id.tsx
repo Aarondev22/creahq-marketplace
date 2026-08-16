@@ -1,6 +1,4 @@
-*** Begin Patch
-*** Update File: src/routes/_authenticated/chat.$id.tsx
-@@
+
 -    const channel = supabase
 -      .channel(`chat:${id}`)
 -      .on(
