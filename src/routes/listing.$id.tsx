@@ -1,4 +1,5 @@
 import React from "react";
+import { createFileRoute } from "@tanstack/react-router";
 import {
   ArrowLeft,
   Heart,
@@ -11,6 +12,10 @@ import {
   Package,
 } from "lucide-react";
 import { ReportButton } from "@/components/ReportButton";
+
+export const Route = createFileRoute("/listing/$id")({
+  component: ListingPage,
+});
 
 export default function ListingPage() {
   const l = { id: "unknown" };

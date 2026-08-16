@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { createFileRoute } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 
 type ChatMessage = {
@@ -6,6 +7,11 @@ type ChatMessage = {
   body?: string;
   sender_id?: string;
 };
+
+export const Route = createFileRoute("/_authenticated/chat/$id")({
+  ssr: false,
+  component: ChatRoute,
+});
 
 export default function ChatRoute({ params }: { params: { id: string } }) {
   const { id } = params;

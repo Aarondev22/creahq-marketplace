@@ -1,3 +1,9 @@
+import { createFileRoute } from "@tanstack/react-router";
+
+export const Route = createFileRoute("/api/public/stripe-webhook")({
+  component: () => null,
+});
+
 export async function POST(request: Request) {
   const signature = request.headers.get("stripe-signature") || "";
   const body = await request.text();
