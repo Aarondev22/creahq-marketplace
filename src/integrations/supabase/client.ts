@@ -5,52 +5,27 @@ import type { Database } from './types';
 function createSupabaseClient() {
   // Use import.meta.env for client-side (Vite build-time replacement)
   // Fall back to process.env for SSR (server-side rendering)
-  const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
-  const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_PUBLISHABLE_KEY;
+  const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || 'http://localhost:54321';
+  // Support both common names for the anon/public key
+  const SUPABASE_PUBLISHABLE_KEY =
+    import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+    import.meta.env.VITE_SUPABASE_ANON_KEY ||
+    process.env.SUPABASE_PUBLISHABLE_KEY ||
+    process.env.VITE_SUPABASE_ANON_KEY ||
+    'anon-key';
 
   if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
     const missing = [
       ...(!SUPABASE_URL ? ['VITE_SUPABASE_URL / SUPABASE_URL'] : []),
-      ...(!SUPABASE_PUBLISHABLE_KEY ? ['VITE_SUPABASE_PUBLISHABLE_KEY / SUPABASE_PUBLISHABLE_KEY'] : []),
+      ...(!SUPABASE_PUBLISHABLE_KEY ? ['VITE_SUPABASE_PUBLISHABLE_KEY / VITE_SUPABASE_ANON_KEY / SUPABASE_PUBLISHABLE_KEY'] : []),
     ];
-    const message = `Missing Supabase environment variable(s): ${missing.join(', ')}. Running in degraded mode.`;
+    const message = `Missing Supabase environment variable(s): ${missing.join(', ')}. Falling back to local dummy values.`;
     console.warn(`[Supabase] ${message}`);
-
-    // Return a no-op supabase-like client that safely returns empty responses instead of throwing.
-    // This prevents hard crashes when env vars are not set in local dev.
-    const noopAuth = {
-      getSession: async () => ({ data: { session: null } }),
-      getUser: async () => ({ data: { user: null } }),
-      signInWithPassword: async () => ({ error: new Error('Supabase not configured') }),
-      signUp: async () => ({ error: new Error('Supabase not configured') }),
-      resetPasswordForEmail: async () => ({ error: new Error('Supabase not configured') }),
-      onAuthStateChange: () => ({ subscription: { unsubscribe: () => {} }, data: { } }),
-      getClaims: async () => ({ data: null, error: new Error('Supabase not configured') }),
-    } as any;
-
-    const genericHandler = {
-      apply() {
-        return Promise.resolve({ data: null, error: null });
-      },
-      get() {
-        return () => Promise.resolve({ data: null, error: null });
-      },
-    } as any;
-
-    const noop = new Proxy(
-      {},
-      {
-        get(target, prop) {
-          if (prop === 'auth') return noopAuth;
-          // Return a function/chainable proxy for calls like supabase.from(...).select(...)
-          return new Proxy(() => {}, genericHandler);
-        },
-      },
-    ) as unknown as ReturnType<typeof createClient>;
-
-    return noop;
   }
 
+  // Create a real supabase client using either provided values or the fallback dummies.
+  // This avoids hard crashes during build when env vars are not set while keeping the
+  // client API available for the app (it will simply fail at runtime for real requests).
   return createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
     auth: {
       storage: typeof window !== 'undefined' ? localStorage : undefined,
