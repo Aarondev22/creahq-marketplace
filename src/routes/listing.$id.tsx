@@ -1,6 +1,4 @@
-*** Begin Patch
-*** Update File: src/routes/listing.$id.tsx
-@@
+
 -import {
 -  ArrowLeft,
 -  Heart,
