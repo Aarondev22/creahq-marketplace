@@ -1,7 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { AppRole } from "@/hooks/useAuth";
-import { toggleUserRole, resolveReport as resolveReportFn, moderateListing, banUser } from "@/lib/admin.client";
+import { toggleUserRole, resolveReport as resolveReportFn, moderateListing, banUser } from "@/lib/admin";
 
 // ... rest of AdminPanel implementation ...
 
