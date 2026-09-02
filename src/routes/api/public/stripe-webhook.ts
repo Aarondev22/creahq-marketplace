@@ -17,7 +17,7 @@ export async function POST(request: Request) {
   }
 
   const { default: Stripe } = await import("stripe");
-  const stripe = new Stripe(secret, { apiVersion: "2022-11-15" });
+  const stripe = new Stripe(secret);
 
   let event: import("stripe").Stripe.Event;
   try {
