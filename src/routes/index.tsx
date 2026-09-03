@@ -26,8 +26,19 @@ export const Route = createFileRoute("/")({
     ]);
   },
   component: Index,
+  pendingComponent: () => (
+    <div className="mx-auto max-w-6xl space-y-6 px-4 py-16">
+      <div className="h-56 animate-pulse rounded-3xl bg-muted" />
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <div key={i} className="h-56 animate-pulse rounded-3xl bg-muted" />
+        ))}
+      </div>
+    </div>
+  ),
   errorComponent: ({ error }) => <div className="p-10 text-center text-sm text-muted-foreground">{error.message}</div>,
   notFoundComponent: () => <div className="p-10 text-center text-sm">Nicht gefunden.</div>,
+
 });
 
 function Index() {
