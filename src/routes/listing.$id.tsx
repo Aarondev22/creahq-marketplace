@@ -19,7 +19,7 @@ import {
   fetchRelatedListings,
   type ListingCard,
 } from "@/lib/listings.functions";
-import { getOrCreateConversation } from "@/lib/chat.functions";
+import { startConversation } from "@/lib/chat.functions";
 import { useCart } from "@/lib/cart";
 import { toast } from "sonner";
 
@@ -146,7 +146,7 @@ function ListingView({
     try {
       const sellerId = l.seller_id ?? l.seller?.id;
       if (!sellerId) throw new Error("Keine Verkäufer-ID gefunden");
-      const convId = await getOrCreateConversation(sellerId, l.id);
+      const convId = await startConversation(l.id, sellerId);
       navigate({ to: "/chat/$id", params: { id: convId } });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Chat konnte nicht geöffnet werden");
