@@ -50,12 +50,12 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-  --font-display: "Fraunces", "Cormorant Garamond", ui-serif, Georgia, serif;
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
 }
 
 :root {
-  --radius: 0.875rem;
+  --radius: 0.75rem;
 
   /* Brand palette — purple on warm off-white */
   --brand: oklch(0.52 0.22 295);
@@ -63,6 +63,9 @@
   --brand-ink: oklch(0.22 0.08 290);
   --surface: oklch(0.985 0.008 90);
   --surface-warm: oklch(0.96 0.018 80);
+  --paint-coral: oklch(0.76 0.16 28);
+  --paint-sun: oklch(0.88 0.16 92);
+  --paint-cyan: oklch(0.79 0.12 205);
 
   --background: var(--surface);
   --foreground: var(--brand-ink);
@@ -96,6 +99,9 @@
   --sidebar-accent-foreground: var(--brand-ink);
   --sidebar-border: oklch(0.9 0.02 290);
   --sidebar-ring: var(--brand);
+  --paint-coral: oklch(0.68 0.16 28);
+  --paint-sun: oklch(0.75 0.13 92);
+  --paint-cyan: oklch(0.7 0.11 205);
 }
 
 .dark {
@@ -150,8 +156,49 @@
 
   h1, h2, h3, h4 {
     font-family: var(--font-display);
-    letter-spacing: -0.02em;
+    letter-spacing: 0;
   }
+
+  button, a, input, select, textarea {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+@utility app-canvas {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 15% 10% at 4% 18%, color-mix(in oklab, var(--paint-coral) 18%, transparent), transparent 75%),
+    radial-gradient(ellipse 22% 8% at 96% 42%, color-mix(in oklab, var(--paint-cyan) 18%, transparent), transparent 75%),
+    radial-gradient(ellipse 18% 9% at 8% 76%, color-mix(in oklab, var(--paint-sun) 18%, transparent), transparent 75%),
+    var(--color-surface);
+}
+
+@utility paint-splash {
+  position: absolute;
+  pointer-events: none;
+  z-index: -1;
+  width: 12rem;
+  height: 7rem;
+  border-radius: 63% 37% 68% 32% / 42% 62% 38% 58%;
+  filter: blur(2px);
+  transform: rotate(-12deg);
+  background: color-mix(in oklab, var(--paint-coral) 16%, transparent);
+  &::before, &::after {
+    content: "";
+    position: absolute;
+    border-radius: 999px;
+    background: inherit;
+  }
+  &::before { width: 1.35rem; height: 1.35rem; right: -1.8rem; top: 1rem; }
+  &::after { width: .65rem; height: .65rem; right: -2.8rem; top: 2.5rem; }
+}
+
+@utility creative-panel {
+  border: 1px solid color-mix(in oklab, var(--border) 80%, transparent);
+  background: color-mix(in oklab, var(--card) 90%, transparent);
+  box-shadow: 0 16px 45px -35px color-mix(in oklab, var(--brand-ink) 35%, transparent);
 }
 
 @utility no-scrollbar {

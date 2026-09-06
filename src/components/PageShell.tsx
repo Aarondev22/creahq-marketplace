@@ -12,13 +12,13 @@ export function PageShell({
   children: ReactNode;
 }) {
   return (
-    <section className="mx-auto max-w-3xl px-5 py-12 sm:px-6 sm:py-16">
+    <section className="relative mx-auto max-w-3xl px-5 py-10 sm:px-6 sm:py-14">
       {eyebrow && (
-        <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-brand-soft px-3 py-1 text-xs font-bold uppercase tracking-widest text-brand">
+        <div className="mb-3 inline-flex items-center gap-2 rounded-lg bg-brand-soft px-3 py-1 text-xs font-bold uppercase tracking-wide text-brand">
           {eyebrow}
         </div>
       )}
-      <h1 className="font-display text-3xl font-black tracking-tight text-brand-ink sm:text-5xl">
+      <h1 className="font-display text-3xl font-extrabold text-brand-ink sm:text-5xl">
         {title}
       </h1>
       {lead && <p className="mt-3 text-base text-muted-foreground sm:text-lg">{lead}</p>}
