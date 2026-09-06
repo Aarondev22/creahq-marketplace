@@ -66,11 +66,12 @@ function BrowsePage() {
   const hasFilters = Boolean(search.kind || search.cat || search.min || search.max || search.sort !== "new");
 
   return (
-    <section className="relative mx-auto max-w-7xl px-4 sm:px-6 py-12 sm:py-16">
-      <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-brand-soft px-3 py-1 text-xs font-bold uppercase tracking-widest text-brand">
+    <section className="relative mx-auto max-w-7xl px-4 py-9 sm:px-6 sm:py-12">
+      <span className="paint-splash -right-20 top-5 rotate-[16deg] bg-paint-cyan/15" aria-hidden="true" />
+      <div className="mb-2 inline-flex items-center gap-2 rounded-lg bg-brand-soft px-3 py-1 text-xs font-bold uppercase tracking-wide text-brand">
         <Search className="h-3.5 w-3.5" /> Stöbern
       </div>
-      <h1 className="font-display text-4xl font-black tracking-tight text-brand-ink sm:text-5xl">
+      <h1 className="font-display text-3xl font-extrabold text-brand-ink sm:text-5xl">
         {search.q ? <>Ergebnisse für „<span className="text-brand">{search.q}</span>"</> : <>Alles auf einen Blick ✨</>}
       </h1>
       <p className="mt-2 max-w-xl text-muted-foreground">
@@ -78,13 +79,13 @@ function BrowsePage() {
       </p>
 
       {/* Filterleiste */}
-      <div className="mt-6 rounded-[1.75rem] border border-border bg-card/70 p-4 shadow-sm backdrop-blur">
+      <div className="creative-panel mt-6 rounded-2xl p-3 backdrop-blur sm:p-4">
         <div className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-muted-foreground">
           <SlidersHorizontal className="h-3.5 w-3.5" /> Filter
           {hasFilters && (
             <button
               onClick={() => set({ kind: "", cat: "", min: "", max: "", sort: "new" })}
-              className="ml-auto inline-flex min-h-9 items-center gap-1 rounded-full bg-brand-soft px-3 text-[11px] font-bold text-brand-ink hover:bg-brand hover:text-primary-foreground"
+               className="ml-auto inline-flex min-h-10 items-center gap-1 rounded-xl bg-brand-soft px-3 text-[11px] font-bold text-brand-ink hover:bg-brand hover:text-primary-foreground"
             >
               <X className="h-3 w-3" /> Zurücksetzen
             </button>
@@ -101,7 +102,7 @@ function BrowsePage() {
           <select
             value={search.cat}
             onChange={(e) => set({ cat: e.target.value })}
-            className="min-h-12 rounded-2xl border border-border bg-surface px-4 text-sm font-medium text-brand-ink"
+            className="min-h-11 rounded-xl border border-border bg-surface px-3 text-sm font-medium text-brand-ink"
           >
             <option value="">Alle Kategorien</option>
             {(categories ?? []).map((c) => (
@@ -115,7 +116,7 @@ function BrowsePage() {
             value={search.min}
             onChange={(e) => set({ min: e.target.value })}
             placeholder="Preis ab €"
-            className="min-h-12 w-full rounded-2xl border border-border bg-surface px-4 text-sm sm:w-32"
+            className="min-h-11 w-full rounded-xl border border-border bg-surface px-3 text-sm sm:w-32"
           />
           <input
             type="number"
@@ -124,12 +125,12 @@ function BrowsePage() {
             value={search.max}
             onChange={(e) => set({ max: e.target.value })}
             placeholder="bis €"
-            className="min-h-12 w-full rounded-2xl border border-border bg-surface px-4 text-sm sm:w-28"
+            className="min-h-11 w-full rounded-xl border border-border bg-surface px-3 text-sm sm:w-28"
           />
           <select
             value={search.sort}
             onChange={(e) => set({ sort: e.target.value as Sort })}
-            className="min-h-12 rounded-2xl border border-border bg-surface px-4 text-sm font-medium text-brand-ink"
+            className="min-h-11 rounded-xl border border-border bg-surface px-3 text-sm font-medium text-brand-ink"
           >
             <option value="new">Neueste zuerst</option>
             <option value="price_asc">Preis aufsteigend</option>
@@ -139,7 +140,7 @@ function BrowsePage() {
       </div>
 
       {items.length === 0 ? (
-        <div className="mt-12 grid place-items-center rounded-[2rem] border-2 border-dashed border-brand/30 bg-brand-soft/20 p-12 text-center">
+         <div className="mt-12 grid place-items-center rounded-2xl border-2 border-dashed border-brand/30 bg-card/60 p-12 text-center">
           <div className="text-6xl">🪺</div>
           <p className="mt-4 font-display text-xl font-bold text-brand-ink">Hier ist gerade nichts zu holen.</p>
           <p className="mt-1 max-w-md text-sm text-muted-foreground">
@@ -162,8 +163,8 @@ function Chip({ label, active, onClick }: { label: string; active: boolean; onCl
   return (
     <button
       onClick={onClick}
-      className={`inline-flex min-h-11 items-center rounded-full px-5 text-sm font-bold transition-all ${
-        active ? "bg-brand text-primary-foreground brand-glow" : "border border-border bg-surface text-brand-ink hover:border-brand hover:bg-brand-soft"
+       className={`inline-flex min-h-11 items-center rounded-xl px-4 text-sm font-bold transition-all ${
+         active ? "bg-brand text-primary-foreground brand-glow" : "border border-border bg-surface text-brand-ink hover:border-brand hover:bg-brand-soft"
       }`}
     >
       {label}

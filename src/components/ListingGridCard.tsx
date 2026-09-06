@@ -7,9 +7,9 @@ export function ListingGridCard({ listing, showKind = true }: { listing: Listing
     <Link
       to="/listing/$id"
       params={{ id: listing.id }}
-      className="group relative flex flex-col overflow-hidden rounded-[1.75rem] border border-border bg-card shadow-sm transition-all duration-300 hover:-translate-y-1.5 hover:border-brand/50 hover:shadow-xl hover:shadow-brand/10"
+      className="group relative flex flex-col overflow-hidden rounded-2xl border border-border/80 bg-card/95 shadow-[0_12px_32px_-28px_color-mix(in_oklab,var(--brand-ink)_45%,transparent)] transition-all duration-300 hover:-translate-y-1 hover:border-brand/40 hover:shadow-lg"
     >
-      <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-brand-soft via-brand-soft/60 to-amber-100/40">
+      <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-brand-soft via-card to-surface-warm">
         {listing.cover_url ? (
           <img
             src={listing.cover_url}
@@ -21,7 +21,7 @@ export function ListingGridCard({ listing, showKind = true }: { listing: Listing
           <div className="grid h-full w-full place-items-center text-4xl opacity-60">{isDigital ? "💾" : "📦"}</div>
         )}
         {showKind && (
-          <span className="absolute left-3 top-3 rounded-full bg-card/90 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-brand-ink backdrop-blur">
+          <span className="absolute left-3 top-3 rounded-lg bg-card/90 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-brand-ink backdrop-blur">
             {isDigital ? "💾 Digital" : "📦 Physisch"}
           </span>
         )}
@@ -34,7 +34,7 @@ export function ListingGridCard({ listing, showKind = true }: { listing: Listing
           {listing.title}
         </h3>
         <span className="mt-auto pt-3">
-          <span className="inline-block rounded-full bg-brand/10 px-3 py-1 text-xs font-black text-brand transition-colors group-hover:bg-brand group-hover:text-primary-foreground">
+          <span className="inline-block rounded-lg bg-brand/10 px-3 py-1 text-xs font-extrabold text-brand transition-colors group-hover:bg-brand group-hover:text-primary-foreground">
             {(listing.price_cents / 100).toFixed(2)} €
           </span>
         </span>
@@ -45,7 +45,7 @@ export function ListingGridCard({ listing, showKind = true }: { listing: Listing
 
 export function ListingCardSkeleton() {
   return (
-    <div className="overflow-hidden rounded-[1.75rem] border border-border bg-card">
+    <div className="overflow-hidden rounded-2xl border border-border bg-card">
       <div className="aspect-[4/3] animate-pulse bg-brand-soft/50" />
       <div className="space-y-2 p-4">
         <div className="h-2.5 w-16 animate-pulse rounded-full bg-brand-soft" />

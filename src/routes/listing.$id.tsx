@@ -172,12 +172,13 @@ function ListingView({
       : "Versand inklusive";
 
   return (
-    <div className="mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:px-6 lg:grid-cols-2">
+    <div className="relative mx-auto grid max-w-6xl gap-8 px-4 py-9 sm:px-6 sm:py-12 lg:grid-cols-2">
+      <span className="paint-splash -right-24 top-16 rotate-[20deg] bg-paint-sun/15" aria-hidden="true" />
       <div className="space-y-3">
         <motion.div
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="aspect-square overflow-hidden rounded-[2rem] border border-border bg-gradient-to-br from-brand-soft to-amber-100/40"
+          className="aspect-square overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-brand-soft via-card to-surface-warm shadow-[0_20px_50px_-38px_color-mix(in_oklab,var(--brand-ink)_55%,transparent)]"
         >
           {allImages[activeImg] ? (
             <img src={allImages[activeImg]} alt={l.title} className="h-full w-full object-cover" />
@@ -193,7 +194,7 @@ function ListingView({
                 type="button"
                 onClick={() => setActiveImg(i)}
                 aria-label={`Bild ${i + 1} anzeigen`}
-                className={`aspect-square overflow-hidden rounded-xl border-2 transition-colors ${
+                 className={`aspect-square overflow-hidden rounded-lg border-2 transition-colors ${
                   i === activeImg ? "border-brand" : "border-border hover:border-brand/50"
                 }`}
               >
@@ -207,22 +208,22 @@ function ListingView({
       <div>
         <div className="flex flex-wrap items-center gap-2">
           {l.category && (
-            <span className="inline-block rounded-full bg-brand-soft px-3 py-1 text-xs font-bold uppercase tracking-widest text-brand">
+            <span className="inline-block rounded-lg bg-brand-soft px-3 py-1 text-xs font-bold uppercase tracking-wide text-brand">
               {l.category}
             </span>
           )}
-          <span className="inline-block rounded-full border border-border bg-card px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+           <span className="inline-block rounded-lg border border-border bg-card px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
             {isDigital ? "Digital" : "Physisch"}
           </span>
         </div>
 
-        <h1 className="mt-2 font-display text-4xl font-black text-brand-ink">{l.title}</h1>
+         <h1 className="mt-2 font-display text-4xl font-extrabold text-brand-ink">{l.title}</h1>
 
         {l.seller && (
           <Link
             to="/shop/$handle"
             params={{ handle: l.seller.handle ?? "" }}
-            className="mt-3 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-sm font-semibold text-brand-ink transition-colors hover:border-brand hover:bg-brand-soft hover:text-brand"
+             className="mt-3 inline-flex min-h-11 items-center gap-2 rounded-xl border border-border bg-card px-3 py-1.5 text-sm font-semibold text-brand-ink transition-colors hover:border-brand hover:bg-brand-soft hover:text-brand"
           >
             <span className="grid h-7 w-7 place-items-center rounded-full bg-brand/15 text-xs font-bold text-brand">
               {(l.seller.display_name ?? "?").slice(0, 1).toUpperCase()}
@@ -242,7 +243,7 @@ function ListingView({
           {l.description}
         </p>
 
-        <dl className="mt-6 grid grid-cols-2 gap-3 rounded-2xl border border-border bg-card p-4 text-sm">
+         <dl className="creative-panel mt-6 grid grid-cols-2 gap-4 rounded-2xl p-4 text-sm">
           <Detail
             icon={isDigital ? <Download className="h-3.5 w-3.5" /> : <Package className="h-3.5 w-3.5" />}
             label="Typ"
@@ -263,7 +264,7 @@ function ListingView({
         </dl>
 
         <div className="mt-8 flex items-end gap-4">
-          <div className="font-display text-4xl font-black text-brand">
+           <div className="font-display text-4xl font-extrabold text-brand">
             {(l.price_cents / 100).toFixed(2)} €
           </div>
         </div>
@@ -272,7 +273,7 @@ function ListingView({
           <button
             type="button"
             onClick={handleAddToCart}
-            className="min-w-[200px] flex-1 rounded-full bg-brand px-6 py-4 text-base font-bold text-primary-foreground brand-glow transition-transform hover:scale-[1.02]"
+             className="min-w-[200px] flex-1 rounded-xl bg-brand px-6 py-3.5 text-base font-bold text-primary-foreground brand-glow transition-transform hover:-translate-y-0.5"
           >
             In den Warenkorb
           </button>
@@ -406,7 +407,7 @@ function Rail({
         )}
       </div>
       {items.length === 0 ? (
-        <div className="rounded-3xl border-2 border-dashed border-brand/25 bg-card/40 p-8 text-center text-sm text-muted-foreground">
+         <div className="rounded-2xl border-2 border-dashed border-brand/25 bg-card/55 p-8 text-center text-sm text-muted-foreground">
           {empty}
         </div>
       ) : (
@@ -416,7 +417,7 @@ function Rail({
               key={item.id}
               to="/listing/$id"
               params={{ id: item.id }}
-              className="group overflow-hidden rounded-2xl border border-border bg-card transition-all hover:-translate-y-1 hover:border-brand hover:shadow-lg"
+               className="group overflow-hidden rounded-2xl border border-border/80 bg-card/95 transition-all hover:-translate-y-1 hover:border-brand/50 hover:shadow-lg"
             >
               <div className="flex aspect-square items-center justify-center bg-gradient-to-br from-brand-soft/60 via-transparent to-amber-100/40 text-4xl">
                 {item.cover_url ? (
@@ -458,7 +459,8 @@ function PlaceholderListing({ id }: { id: string }) {
     : "Hier wohnt ein echtes Produkt.";
 
   return (
-    <div className="mx-auto max-w-6xl px-6 py-10">
+     <div className="relative mx-auto max-w-6xl px-5 py-9 sm:px-6">
+       <span className="paint-splash -right-24 top-10 rotate-[20deg] bg-paint-sun/15" aria-hidden="true" />
       <Link
         to="/"
         className="inline-flex items-center gap-1 rounded-full bg-brand-soft px-3 py-1.5 text-xs font-bold text-brand-ink hover:bg-brand hover:text-primary-foreground"

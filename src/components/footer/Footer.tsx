@@ -43,8 +43,9 @@ const socials = [
 
 export function Footer() {
   return (
-    <footer className="mt-24 border-t border-border bg-surface-warm">
-      <div className="mx-auto grid max-w-7xl gap-10 px-6 py-14 md:grid-cols-[1.2fr_2.5fr_1fr]">
+    <footer className="relative mt-20 overflow-hidden border-t border-border/70 bg-surface-warm/85 backdrop-blur">
+      <span className="paint-splash -right-16 top-8 rotate-[22deg] bg-paint-cyan/15" aria-hidden="true" />
+      <div className="relative mx-auto grid max-w-7xl gap-10 px-6 py-12 md:grid-cols-[1.2fr_2.5fr_1fr]">
         <div>
           <Logo />
           <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted-foreground">

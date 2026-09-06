@@ -31,7 +31,7 @@ export function DiscoverRail({ title, subtitle, emoji, emptyMessage, items, slug
   );
 
   return (
-    <section className="mx-auto max-w-7xl px-4 sm:px-6 py-10">
+    <section className="relative mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
       <div className="mb-5 flex items-end justify-between gap-4">
         {slug ? (
           <Link
@@ -49,7 +49,7 @@ export function DiscoverRail({ title, subtitle, emoji, emptyMessage, items, slug
           <Link
             to="/kategorie/$slug"
             params={{ slug }}
-            className="hidden shrink-0 items-center gap-1 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-bold text-brand-ink transition-colors hover:border-brand hover:text-brand sm:inline-flex"
+            className="hidden min-h-10 shrink-0 items-center gap-1 rounded-xl border border-border bg-card px-3 py-1.5 text-xs font-bold text-brand-ink transition-colors hover:border-brand hover:text-brand sm:inline-flex"
           >
             Alle ansehen <ArrowRight className="h-3 w-3" />
           </Link>
@@ -99,7 +99,7 @@ function PlaceholderCard({ index, message, slug }: { index: number; message: str
   );
 
   const className =
-    "group relative flex h-64 w-56 shrink-0 flex-col justify-between overflow-hidden rounded-3xl border-2 border-dashed border-brand/30 bg-card/60 p-5 transition-all hover:-translate-y-0.5 hover:border-brand/60";
+     "group relative flex h-60 w-52 shrink-0 flex-col justify-between overflow-hidden rounded-2xl border-2 border-dashed border-brand/25 bg-card/70 p-5 transition-all hover:-translate-y-0.5 hover:border-brand/60 sm:h-64 sm:w-56";
 
   // Placeholder cards always link to a placeholder LISTING detail page,
   // never back to the category — a click on a product card should feel

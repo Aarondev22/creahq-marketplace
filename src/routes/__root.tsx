@@ -96,7 +96,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "stylesheet", href: appCss },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,700;9..144,900&family=Inter:wght@400;500;600;700;800&display=swap" },
+      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" },
     ],
   }),
   shellComponent: RootShell,
@@ -135,9 +135,12 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <CartProvider>
-        <div className="flex min-h-screen flex-col bg-surface">
+        <div className="app-canvas flex min-h-screen flex-col">
           <Topbar />
-          <main className="flex-1">
+          <main className="relative z-0 flex-1">
+            <span className="paint-splash left-[-5rem] top-[20rem]" aria-hidden="true" />
+            <span className="paint-splash right-[-4rem] top-[58rem] rotate-[18deg] bg-paint-cyan/15" aria-hidden="true" />
+            <span className="paint-splash left-[-3rem] top-[105rem] rotate-[8deg] bg-paint-sun/15" aria-hidden="true" />
             <Outlet />
           </main>
           <Footer />
