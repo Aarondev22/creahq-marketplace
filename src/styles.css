@@ -37,6 +37,9 @@
   --color-brand-ink: var(--brand-ink);
   --color-surface: var(--surface);
   --color-surface-warm: var(--surface-warm);
+  --color-confetti-coral: var(--confetti-coral);
+  --color-confetti-sun: var(--confetti-sun);
+  --color-confetti-mint: var(--confetti-mint);
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
@@ -50,19 +53,22 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-  --font-display: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Syne", "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
   --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
 }
 
 :root {
   --radius: 0.75rem;
 
-  /* Brand palette — purple on warm off-white */
-  --brand: oklch(0.52 0.22 295);
+  /* Confetti palette — purple, coral, sun and mint on warm white */
+  --brand: oklch(0.49 0.25 295);
   --brand-soft: oklch(0.92 0.06 295);
   --brand-ink: oklch(0.22 0.08 290);
-  --surface: oklch(0.985 0.008 90);
+  --surface: oklch(0.992 0.01 92);
   --surface-warm: oklch(0.96 0.018 80);
+  --confetti-coral: oklch(0.68 0.2 22);
+  --confetti-sun: oklch(0.84 0.16 85);
+  --confetti-mint: oklch(0.75 0.14 165);
   --paint-coral: oklch(0.76 0.16 28);
   --paint-sun: oklch(0.88 0.16 92);
   --paint-cyan: oklch(0.79 0.12 205);
@@ -110,6 +116,9 @@
   --brand-ink: oklch(0.96 0.015 90);
   --surface: oklch(0.16 0.03 290);
   --surface-warm: oklch(0.2 0.04 290);
+  --confetti-coral: oklch(0.72 0.18 22);
+  --confetti-sun: oklch(0.82 0.14 85);
+  --confetti-mint: oklch(0.72 0.12 165);
   --background: var(--surface);
   --foreground: var(--brand-ink);
   --card: oklch(0.2 0.04 290);
@@ -168,11 +177,7 @@
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  background:
-    radial-gradient(ellipse 15% 10% at 4% 18%, color-mix(in oklab, var(--paint-coral) 18%, transparent), transparent 75%),
-    radial-gradient(ellipse 22% 8% at 96% 42%, color-mix(in oklab, var(--paint-cyan) 18%, transparent), transparent 75%),
-    radial-gradient(ellipse 18% 9% at 8% 76%, color-mix(in oklab, var(--paint-sun) 18%, transparent), transparent 75%),
-    var(--color-surface);
+  background: var(--color-surface);
 }
 
 @utility paint-splash {
@@ -199,6 +204,15 @@
   border: 1px solid color-mix(in oklab, var(--border) 80%, transparent);
   background: color-mix(in oklab, var(--card) 90%, transparent);
   box-shadow: 0 16px 45px -35px color-mix(in oklab, var(--brand-ink) 35%, transparent);
+}
+
+@utility confetti-grid {
+  background-image: radial-gradient(color-mix(in oklab, var(--brand) 13%, transparent) 1px, transparent 1px);
+  background-size: 18px 18px;
+}
+
+@utility torn-edge {
+  clip-path: polygon(0 3%, 8% 0, 18% 2%, 29% 0, 41% 3%, 53% 0, 64% 2%, 76% 0, 88% 3%, 100% 1%, 100% 97%, 91% 100%, 80% 98%, 68% 100%, 56% 97%, 44% 100%, 31% 98%, 18% 100%, 8% 97%, 0 99%);
 }
 
 @utility no-scrollbar {

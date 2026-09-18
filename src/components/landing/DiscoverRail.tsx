@@ -12,9 +12,17 @@ type Props = {
   items?: TListing[];
   /** Category slug — the whole title becomes a link to /kategorie/<slug>. */
   slug?: string;
+  tone?: "plain" | "coral" | "mint" | "sun";
 };
 
-export function DiscoverRail({ title, subtitle, emoji, emptyMessage, items, slug }: Props) {
+const toneClasses = {
+  plain: "bg-transparent",
+  coral: "bg-confetti-coral/12",
+  mint: "bg-confetti-mint/20",
+  sun: "bg-confetti-sun/22",
+};
+
+export function DiscoverRail({ title, subtitle, emoji, emptyMessage, items, slug, tone = "plain" }: Props) {
   const hasItems = items && items.length > 0;
 
   const Header = (
@@ -31,7 +39,8 @@ export function DiscoverRail({ title, subtitle, emoji, emptyMessage, items, slug
   );
 
   return (
-    <section className="relative mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
+    <section className={`relative my-3 overflow-hidden py-10 sm:my-5 sm:py-14 ${toneClasses[tone]}`}>
+      <div className="mx-auto max-w-7xl px-4 sm:px-6">
       <div className="mb-5 flex items-end justify-between gap-4">
         {slug ? (
           <Link
@@ -66,6 +75,7 @@ export function DiscoverRail({ title, subtitle, emoji, emptyMessage, items, slug
         </div>
         <div className="pointer-events-none absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-surface to-transparent" />
       </div>
+      </div>
     </section>
   );
 }
@@ -99,7 +109,7 @@ function PlaceholderCard({ index, message, slug }: { index: number; message: str
   );
 
   const className =
-     "group relative flex h-60 w-52 shrink-0 flex-col justify-between overflow-hidden rounded-2xl border-2 border-dashed border-brand/25 bg-card/70 p-5 transition-all hover:-translate-y-0.5 hover:border-brand/60 sm:h-64 sm:w-56";
+     `group relative flex h-60 shrink-0 flex-col justify-between overflow-hidden border-2 border-dashed border-brand/25 bg-card/85 p-5 shadow-sm transition-all hover:-translate-y-1 hover:border-brand/60 sm:h-64 ${index === 0 ? "w-72 rounded-[2rem] sm:w-80" : "w-52 rounded-2xl sm:w-56"}`;
 
   // Placeholder cards always link to a placeholder LISTING detail page,
   // never back to the category — a click on a product card should feel
