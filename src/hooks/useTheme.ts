@@ -79,12 +79,13 @@ export function useTheme() {
     try {
       // Alte Länder-Theme-Reste aufräumen
       try { localStorage.removeItem("creahq:country-theme"); } catch { /* noop */ }
-      const stored = localStorage.getItem(LS_THEME) ?? DEFAULT_THEME_ID;
+      const stored = localStorage.getItem(LS_THEME) ?? document.documentElement.dataset.creahqTheme ?? DEFAULT_THEME_ID;
       // Falls jemand noch ein altes "c-*" Country-Theme gespeichert hatte
       const t = stored.startsWith("c-") ? DEFAULT_THEME_ID : stored;
       if (t !== stored) { try { localStorage.setItem(LS_THEME, t); } catch { /* noop */ } }
       const m = (localStorage.getItem(LS_MODE) as Mode | null) ?? "light";
-      const backgrounds = localStorage.getItem(LS_BACKGROUNDS) !== "off";
+      const storedBackgrounds = localStorage.getItem(LS_BACKGROUNDS);
+      const backgrounds = storedBackgrounds ? storedBackgrounds !== "off" : document.documentElement.dataset.themeBackgrounds !== "off";
       setThemeId(t);
       setModeState(m);
       setBackgroundsEnabled(backgrounds);
@@ -100,8 +101,8 @@ export function useTheme() {
     const found = HERO_THEMES.find((x) => x.id === id);
     if (!found) return;
     setThemeId(id);
-    try { localStorage.setItem(LS_THEME, id); } catch { /* noop */ }
     applyTheme(found, mode);
+    try { localStorage.setItem(LS_THEME, id); } catch { /* noop */ }
   }, [mode]);
 
   const resetTheme = useCallback(() => {
@@ -111,8 +112,8 @@ export function useTheme() {
   }, []);
 
   const toggleBackgrounds = useCallback(() => {
-    setBackgroundsEnabled((current) => {
-      const next = !current;
+    setBackgroundsEnabled(() => {
+      const next = document.documentElement.dataset.themeBackgrounds === "off";
       try { localStorage.setItem(LS_BACKGROUNDS, next ? "on" : "off"); } catch { /* noop */ }
       document.documentElement.dataset.themeBackgrounds = next ? "on" : "off";
       return next;
