@@ -38,6 +38,7 @@ export const HERO_THEMES: HeroTheme[] = COLOR_THEMES;
 const DEFAULT_THEME_ID = "violet";
 const LS_THEME = "creahq:hero-theme";
 const LS_MODE = "creahq:mode";
+const LS_BACKGROUNDS = "creahq:theme-backgrounds";
 
 type Mode = "light" | "dark";
 
@@ -54,6 +55,7 @@ const OVERRIDE_VARS = [
 function applyTheme(theme: HeroTheme, mode: Mode) {
   const root = document.documentElement;
   OVERRIDE_VARS.forEach((v) => root.style.removeProperty(v));
+  root.dataset.creahqTheme = theme.id;
   root.style.setProperty("--brand", mode === "dark" ? theme.brandDark : theme.brandLight);
   root.style.setProperty("--brand-soft", mode === "dark" ? theme.softDark : theme.softLight);
 }
@@ -61,6 +63,7 @@ function applyTheme(theme: HeroTheme, mode: Mode) {
 function clearTheme() {
   const root = document.documentElement;
   OVERRIDE_VARS.forEach((v) => root.style.removeProperty(v));
+  root.dataset.creahqTheme = DEFAULT_THEME_ID;
 }
 
 function applyMode(mode: Mode) {
@@ -70,21 +73,26 @@ function applyMode(mode: Mode) {
 export function useTheme() {
   const [themeId, setThemeId] = useState<string>(DEFAULT_THEME_ID);
   const [mode, setModeState] = useState<Mode>("light");
+  const [backgroundsEnabled, setBackgroundsEnabled] = useState(true);
 
   useEffect(() => {
     try {
       // Alte Länder-Theme-Reste aufräumen
       try { localStorage.removeItem("creahq:country-theme"); } catch { /* noop */ }
-      const stored = localStorage.getItem(LS_THEME) ?? DEFAULT_THEME_ID;
+      const stored = localStorage.getItem(LS_THEME) ?? document.documentElement.dataset.creahqTheme ?? DEFAULT_THEME_ID;
       // Falls jemand noch ein altes "c-*" Country-Theme gespeichert hatte
       const t = stored.startsWith("c-") ? DEFAULT_THEME_ID : stored;
       if (t !== stored) { try { localStorage.setItem(LS_THEME, t); } catch { /* noop */ } }
       const m = (localStorage.getItem(LS_MODE) as Mode | null) ?? "light";
+      const storedBackgrounds = localStorage.getItem(LS_BACKGROUNDS);
+      const backgrounds = storedBackgrounds ? storedBackgrounds !== "off" : document.documentElement.dataset.themeBackgrounds !== "off";
       setThemeId(t);
       setModeState(m);
+      setBackgroundsEnabled(backgrounds);
+      document.documentElement.dataset.themeBackgrounds = backgrounds ? "on" : "off";
       applyMode(m);
       const found = HERO_THEMES.find((x) => x.id === t);
-      if (found && found.id !== DEFAULT_THEME_ID) applyTheme(found, m);
+      if (found) applyTheme(found, m);
       else clearTheme();
     } catch { /* noop */ }
   }, []);
@@ -93,9 +101,8 @@ export function useTheme() {
     const found = HERO_THEMES.find((x) => x.id === id);
     if (!found) return;
     setThemeId(id);
+    applyTheme(found, mode);
     try { localStorage.setItem(LS_THEME, id); } catch { /* noop */ }
-    if (id === DEFAULT_THEME_ID) clearTheme();
-    else applyTheme(found, mode);
   }, [mode]);
 
   const resetTheme = useCallback(() => {
@@ -104,12 +111,21 @@ export function useTheme() {
     clearTheme();
   }, []);
 
+  const toggleBackgrounds = useCallback(() => {
+    setBackgroundsEnabled(() => {
+      const next = document.documentElement.dataset.themeBackgrounds === "off";
+      try { localStorage.setItem(LS_BACKGROUNDS, next ? "on" : "off"); } catch { /* noop */ }
+      document.documentElement.dataset.themeBackgrounds = next ? "on" : "off";
+      return next;
+    });
+  }, []);
+
   const setExplicitMode = useCallback((m: Mode) => {
     setModeState(m);
     try { localStorage.setItem(LS_MODE, m); } catch { /* noop */ }
     applyMode(m);
     const found = HERO_THEMES.find((x) => x.id === themeId);
-    if (found && found.id !== DEFAULT_THEME_ID) applyTheme(found, m);
+    if (found) applyTheme(found, m);
     else clearTheme();
   }, [themeId]);
 
@@ -117,5 +133,5 @@ export function useTheme() {
     setExplicitMode(mode === "light" ? "dark" : "light");
   }, [mode, setExplicitMode]);
 
-  return { themeId, setTheme, resetTheme, mode, toggleMode, setMode: setExplicitMode };
+  return { themeId, setTheme, resetTheme, mode, toggleMode, setMode: setExplicitMode, backgroundsEnabled, toggleBackgrounds };
 }

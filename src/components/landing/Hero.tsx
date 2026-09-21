@@ -1,10 +1,10 @@
 import { motion } from "motion/react";
-import { ArrowRight, Sparkles, Store, RotateCcw } from "lucide-react";
+import { ArrowRight, Sparkles, Store, RotateCcw, Eye, EyeOff } from "lucide-react";
 import { useTheme, HERO_THEMES } from "@/hooks/useTheme";
 
 
 export function Hero() {
-  const { themeId, setTheme, resetTheme } = useTheme();
+  const { themeId, setTheme, resetTheme, backgroundsEnabled, toggleBackgrounds } = useTheme();
   const active = HERO_THEMES.find((t) => t.id === themeId) ?? HERO_THEMES[HERO_THEMES.length - 1];
   const list = HERO_THEMES;
 
@@ -104,8 +104,17 @@ export function Hero() {
               </div>
               <div className="flex shrink-0 items-center gap-1.5">
                 <button
+                  onClick={toggleBackgrounds}
+                  className="grid h-9 w-9 place-items-center rounded-full bg-surface/80 text-brand-ink shadow-sm backdrop-blur transition-colors hover:bg-surface"
+                  title={backgroundsEnabled ? "Hintergrundmotive ausschalten" : "Hintergrundmotive einschalten"}
+                  aria-label={backgroundsEnabled ? "Hintergrundmotive ausschalten" : "Hintergrundmotive einschalten"}
+                  aria-pressed={backgroundsEnabled}
+                >
+                  {backgroundsEnabled ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                </button>
+                <button
                   onClick={resetTheme}
-                  className="inline-flex items-center gap-1 rounded-full bg-white/80 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-brand-ink shadow-sm backdrop-blur transition-colors hover:bg-white"
+                  className="inline-flex min-h-9 items-center gap-1 rounded-full bg-surface/80 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-brand-ink shadow-sm backdrop-blur transition-colors hover:bg-surface"
                   title="Standard wiederherstellen"
                 >
                   <RotateCcw className="h-3 w-3" /> Reset
@@ -130,7 +139,7 @@ export function Hero() {
                     className={`grid h-14 place-items-center overflow-hidden rounded-2xl text-2xl shadow-sm backdrop-blur transition-all ${
                       isActive ? "scale-110 ring-2 ring-brand" : "hover:scale-105"
                     }`}
-                    style={{ background: isActive ? "#ffffff" : t.softLight }}
+                    style={{ background: isActive ? "var(--surface)" : t.softLight }}
                   >
                     <span className="drop-shadow-sm">{t.emoji}</span>
                   </button>
@@ -138,7 +147,7 @@ export function Hero() {
               })}
             </div>
             <p className="mt-3 text-[11px] text-muted-foreground">
-              Farben wirken auf die ganze Seite — Hell/Dunkel auch.
+              Farben und Motive wirken auf die ganze Seite — Hell/Dunkel auch.
             </p>
 
           </div>
