@@ -168,12 +168,99 @@
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  background:
-    radial-gradient(ellipse 15% 10% at 4% 18%, color-mix(in oklab, var(--paint-coral) 18%, transparent), transparent 75%),
-    radial-gradient(ellipse 22% 8% at 96% 42%, color-mix(in oklab, var(--paint-cyan) 18%, transparent), transparent 75%),
-    radial-gradient(ellipse 18% 9% at 8% 76%, color-mix(in oklab, var(--paint-sun) 18%, transparent), transparent 75%),
-    var(--color-surface);
+  background: var(--color-surface);
+  transition: background-color 300ms ease;
 }
+
+.app-canvas.is-inner-page {
+  background:
+    radial-gradient(ellipse 26rem 17rem at -4% 13%, color-mix(in oklab, var(--brand) 15%, transparent), transparent 72%),
+    radial-gradient(ellipse 32rem 18rem at 104% 46%, color-mix(in oklab, var(--paint-cyan) 14%, transparent), transparent 72%),
+    radial-gradient(ellipse 25rem 15rem at 5% 82%, color-mix(in oklab, var(--paint-sun) 14%, transparent), transparent 72%),
+    linear-gradient(145deg, color-mix(in oklab, var(--brand-soft) 22%, var(--surface)), var(--surface) 42%, color-mix(in oklab, var(--surface-warm) 72%, var(--surface)));
+}
+
+.theme-scenery {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.theme-motif {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  width: 4.75rem;
+  height: 4.75rem;
+  border: 1px solid color-mix(in oklab, var(--brand) 18%, transparent);
+  border-radius: 42% 58% 64% 36% / 52% 38% 62% 48%;
+  background: color-mix(in oklab, var(--card) 58%, transparent);
+  color: color-mix(in oklab, var(--brand) 48%, transparent);
+  font-size: 2rem;
+  box-shadow: 0 18px 50px -34px color-mix(in oklab, var(--brand-ink) 55%, transparent);
+  animation: scenery-float 8s ease-in-out infinite;
+}
+
+.theme-motif::before { content: "✦"; }
+.motif-one { left: 3%; top: 5rem; transform: rotate(-12deg); }
+.motif-two { right: 4%; top: 23rem; transform: rotate(11deg); animation-delay: -2s; }
+.motif-three { left: 5%; top: 52rem; transform: rotate(8deg); animation-delay: -4s; }
+.motif-four { right: 5%; top: 82rem; transform: rotate(-8deg); animation-delay: -6s; }
+
+html[data-creahq-theme="candy"] .theme-motif::before { content: "🍬"; }
+html[data-creahq-theme="sun"] .theme-motif::before { content: "☀"; }
+html[data-creahq-theme="forest"] .theme-motif::before { content: "❧"; }
+html[data-creahq-theme="ocean"] .theme-motif::before { content: "💧"; }
+html[data-creahq-theme="violet"] .theme-motif::before { content: "✦"; }
+
+html[data-creahq-theme="candy"] .app-canvas.is-inner-page {
+  background:
+    radial-gradient(circle at 12% 16%, color-mix(in oklab, var(--brand) 17%, transparent) 0 5rem, transparent 5.2rem),
+    radial-gradient(circle at 91% 56%, color-mix(in oklab, var(--paint-sun) 17%, transparent) 0 7rem, transparent 7.2rem),
+    linear-gradient(145deg, color-mix(in oklab, var(--brand-soft) 30%, var(--surface)), var(--surface) 52%, color-mix(in oklab, var(--paint-coral) 8%, var(--surface)));
+}
+
+html[data-creahq-theme="sun"] .app-canvas.is-inner-page {
+  background:
+    radial-gradient(circle at 88% 12%, color-mix(in oklab, var(--paint-sun) 26%, transparent) 0 9rem, transparent 9.3rem),
+    linear-gradient(180deg, color-mix(in oklab, var(--paint-cyan) 10%, var(--surface)), var(--surface) 42%, color-mix(in oklab, var(--paint-sun) 15%, var(--surface)));
+}
+
+html[data-creahq-theme="forest"] .app-canvas.is-inner-page {
+  background:
+    radial-gradient(ellipse 30rem 17rem at 0% 25%, color-mix(in oklab, var(--brand) 18%, transparent), transparent 72%),
+    radial-gradient(ellipse 28rem 20rem at 100% 72%, color-mix(in oklab, var(--paint-sun) 11%, transparent), transparent 72%),
+    linear-gradient(150deg, color-mix(in oklab, var(--brand-soft) 27%, var(--surface)), var(--surface) 58%, color-mix(in oklab, var(--brand) 8%, var(--surface)));
+}
+
+html[data-creahq-theme="ocean"] .app-canvas.is-inner-page {
+  background:
+    radial-gradient(ellipse 38rem 15rem at 105% 18%, color-mix(in oklab, var(--brand) 20%, transparent), transparent 72%),
+    radial-gradient(ellipse 35rem 14rem at -5% 70%, color-mix(in oklab, var(--paint-cyan) 20%, transparent), transparent 72%),
+    linear-gradient(165deg, color-mix(in oklab, var(--paint-cyan) 14%, var(--surface)), var(--surface) 48%, color-mix(in oklab, var(--brand-soft) 25%, var(--surface)));
+}
+
+html[data-creahq-theme="violet"] .app-canvas.is-inner-page {
+  background:
+    radial-gradient(ellipse 28rem 18rem at 0% 17%, color-mix(in oklab, var(--brand) 18%, transparent), transparent 72%),
+    radial-gradient(ellipse 26rem 16rem at 100% 62%, color-mix(in oklab, var(--paint-coral) 12%, transparent), transparent 72%),
+    linear-gradient(145deg, color-mix(in oklab, var(--brand-soft) 28%, var(--surface)), var(--surface) 50%, color-mix(in oklab, var(--paint-cyan) 8%, var(--surface)));
+}
+
+html[data-theme-backgrounds="off"] .app-canvas,
+html[data-theme-backgrounds="off"] .app-canvas.is-inner-page {
+  background: var(--color-surface);
+}
+
+html[data-theme-backgrounds="off"] .theme-scenery {
+  display: none;
+}
+
+.splash-one { left: -5rem; top: 18rem; }
+.splash-two { right: -4rem; top: 44rem; transform: rotate(18deg); background: color-mix(in oklab, var(--paint-cyan) 16%, transparent); }
+.splash-three { left: -3rem; top: 76rem; transform: rotate(8deg); background: color-mix(in oklab, var(--paint-sun) 16%, transparent); }
 
 @utility paint-splash {
   position: absolute;
@@ -238,6 +325,17 @@
 @keyframes blob {
   0%, 100% { border-radius: 42% 58% 70% 30% / 45% 45% 55% 55%; }
   50% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
+}
+
+@keyframes scenery-float {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -9px; }
+}
+
+@media (max-width: 900px) {
+  .theme-motif { width: 3.5rem; height: 3.5rem; font-size: 1.4rem; opacity: .7; }
+  .motif-one, .motif-three { left: -1rem; }
+  .motif-two, .motif-four { right: -1rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {

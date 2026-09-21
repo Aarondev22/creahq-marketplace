@@ -3,6 +3,7 @@ import {
   Outlet,
   Link,
   createRootRouteWithContext,
+  useLocation,
   useRouter,
   HeadContent,
   Scripts,
@@ -122,6 +123,8 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
+  const location = useLocation();
+  const isHome = location.pathname === "/";
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
@@ -135,12 +138,20 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <CartProvider>
-        <div className="app-canvas flex min-h-screen flex-col">
+        <div className={`app-canvas flex min-h-screen flex-col ${isHome ? "is-home" : "is-inner-page"}`}>
           <Topbar />
           <main className="relative z-0 flex-1">
-            <span className="paint-splash left-[-5rem] top-[20rem]" aria-hidden="true" />
-            <span className="paint-splash right-[-4rem] top-[58rem] rotate-[18deg] bg-paint-cyan/15" aria-hidden="true" />
-            <span className="paint-splash left-[-3rem] top-[105rem] rotate-[8deg] bg-paint-sun/15" aria-hidden="true" />
+            {!isHome && (
+              <div className="theme-scenery" aria-hidden="true">
+                <span className="theme-motif motif-one" />
+                <span className="theme-motif motif-two" />
+                <span className="theme-motif motif-three" />
+                <span className="theme-motif motif-four" />
+                <span className="paint-splash splash-one" />
+                <span className="paint-splash splash-two" />
+                <span className="paint-splash splash-three" />
+              </div>
+            )}
             <Outlet />
           </main>
           <Footer />
