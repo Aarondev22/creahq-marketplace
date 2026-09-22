@@ -106,11 +106,29 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   errorComponent: ErrorComponent,
 });
 
+const THEME_BOOT = `(function(){try{var r=document.documentElement;
+var themes={candy:['oklch(0.62 0.24 340)','oklch(0.74 0.2 340)','oklch(0.93 0.06 340)','oklch(0.3 0.1 340)'],
+sun:['oklch(0.7 0.18 55)','oklch(0.78 0.16 60)','oklch(0.94 0.07 70)','oklch(0.32 0.09 55)'],
+forest:['oklch(0.55 0.16 150)','oklch(0.72 0.16 150)','oklch(0.93 0.06 150)','oklch(0.3 0.09 150)'],
+ocean:['oklch(0.58 0.16 230)','oklch(0.72 0.16 230)','oklch(0.93 0.06 230)','oklch(0.3 0.1 230)'],
+violet:['oklch(0.52 0.22 295)','oklch(0.7 0.2 295)','oklch(0.92 0.06 295)','oklch(0.3 0.1 295)']};
+var t=localStorage.getItem('creahq:hero-theme')||'violet';if(!themes[t])t='violet';
+var m=localStorage.getItem('creahq:mode')==='dark'?'dark':'light';
+var b=localStorage.getItem('creahq:theme-backgrounds');
+r.classList.toggle('dark',m==='dark');
+r.dataset.creahqTheme=t;
+r.dataset.themeBackgrounds=b==='off'?'off':'on';
+var c=themes[t];
+r.style.setProperty('--brand',m==='dark'?c[1]:c[0]);
+r.style.setProperty('--brand-soft',m==='dark'?c[3]:c[2]);
+}catch(e){}})();`;
+
 function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="de">
       <head>
         <HeadContent />
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOT }} />
       </head>
       <body>
         {children}
