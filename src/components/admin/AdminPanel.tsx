@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { X, GripHorizontal, Flag, ShieldCheck, Users } from "lucide-react";
+import { X, GripHorizontal, Flag, ShieldCheck, Users, Package } from "lucide-react";
 import {
   listReports,
   resolveReport,
@@ -10,12 +10,15 @@ import {
   searchUsers,
   banUser,
   toggleUserRole,
+  listAllListings,
+  setListingStatus,
+  type AdminListingFull,
   type AdminReport,
   type AdminListing,
   type AdminUser,
 } from "@/lib/admin.functions";
 
-type Tab = "reports" | "queue" | "users";
+type Tab = "reports" | "queue" | "products" | "users";
 const POS_KEY = "creahq.adminPanel.pos";
 
 export function AdminPanel({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -24,6 +27,9 @@ export function AdminPanel({ open, onClose }: { open: boolean; onClose: () => vo
   const [queue, setQueue] = useState<AdminListing[]>([]);
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [q, setQ] = useState("");
+  const [products, setProducts] = useState<AdminListingFull[]>([]);
+  const [pq, setPq] = useState("");
+  const [pf, setPf] = useState("all");
   const [loading, setLoading] = useState(false);
   const [pos, setPos] = useState<{ x: number; y: number }>({ x: 24, y: 80 });
   const drag = useRef<{ dx: number; dy: number } | null>(null);
@@ -35,6 +41,8 @@ export function AdminPanel({ open, onClose }: { open: boolean; onClose: () => vo
   const doModerate = useServerFn(moderateListing);
   const doBan = useServerFn(banUser);
   const doRole = useServerFn(toggleUserRole);
+  const getAll = useServerFn(listAllListings);
+  const doStatus = useServerFn(setListingStatus);
 
   useEffect(() => {
     try {
@@ -50,6 +58,7 @@ export function AdminPanel({ open, onClose }: { open: boolean; onClose: () => vo
     try {
       if (tab === "reports") setReports(await getReports());
       else if (tab === "queue") setQueue(await getQueue());
+      else if (tab === "products") setProducts(await getAll({ data: { q: pq, filter: pf } }));
       else setUsers(await findUsers({ data: { q } }));
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Laden fehlgeschlagen");
@@ -57,7 +66,7 @@ export function AdminPanel({ open, onClose }: { open: boolean; onClose: () => vo
       setLoading(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab, q]);
+  }, [tab, q, pf]);
 
   useEffect(() => {
     if (open) void load();
@@ -117,13 +126,14 @@ export function AdminPanel({ open, onClose }: { open: boolean; onClose: () => vo
         {([
           ["reports", "Meldungen", <Flag key="a" className="h-4 w-4" />],
           ["queue", "Moderation", <ShieldCheck key="b" className="h-4 w-4" />],
+          ["products", "Produkte", <Package key="d" className="h-4 w-4" />],
           ["users", "Nutzer", <Users key="c" className="h-4 w-4" />],
         ] as [Tab, string, React.ReactNode][]).map(([key, label, icon]) => (
           <button
             key={key}
             type="button"
             onClick={() => setTab(key)}
-            className={`flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-full px-3 text-xs font-bold transition ${
+            className={`flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-full px-2 text-[11px] font-bold transition ${
               tab === key ? "bg-brand text-primary-foreground" : "border border-border text-muted-foreground"
             }`}
           >
@@ -213,6 +223,40 @@ export function AdminPanel({ open, onClose }: { open: boolean; onClose: () => vo
               ))}
             </ul>
           )
+        ) : tab === "products" ? (
+          <div className="space-y-3">
+            <form onSubmit={(e) => { e.preventDefault(); void load(); }} className="flex gap-2">
+              <input value={pq} onChange={(e) => setPq(e.target.value)} placeholder="Produkt suchen …" className="min-h-11 flex-1 rounded-full border border-border bg-background px-4 text-sm focus:border-brand focus:outline-none" />
+              <button type="submit" className="min-h-11 rounded-full bg-brand px-4 text-sm font-bold text-primary-foreground">Suchen</button>
+            </form>
+            <div className="flex flex-wrap gap-1.5">
+              {([["all","Alle"],["approved","Freigegeben"],["pending","Prüfen"],["rejected","Gesperrt"],["paused","Pausiert"]] as const).map(([k,l]) => (
+                <button key={k} type="button" onClick={() => setPf(k)} className={`min-h-9 rounded-full px-3 text-xs font-bold ${pf === k ? "bg-brand text-primary-foreground" : "border border-border text-muted-foreground"}`}>{l}</button>
+              ))}
+            </div>
+            {products.length === 0 ? <Empty text="Keine Produkte gefunden." /> : (
+              <ul className="space-y-2">
+                {products.map((l) => (
+                  <li key={l.id} className="rounded-2xl border border-border p-3">
+                    <div className="flex items-center gap-3">
+                      <span className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-xl bg-brand-soft">
+                        {l.cover_url ? <img src={l.cover_url} alt="" className="h-full w-full object-cover" /> : "📦"}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <a href={`/listing/${l.id}`} target="_blank" rel="noreferrer" className="block truncate text-sm font-bold text-brand-ink hover:text-brand">{l.title}</a>
+                        <p className="text-[11px] text-muted-foreground">{(l.price_cents / 100).toFixed(2)} {l.currency?.toUpperCase()} · {l.moderation_status} · {l.status === "published" ? "online" : "pausiert"}</p>
+                      </div>
+                    </div>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {l.moderation_status !== "approved" && <Action label="Freigeben" onClick={async () => { await doModerate({ data: { id: l.id, moderation_status: "approved" } }); toast.success("Freigegeben"); void load(); }} />}
+                      {l.moderation_status !== "rejected" && <Action variant="ghost" label="Sperren" onClick={async () => { await doModerate({ data: { id: l.id, moderation_status: "rejected" } }); toast.success("Gesperrt"); void load(); }} />}
+                      <Action variant="ghost" label={l.status === "published" ? "Pausieren" : "Online stellen"} onClick={async () => { await doStatus({ data: { id: l.id, status: l.status === "published" ? "draft" : "published" } }); toast.success("Gespeichert"); void load(); }} />
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         ) : (
           <div className="space-y-3">
             <form

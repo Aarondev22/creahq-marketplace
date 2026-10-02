@@ -176,3 +176,41 @@ export const toggleUserRole = createServerFn({ method: "POST" })
     }
     return { ok: true };
   });
+
+export type AdminListingFull = AdminListing & { price_cents: number; currency: string };
+
+export const listAllListings = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { q?: string; filter?: string }) => ({
+    q: String(d?.q ?? "").trim().slice(0, 80),
+    filter: ["all", "approved", "pending", "rejected", "paused"].includes(String(d?.filter)) ? String(d?.filter) : "all",
+  }))
+  .handler(async ({ data, context }): Promise<AdminListingFull[]> => {
+    await assertAdmin(context as Ctx);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    let query = supabaseAdmin
+      .from("listings")
+      .select("id,title,seller_id,moderation_status,moderation_note,status,cover_url,created_at,price_cents,currency")
+      .order("created_at", { ascending: false })
+      .limit(100);
+    if (data.q) query = query.ilike("title", `%${data.q.replace(/[%_,()]/g, "")}%`);
+    if (data.filter === "paused") query = query.neq("status", "published");
+    else if (data.filter !== "all") query = query.eq("moderation_status", data.filter);
+    const { data: rows, error } = await query;
+    if (error) throw new Error(error.message);
+    return (rows ?? []) as AdminListingFull[];
+  });
+
+export const setListingStatus = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string; status: "published" | "draft" }) => ({
+    id: String(d.id),
+    status: d.status === "draft" ? ("draft" as const) : ("published" as const),
+  }))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context as Ctx);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.from("listings").update({ status: data.status }).eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
