@@ -34,7 +34,7 @@ export const Route = createFileRoute("/shop/$handle")({
       </div>
     </div>
   ),
-  errorComponent: ({ error }) => <div className="p-10 text-center text-sm">{error.message}</div>,
+  errorComponent: ({ error }) => <div className="p-10 text-center text-sm">{(error as Error).message}</div>,
   notFoundComponent: () => (
     <div className="mx-auto max-w-md px-6 py-24 text-center">
       <div className="text-6xl">🔍</div>

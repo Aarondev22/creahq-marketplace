@@ -50,7 +50,7 @@ export const Route = createFileRoute("/browse")({
     ],
   }),
   component: BrowsePage,
-  errorComponent: ({ error }) => <div className="p-10 text-center text-sm">{error.message}</div>,
+  errorComponent: ({ error }) => <div className="p-10 text-center text-sm">{(error as Error).message}</div>,
   notFoundComponent: () => <div className="p-10 text-center text-sm">Nicht gefunden.</div>,
 });
 
