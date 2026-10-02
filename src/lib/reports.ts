@@ -1,6 +1,13 @@
 import { supabase } from "@/integrations/supabase/client";
 
-export type ReportTarget = "listing" | "shop" | "message" | "user";
+export type ReportTarget = "listing" | "shop" | "chat" | "order";
+
+export const ORDER_PROBLEM_REASONS = [
+  { value: "not_received", label: "Artikel nicht erhalten" },
+  { value: "damaged", label: "Beschädigt angekommen" },
+  { value: "not_as_described", label: "Entspricht nicht der Beschreibung" },
+  { value: "other", label: "Sonstiges" },
+] as const;
 
 export const REPORT_REASONS = [
   { value: "spam", label: "Spam oder Betrug" },

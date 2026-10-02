@@ -142,12 +142,12 @@ function ListingView({
     }
   }
 
-  async function handleOpenChat() {
+  async function handleOpenChat(withOffer = false) {
     try {
       const sellerId = l.seller_id ?? l.seller?.id;
       if (!sellerId) throw new Error("Keine Verkäufer-ID gefunden");
       const convId = await startConversation(l.id, sellerId);
-      navigate({ to: "/chat/$id", params: { id: convId } });
+      navigate({ to: "/chat/$id", params: { id: convId }, search: { offer: withOffer ? 1 : undefined } });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Chat konnte nicht geöffnet werden");
     }
@@ -279,6 +279,13 @@ function ListingView({
           </button>
           <button
             type="button"
+            onClick={() => handleOpenChat(true)}
+            className="rounded-xl border-2 border-brand bg-card px-5 py-3.5 text-base font-bold text-brand transition-transform hover:-translate-y-0.5"
+          >
+            Preis vorschlagen
+          </button>
+          <button
+            type="button"
             onClick={handleFavorite}
             aria-label="Favorisieren"
             title={isFav ? "Aus Favoriten entfernen" : "Favorisieren"}
@@ -288,7 +295,7 @@ function ListingView({
           </button>
           <button
             type="button"
-            onClick={handleOpenChat}
+            onClick={() => handleOpenChat()}
             aria-label="Chat mit Verkäufer"
             title="Chat mit Verkäufer"
             className="grid h-14 w-14 shrink-0 place-items-center rounded-full border-2 border-border bg-card text-brand-ink transition-colors hover:border-brand hover:text-brand"
