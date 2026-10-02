@@ -19,6 +19,8 @@ export type ChatMessage = {
   sender_id: string;
   body: string;
   created_at: string;
+  kind?: string | null;
+  offer_id?: string | null;
 };
 
 async function myId(): Promise<string> {
@@ -70,7 +72,7 @@ export async function fetchConversations(): Promise<Conversation[]> {
 export async function fetchMessages(conversationId: string): Promise<ChatMessage[]> {
   const { data, error } = await supabase
     .from("messages")
-    .select("id,conversation_id,sender_id,body,created_at")
+    .select("id,conversation_id,sender_id,body,created_at,kind,offer_id")
     .eq("conversation_id", conversationId)
     .order("created_at", { ascending: true })
     .limit(200);
@@ -105,7 +107,7 @@ export async function sendMessage(conversationId: string, body: string): Promise
   const { data, error } = await supabase
     .from("messages")
     .insert({ conversation_id: conversationId, sender_id: me, body })
-    .select("id,conversation_id,sender_id,body,created_at")
+    .select("id,conversation_id,sender_id,body,created_at,kind,offer_id")
     .single();
   if (error) throw new Error(error.message);
 
