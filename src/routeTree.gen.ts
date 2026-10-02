@@ -9,108 +9,39 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
-import { Route as AgbRouteImport } from './routes/agb'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as BrowseRouteImport } from './routes/browse'
-import { Route as CookiesRouteImport } from './routes/cookies'
-import { Route as DatenschutzRouteImport } from './routes/datenschutz'
-import { Route as GebuehrenRouteImport } from './routes/gebuehren'
-import { Route as HilfeRouteImport } from './routes/hilfe'
-import { Route as ImpressumRouteImport } from './routes/impressum'
-import { Route as KategorienRouteImport } from './routes/kategorien'
-import { Route as KontaktRouteImport } from './routes/kontakt'
-import { Route as RedeemRouteImport } from './routes/redeem'
-import { Route as RegelnRouteImport } from './routes/regeln'
-import { Route as SpielenRouteImport } from './routes/spielen'
-import { Route as UeberRouteImport } from './routes/ueber'
 import { Route as WarenkorbRouteImport } from './routes/warenkorb'
-import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
-import { Route as AuthenticatedEinstellungenRouteImport } from './routes/_authenticated/einstellungen'
-import { Route as AuthenticatedNachrichtenRouteImport } from './routes/_authenticated/nachrichten'
-import { Route as CheckoutAbbruchRouteImport } from './routes/checkout.abbruch'
-import { Route as CheckoutErfolgRouteImport } from './routes/checkout.erfolg'
-import { Route as KategorieSlugRouteImport } from './routes/kategorie.$slug'
-import { Route as ListingIdRouteImport } from './routes/listing.$id'
-import { Route as ShopHandleRouteImport } from './routes/shop.$handle'
+import { Route as UeberRouteImport } from './routes/ueber'
+import { Route as SpielenRouteImport } from './routes/spielen'
+import { Route as RegelnRouteImport } from './routes/regeln'
+import { Route as RedeemRouteImport } from './routes/redeem'
+import { Route as KontaktRouteImport } from './routes/kontakt'
+import { Route as KategorienRouteImport } from './routes/kategorien'
+import { Route as ImpressumRouteImport } from './routes/impressum'
+import { Route as HilfeRouteImport } from './routes/hilfe'
+import { Route as GebuehrenRouteImport } from './routes/gebuehren'
+import { Route as DatenschutzRouteImport } from './routes/datenschutz'
+import { Route as CookiesRouteImport } from './routes/cookies'
+import { Route as BrowseRouteImport } from './routes/browse'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AgbRouteImport } from './routes/agb'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as VerkaufenGuideRouteImport } from './routes/verkaufen.guide'
-import { Route as AuthenticatedChatIdRouteImport } from './routes/_authenticated/chat.$id'
-import { Route as AuthenticatedVerkaufenNeuRouteImport } from './routes/_authenticated/verkaufen.neu'
+import { Route as ShopHandleRouteImport } from './routes/shop.$handle'
+import { Route as ListingIdRouteImport } from './routes/listing.$id'
+import { Route as KategorieSlugRouteImport } from './routes/kategorie.$slug'
+import { Route as CheckoutErfolgRouteImport } from './routes/checkout.erfolg'
+import { Route as CheckoutAbbruchRouteImport } from './routes/checkout.abbruch'
+import { Route as AuthenticatedNachrichtenRouteImport } from './routes/_authenticated/nachrichten'
+import { Route as AuthenticatedEinstellungenRouteImport } from './routes/_authenticated/einstellungen'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api/public/stripe-webhook'
+import { Route as AuthenticatedVerkaufenNeuRouteImport } from './routes/_authenticated/verkaufen.neu'
+import { Route as AuthenticatedChatIdRouteImport } from './routes/_authenticated/chat.$id'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
-  id: '/_authenticated',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AgbRoute = AgbRouteImport.update({
-  id: '/agb',
-  path: '/agb',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthRoute = AuthRouteImport.update({
-  id: '/auth',
-  path: '/auth',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BrowseRoute = BrowseRouteImport.update({
-  id: '/browse',
-  path: '/browse',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CookiesRoute = CookiesRouteImport.update({
-  id: '/cookies',
-  path: '/cookies',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DatenschutzRoute = DatenschutzRouteImport.update({
-  id: '/datenschutz',
-  path: '/datenschutz',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const GebuehrenRoute = GebuehrenRouteImport.update({
-  id: '/gebuehren',
-  path: '/gebuehren',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const HilfeRoute = HilfeRouteImport.update({
-  id: '/hilfe',
-  path: '/hilfe',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ImpressumRoute = ImpressumRouteImport.update({
-  id: '/impressum',
-  path: '/impressum',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const KategorienRoute = KategorienRouteImport.update({
-  id: '/kategorien',
-  path: '/kategorien',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const KontaktRoute = KontaktRouteImport.update({
-  id: '/kontakt',
-  path: '/kontakt',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RedeemRoute = RedeemRouteImport.update({
-  id: '/redeem',
-  path: '/redeem',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RegelnRoute = RegelnRouteImport.update({
-  id: '/regeln',
-  path: '/regeln',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SpielenRoute = SpielenRouteImport.update({
-  id: '/spielen',
-  path: '/spielen',
+const WarenkorbRoute = WarenkorbRouteImport.update({
+  id: '/warenkorb',
+  path: '/warenkorb',
   getParentRoute: () => rootRouteImport,
 } as any)
 const UeberRoute = UeberRouteImport.update({
@@ -118,51 +49,78 @@ const UeberRoute = UeberRouteImport.update({
   path: '/ueber',
   getParentRoute: () => rootRouteImport,
 } as any)
-const WarenkorbRoute = WarenkorbRouteImport.update({
-  id: '/warenkorb',
-  path: '/warenkorb',
+const SpielenRoute = SpielenRouteImport.update({
+  id: '/spielen',
+  path: '/spielen',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedEinstellungenRoute =
-  AuthenticatedEinstellungenRouteImport.update({
-    id: '/einstellungen',
-    path: '/einstellungen',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedNachrichtenRoute =
-  AuthenticatedNachrichtenRouteImport.update({
-    id: '/nachrichten',
-    path: '/nachrichten',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const CheckoutAbbruchRoute = CheckoutAbbruchRouteImport.update({
-  id: '/checkout/abbruch',
-  path: '/checkout/abbruch',
+const RegelnRoute = RegelnRouteImport.update({
+  id: '/regeln',
+  path: '/regeln',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CheckoutErfolgRoute = CheckoutErfolgRouteImport.update({
-  id: '/checkout/erfolg',
-  path: '/checkout/erfolg',
+const RedeemRoute = RedeemRouteImport.update({
+  id: '/redeem',
+  path: '/redeem',
   getParentRoute: () => rootRouteImport,
 } as any)
-const KategorieSlugRoute = KategorieSlugRouteImport.update({
-  id: '/kategorie/$slug',
-  path: '/kategorie/$slug',
+const KontaktRoute = KontaktRouteImport.update({
+  id: '/kontakt',
+  path: '/kontakt',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ListingIdRoute = ListingIdRouteImport.update({
-  id: '/listing/$id',
-  path: '/listing/$id',
+const KategorienRoute = KategorienRouteImport.update({
+  id: '/kategorien',
+  path: '/kategorien',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ShopHandleRoute = ShopHandleRouteImport.update({
-  id: '/shop/$handle',
-  path: '/shop/$handle',
+const ImpressumRoute = ImpressumRouteImport.update({
+  id: '/impressum',
+  path: '/impressum',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HilfeRoute = HilfeRouteImport.update({
+  id: '/hilfe',
+  path: '/hilfe',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GebuehrenRoute = GebuehrenRouteImport.update({
+  id: '/gebuehren',
+  path: '/gebuehren',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DatenschutzRoute = DatenschutzRouteImport.update({
+  id: '/datenschutz',
+  path: '/datenschutz',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CookiesRoute = CookiesRouteImport.update({
+  id: '/cookies',
+  path: '/cookies',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BrowseRoute = BrowseRouteImport.update({
+  id: '/browse',
+  path: '/browse',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AgbRoute = AgbRouteImport.update({
+  id: '/agb',
+  path: '/agb',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const VerkaufenGuideRoute = VerkaufenGuideRouteImport.update({
@@ -170,10 +128,52 @@ const VerkaufenGuideRoute = VerkaufenGuideRouteImport.update({
   path: '/verkaufen/guide',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedChatIdRoute = AuthenticatedChatIdRouteImport.update({
-  id: '/chat/$id',
-  path: '/chat/$id',
+const ShopHandleRoute = ShopHandleRouteImport.update({
+  id: '/shop/$handle',
+  path: '/shop/$handle',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ListingIdRoute = ListingIdRouteImport.update({
+  id: '/listing/$id',
+  path: '/listing/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KategorieSlugRoute = KategorieSlugRouteImport.update({
+  id: '/kategorie/$slug',
+  path: '/kategorie/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CheckoutErfolgRoute = CheckoutErfolgRouteImport.update({
+  id: '/checkout/erfolg',
+  path: '/checkout/erfolg',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CheckoutAbbruchRoute = CheckoutAbbruchRouteImport.update({
+  id: '/checkout/abbruch',
+  path: '/checkout/abbruch',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedNachrichtenRoute =
+  AuthenticatedNachrichtenRouteImport.update({
+    id: '/nachrichten',
+    path: '/nachrichten',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedEinstellungenRoute =
+  AuthenticatedEinstellungenRouteImport.update({
+    id: '/einstellungen',
+    path: '/einstellungen',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const ApiPublicStripeWebhookRoute = ApiPublicStripeWebhookRouteImport.update({
+  id: '/api/public/stripe-webhook',
+  path: '/api/public/stripe-webhook',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedVerkaufenNeuRoute =
   AuthenticatedVerkaufenNeuRouteImport.update({
@@ -181,10 +181,10 @@ const AuthenticatedVerkaufenNeuRoute =
     path: '/verkaufen/neu',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const ApiPublicStripeWebhookRoute = ApiPublicStripeWebhookRouteImport.update({
-  id: '/api/public/stripe-webhook',
-  path: '/api/public/stripe-webhook',
-  getParentRoute: () => rootRouteImport,
+const AuthenticatedChatIdRoute = AuthenticatedChatIdRouteImport.update({
+  id: '/chat/$id',
+  path: '/chat/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -402,109 +402,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated': {
-      id: '/_authenticated'
-      path: ''
-      fullPath: '/'
-      preLoaderRoute: typeof AuthenticatedRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/agb': {
-      id: '/agb'
-      path: '/agb'
-      fullPath: '/agb'
-      preLoaderRoute: typeof AgbRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/browse': {
-      id: '/browse'
-      path: '/browse'
-      fullPath: '/browse'
-      preLoaderRoute: typeof BrowseRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/cookies': {
-      id: '/cookies'
-      path: '/cookies'
-      fullPath: '/cookies'
-      preLoaderRoute: typeof CookiesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/datenschutz': {
-      id: '/datenschutz'
-      path: '/datenschutz'
-      fullPath: '/datenschutz'
-      preLoaderRoute: typeof DatenschutzRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/gebuehren': {
-      id: '/gebuehren'
-      path: '/gebuehren'
-      fullPath: '/gebuehren'
-      preLoaderRoute: typeof GebuehrenRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/hilfe': {
-      id: '/hilfe'
-      path: '/hilfe'
-      fullPath: '/hilfe'
-      preLoaderRoute: typeof HilfeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/impressum': {
-      id: '/impressum'
-      path: '/impressum'
-      fullPath: '/impressum'
-      preLoaderRoute: typeof ImpressumRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/kategorien': {
-      id: '/kategorien'
-      path: '/kategorien'
-      fullPath: '/kategorien'
-      preLoaderRoute: typeof KategorienRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/kontakt': {
-      id: '/kontakt'
-      path: '/kontakt'
-      fullPath: '/kontakt'
-      preLoaderRoute: typeof KontaktRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/redeem': {
-      id: '/redeem'
-      path: '/redeem'
-      fullPath: '/redeem'
-      preLoaderRoute: typeof RedeemRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/regeln': {
-      id: '/regeln'
-      path: '/regeln'
-      fullPath: '/regeln'
-      preLoaderRoute: typeof RegelnRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/spielen': {
-      id: '/spielen'
-      path: '/spielen'
-      fullPath: '/spielen'
-      preLoaderRoute: typeof SpielenRouteImport
+    '/warenkorb': {
+      id: '/warenkorb'
+      path: '/warenkorb'
+      fullPath: '/warenkorb'
+      preLoaderRoute: typeof WarenkorbRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ueber': {
@@ -514,67 +416,109 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UeberRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/warenkorb': {
-      id: '/warenkorb'
-      path: '/warenkorb'
-      fullPath: '/warenkorb'
-      preLoaderRoute: typeof WarenkorbRouteImport
+    '/spielen': {
+      id: '/spielen'
+      path: '/spielen'
+      fullPath: '/spielen'
+      preLoaderRoute: typeof SpielenRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/dashboard': {
-      id: '/_authenticated/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/einstellungen': {
-      id: '/_authenticated/einstellungen'
-      path: '/einstellungen'
-      fullPath: '/einstellungen'
-      preLoaderRoute: typeof AuthenticatedEinstellungenRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/nachrichten': {
-      id: '/_authenticated/nachrichten'
-      path: '/nachrichten'
-      fullPath: '/nachrichten'
-      preLoaderRoute: typeof AuthenticatedNachrichtenRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/checkout/abbruch': {
-      id: '/checkout/abbruch'
-      path: '/checkout/abbruch'
-      fullPath: '/checkout/abbruch'
-      preLoaderRoute: typeof CheckoutAbbruchRouteImport
+    '/regeln': {
+      id: '/regeln'
+      path: '/regeln'
+      fullPath: '/regeln'
+      preLoaderRoute: typeof RegelnRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/checkout/erfolg': {
-      id: '/checkout/erfolg'
-      path: '/checkout/erfolg'
-      fullPath: '/checkout/erfolg'
-      preLoaderRoute: typeof CheckoutErfolgRouteImport
+    '/redeem': {
+      id: '/redeem'
+      path: '/redeem'
+      fullPath: '/redeem'
+      preLoaderRoute: typeof RedeemRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/kategorie/$slug': {
-      id: '/kategorie/$slug'
-      path: '/kategorie/$slug'
-      fullPath: '/kategorie/$slug'
-      preLoaderRoute: typeof KategorieSlugRouteImport
+    '/kontakt': {
+      id: '/kontakt'
+      path: '/kontakt'
+      fullPath: '/kontakt'
+      preLoaderRoute: typeof KontaktRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/listing/$id': {
-      id: '/listing/$id'
-      path: '/listing/$id'
-      fullPath: '/listing/$id'
-      preLoaderRoute: typeof ListingIdRouteImport
+    '/kategorien': {
+      id: '/kategorien'
+      path: '/kategorien'
+      fullPath: '/kategorien'
+      preLoaderRoute: typeof KategorienRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/shop/$handle': {
-      id: '/shop/$handle'
-      path: '/shop/$handle'
-      fullPath: '/shop/$handle'
-      preLoaderRoute: typeof ShopHandleRouteImport
+    '/impressum': {
+      id: '/impressum'
+      path: '/impressum'
+      fullPath: '/impressum'
+      preLoaderRoute: typeof ImpressumRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/hilfe': {
+      id: '/hilfe'
+      path: '/hilfe'
+      fullPath: '/hilfe'
+      preLoaderRoute: typeof HilfeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/gebuehren': {
+      id: '/gebuehren'
+      path: '/gebuehren'
+      fullPath: '/gebuehren'
+      preLoaderRoute: typeof GebuehrenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/datenschutz': {
+      id: '/datenschutz'
+      path: '/datenschutz'
+      fullPath: '/datenschutz'
+      preLoaderRoute: typeof DatenschutzRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cookies': {
+      id: '/cookies'
+      path: '/cookies'
+      fullPath: '/cookies'
+      preLoaderRoute: typeof CookiesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/browse': {
+      id: '/browse'
+      path: '/browse'
+      fullPath: '/browse'
+      preLoaderRoute: typeof BrowseRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/agb': {
+      id: '/agb'
+      path: '/agb'
+      fullPath: '/agb'
+      preLoaderRoute: typeof AgbRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/verkaufen/guide': {
@@ -584,18 +528,60 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof VerkaufenGuideRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/chat/$id': {
-      id: '/_authenticated/chat/$id'
-      path: '/chat/$id'
-      fullPath: '/chat/$id'
-      preLoaderRoute: typeof AuthenticatedChatIdRouteImport
+    '/shop/$handle': {
+      id: '/shop/$handle'
+      path: '/shop/$handle'
+      fullPath: '/shop/$handle'
+      preLoaderRoute: typeof ShopHandleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/listing/$id': {
+      id: '/listing/$id'
+      path: '/listing/$id'
+      fullPath: '/listing/$id'
+      preLoaderRoute: typeof ListingIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/kategorie/$slug': {
+      id: '/kategorie/$slug'
+      path: '/kategorie/$slug'
+      fullPath: '/kategorie/$slug'
+      preLoaderRoute: typeof KategorieSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/checkout/erfolg': {
+      id: '/checkout/erfolg'
+      path: '/checkout/erfolg'
+      fullPath: '/checkout/erfolg'
+      preLoaderRoute: typeof CheckoutErfolgRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/checkout/abbruch': {
+      id: '/checkout/abbruch'
+      path: '/checkout/abbruch'
+      fullPath: '/checkout/abbruch'
+      preLoaderRoute: typeof CheckoutAbbruchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/nachrichten': {
+      id: '/_authenticated/nachrichten'
+      path: '/nachrichten'
+      fullPath: '/nachrichten'
+      preLoaderRoute: typeof AuthenticatedNachrichtenRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/verkaufen/neu': {
-      id: '/_authenticated/verkaufen/neu'
-      path: '/verkaufen/neu'
-      fullPath: '/verkaufen/neu'
-      preLoaderRoute: typeof AuthenticatedVerkaufenNeuRouteImport
+    '/_authenticated/einstellungen': {
+      id: '/_authenticated/einstellungen'
+      path: '/einstellungen'
+      fullPath: '/einstellungen'
+      preLoaderRoute: typeof AuthenticatedEinstellungenRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/api/public/stripe-webhook': {
@@ -604,6 +590,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/public/stripe-webhook'
       preLoaderRoute: typeof ApiPublicStripeWebhookRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/verkaufen/neu': {
+      id: '/_authenticated/verkaufen/neu'
+      path: '/verkaufen/neu'
+      fullPath: '/verkaufen/neu'
+      preLoaderRoute: typeof AuthenticatedVerkaufenNeuRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/chat/$id': {
+      id: '/_authenticated/chat/$id'
+      path: '/chat/$id'
+      fullPath: '/chat/$id'
+      preLoaderRoute: typeof AuthenticatedChatIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
   }
 }
