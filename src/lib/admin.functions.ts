@@ -203,14 +203,14 @@ export const listAllListings = createServerFn({ method: "GET" })
 
 export const setListingStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { id: string; status: "published" | "paused" }) => ({
+  .inputValidator((d: { id: string; status: "published" | "draft" }) => ({
     id: String(d.id),
-    status: d.status === "paused" ? ("paused" as const) : ("published" as const),
+    status: d.status === "draft" ? ("draft" as const) : ("published" as const),
   }))
   .handler(async ({ data, context }) => {
     await assertAdmin(context as Ctx);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await supabaseAdmin.from("listings").update({ status: data.status as never }).eq("id", data.id);
+    const { error } = await supabaseAdmin.from("listings").update({ status: data.status }).eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
