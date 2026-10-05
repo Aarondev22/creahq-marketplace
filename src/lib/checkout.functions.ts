@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-export type CheckoutLine = { listing_id: string; qty: number };
+export type CheckoutLine = { listing_id: string; qty: number; offer_id?: string };
 
 export type CheckoutResult = { url: string } | { error: string };
 
@@ -10,7 +10,7 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
   .inputValidator((d: { items: CheckoutLine[]; origin: string }) => ({
     items: (Array.isArray(d?.items) ? d.items : [])
       .slice(0, 50)
-      .map((i) => ({ listing_id: String(i.listing_id), qty: Math.min(Math.max(Number(i.qty) || 1, 1), 99) })),
+      .map((i) => ({ listing_id: String(i.listing_id), qty: Math.min(Math.max(Number(i.qty) || 1, 1), 99), offer_id: i.offer_id ? String(i.offer_id) : undefined })),
     origin: String(d?.origin ?? "").slice(0, 200),
   }))
   .handler(async ({ data, context }): Promise<CheckoutResult> => {
@@ -35,6 +35,24 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
       .filter((x): x is { item: CheckoutLine; listing: NonNullable<(typeof available)[number]> } => Boolean(x.listing));
 
     if (lines.length === 0) return { error: "Diese Produkte sind nicht mehr verfügbar." };
+
+    // Angenommene Preisvorschläge serverseitig prüfen und Preis/Menge daraus übernehmen.
+    const offerIds = lines.map((l) => l.item.offer_id).filter((x): x is string => Boolean(x));
+    if (offerIds.length) {
+      const { data: offers } = await supabase
+        .from("private_offers")
+        .select("id,listing_id,buyer_id,price_cents,qty,accepted_at,declined_at,expires_at")
+        .in("id", offerIds);
+      for (const l of lines) {
+        if (!l.item.offer_id) continue;
+        const o = (offers ?? []).find((x) => x.id === l.item.offer_id);
+        if (!o || o.buyer_id !== userId || o.listing_id !== l.listing.id || !o.accepted_at || o.declined_at || new Date(o.expires_at) < new Date()) {
+          return { error: `Der Angebotspreis für „${l.listing.title}“ ist nicht mehr gültig.` };
+        }
+        l.listing = { ...l.listing, price_cents: o.price_cents };
+        l.item = { ...l.item, qty: o.qty };
+      }
+    }
 
     const totalCents = lines.reduce((sum, l) => sum + l.listing.price_cents * l.item.qty, 0);
     const currency = (lines[0]!.listing.currency || "eur").toLowerCase();

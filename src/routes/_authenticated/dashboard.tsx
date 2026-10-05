@@ -429,6 +429,15 @@ function SalesTab({ sales, onUpdated }: { sales: MySale[]; onUpdated: () => void
                 </button>
               )}
             </div>
+            {s.report && (
+              <div className="mt-4 rounded-2xl border-2 border-destructive/40 bg-destructive/5 px-4 py-3 text-sm">
+                <div className="font-bold text-destructive">⚠️ Käufer meldet: {s.report.reason}</div>
+                {s.report.note && <p className="mt-1 text-brand-ink">„{s.report.note}“</p>}
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {s.report.status === "open" ? "Wird von CreaHQ geprüft – bitte kläre es mit dem Käufer im Chat." : "Fall abgeschlossen."}
+                </p>
+              </div>
+            )}
             {openFor === s.order_id && !s.shipment && (
               <div className="mt-4 grid gap-3 border-t border-border pt-4 sm:grid-cols-[160px_1fr_auto]">
                 <select value={carrier} onChange={(e) => setCarrier(e.target.value)} className="min-h-12 rounded-2xl border border-border bg-surface px-4 text-sm">

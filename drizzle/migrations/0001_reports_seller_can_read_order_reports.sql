@@ -1,0 +1,2 @@
+CREATE POLICY reports_select_order_seller ON public.reports FOR SELECT TO authenticated
+USING (target_type = 'order' AND EXISTS (SELECT 1 FROM public.order_items oi WHERE oi.order_id = reports.target_id AND oi.seller_id = auth.uid()));

@@ -4,6 +4,8 @@ import { ArrowLeft, Send, Store, Tag, Check, X, Repeat } from "lucide-react";
 import { fetchOffers, createOffer, respondToOffer, type Offer } from "@/lib/offers.functions";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useCart } from "@/lib/cart";
+import { useNavigate } from "@tanstack/react-router";
 import {
   fetchConversations,
   fetchMessages,
@@ -46,6 +48,8 @@ function ChatRoute() {
   const [myId, setMyId] = useState<string | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const search = Route.useSearch();
+  const { addOfferItem } = useCart();
+  const nav = useNavigate();
   const [offers, setOffers] = useState<Offer[]>([]);
   const [offerOpen, setOfferOpen] = useState(search.offer === 1);
   const [offerPrice, setOfferPrice] = useState("");
@@ -226,6 +230,18 @@ function ChatRoute() {
                           <button onClick={() => { setCounterOf(offer); setOfferQty(String(offer.qty)); setOfferOpen(true); }} className="inline-flex min-h-11 items-center justify-center gap-1 rounded-2xl border-2 border-brand bg-card text-xs font-bold text-brand"><Repeat className="h-4 w-4" />Gegen</button>
                           <button onClick={() => answer(offer, false)} className="inline-flex min-h-11 items-center justify-center gap-1 rounded-2xl border-2 border-border bg-card text-xs font-bold text-brand-ink"><X className="h-4 w-4" />Ablehnen</button>
                         </div>
+                      )}
+                      {offer.accepted_at && !expired && myId === offer.buyer_id && conv && (
+                        <button
+                          onClick={() => {
+                            addOfferItem({ id: offer.listing_id, title: conv.listing_title ?? "Produkt", cover_url: conv.listing_cover, price_cents: offer.price_cents, qty: offer.qty, offer_id: offer.id });
+                            toast.success("Zum Angebotspreis im Warenkorb 🛒");
+                            nav({ to: "/warenkorb" });
+                          }}
+                          className="mt-3 min-h-11 w-full rounded-2xl bg-brand text-sm font-bold text-primary-foreground"
+                        >
+                          Zum Angebotspreis in den Warenkorb
+                        </button>
                       )}
                       <p className="mt-2 text-[10px] text-muted-foreground">{timeShort(m.created_at)}</p>
                     </div>

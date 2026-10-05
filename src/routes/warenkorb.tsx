@@ -36,7 +36,7 @@ function CartPage() {
     try {
       const res = await createCheckoutSession({
         data: {
-          items: items.map((i) => ({ listing_id: i.id, qty: i.qty })),
+          items: items.map((i) => ({ listing_id: i.id, qty: i.qty, offer_id: i.offer_id })),
           origin: window.location.origin,
         },
       });

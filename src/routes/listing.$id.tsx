@@ -279,13 +279,6 @@ function ListingView({
           </button>
           <button
             type="button"
-            onClick={() => handleOpenChat(true)}
-            className="rounded-xl border-2 border-brand bg-card px-5 py-3.5 text-base font-bold text-brand transition-transform hover:-translate-y-0.5"
-          >
-            Preis vorschlagen
-          </button>
-          <button
-            type="button"
             onClick={handleFavorite}
             aria-label="Favorisieren"
             title={isFav ? "Aus Favoriten entfernen" : "Favorisieren"}
