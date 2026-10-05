@@ -6,6 +6,8 @@ export type CartItem = {
   price_cents: number;
   cover_url: string | null;
   qty: number;
+  /** Gesetzt, wenn der Artikel zu einem angenommenen Preisvorschlag gekauft wird. */
+  offer_id?: string;
 };
 
 const LS_CART = "creahq:cart";
@@ -13,6 +15,7 @@ const LS_CART = "creahq:cart";
 type CartContextType = {
   items: CartItem[];
   addItem: (item: Omit<CartItem, "qty">) => void;
+  addOfferItem: (item: CartItem & { offer_id: string }) => void;
   removeItem: (id: string) => void;
   setQty: (id: string, qty: number) => void;
   clear: () => void;
@@ -46,13 +49,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
     });
   }
 
+  function addOfferItem(item: CartItem & { offer_id: string }) {
+    setItems((prev) => [...prev.filter((x) => x.id !== item.id), item]);
+  }
+
   function removeItem(id: string) {
     setItems((prev) => prev.filter((x) => x.id !== id));
   }
 
   function setQty(id: string, qty: number) {
     if (qty < 1) return removeItem(id);
-    setItems((prev) => prev.map((x) => (x.id === id ? { ...x, qty } : x)));
+    setItems((prev) => prev.map((x) => (x.id === id && !x.offer_id ? { ...x, qty } : x)));
   }
 
   function clear() {
@@ -63,7 +70,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const totalCount = items.reduce((sum, i) => sum + i.qty, 0);
 
   return (
-    <CartContext.Provider value={{ items, addItem, removeItem, setQty, clear, totalCents, totalCount }}>
+    <CartContext.Provider value={{ items, addItem, addOfferItem, removeItem, setQty, clear, totalCents, totalCount }}>
       {children}
     </CartContext.Provider>
   );
