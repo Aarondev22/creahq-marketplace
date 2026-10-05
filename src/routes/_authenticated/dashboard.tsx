@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { fetchMySales, addShipment, type MySale } from "@/lib/shipments.functions";
+import { ORDER_PROBLEM_REASONS, createReport } from "@/lib/reports";
 
 const TABS = ["overview", "listings", "favorites", "orders", "sales"] as const;
 
@@ -30,6 +31,19 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 
 type MyListing = { id: string; title: string; price_cents: number; status: string; cover_url: string | null; created_at: string };
 type MyOrder = { id: string; total_cents: number; status: string; created_at: string };
+type OrderShipment = { order_id: string; carrier: string; tracking_number: string };
+type OrderReport = { target_id: string; status: string; reason: string };
+
+function trackingUrl(carrier: string, nr: string) {
+  const n = encodeURIComponent(nr);
+  switch (carrier) {
+    case "DHL": case "Deutsche Post": return `https://www.dhl.de/de/privatkunden/pakete-empfangen/verfolgen.html?piececode=${n}`;
+    case "Hermes": return `https://www.myhermes.de/empfangen/sendungsverfolgung/sendungsinformation#${n}`;
+    case "DPD": return `https://tracking.dpd.de/status/de_DE/parcel/${n}`;
+    case "UPS": return `https://www.ups.com/track?tracknum=${n}`;
+    default: return `https://www.google.com/search?q=${encodeURIComponent(carrier + " " + nr)}`;
+  }
+}
 type FavRow = { id: string; listing: { id: string; title: string; price_cents: number; cover_url: string | null } | null };
 type Tab = "overview" | "listings" | "favorites" | "orders" | "sales";
 
@@ -278,27 +292,93 @@ function Dashboard() {
         </section>
       )}
 
-      {tab === "orders" && (
-        <section className="mt-8">
-          <h2 className="mb-4 inline-flex items-center gap-2 font-display text-2xl font-black text-brand-ink">
-            <ShoppingBag className="h-5 w-5" /> Deine Bestellungen
-          </h2>
-          {orders.length === 0 ? <p className="text-sm text-muted-foreground">Noch keine Bestellungen.</p> : (
-            <ul className="divide-y divide-border rounded-2xl border border-border bg-card">
-              {orders.map((o) => (
-                <li key={o.id} className="flex items-center justify-between p-4 text-sm">
-                  <span className="font-mono text-xs text-muted-foreground">#{o.id.slice(0, 8)}</span>
-                  <span className="font-semibold">{(o.total_cents / 100).toFixed(2)} €</span>
-                  <span className="rounded-full bg-brand/10 px-2 py-0.5 text-xs font-bold text-brand">{o.status}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-      )}
-
+      {tab === "orders" && <OrdersTab orders={orders} />}
       {tab === "sales" && <SalesTab sales={sales} onUpdated={load} />}
     </div>
+  );
+}
+
+function OrdersTab({ orders }: { orders: MyOrder[] }) {
+  const [ships, setShips] = useState<OrderShipment[]>([]);
+  const [reports, setReports] = useState<OrderReport[]>([]);
+  const [openFor, setOpenFor] = useState<string | null>(null);
+  const [reason, setReason] = useState<string>(ORDER_PROBLEM_REASONS[0].value);
+  const [note, setNote] = useState("");
+  const [saving, setSaving] = useState(false);
+  const ids = orders.map((o) => o.id);
+
+  async function reload() {
+    if (!ids.length) return;
+    const [{ data: sh }, { data: rp }] = await Promise.all([
+      supabase.from("shipments").select("order_id,carrier,tracking_number").in("order_id", ids),
+      supabase.from("reports").select("target_id,status,reason").eq("target_type", "order").in("target_id", ids),
+    ]);
+    setShips((sh ?? []) as OrderShipment[]);
+    setReports((rp ?? []) as OrderReport[]);
+  }
+  useEffect(() => { reload(); }, [ids.join(",")]);
+
+  async function submit(orderId: string) {
+    setSaving(true);
+    try {
+      const label = ORDER_PROBLEM_REASONS.find((r) => r.value === reason)?.label ?? reason;
+      await createReport({ targetType: "order", targetId: orderId, reason: label, note });
+      toast.success("Problem gemeldet – wir prüfen das.");
+      setOpenFor(null); setNote("");
+      reload();
+    } catch (err) { toast.error(err instanceof Error ? err.message : "Fehler"); }
+    finally { setSaving(false); }
+  }
+
+  return (
+    <section className="mt-8">
+      <h2 className="mb-4 inline-flex items-center gap-2 font-display text-2xl font-black text-brand-ink">
+        <ShoppingBag className="h-5 w-5" /> Deine Bestellungen
+      </h2>
+      {orders.length === 0 ? <p className="text-sm text-muted-foreground">Noch keine Bestellungen.</p> : (
+        <ul className="space-y-3">
+          {orders.map((o) => {
+            const sh = ships.find((s) => s.order_id === o.id);
+            const rp = reports.find((r) => r.target_id === o.id);
+            return (
+              <li key={o.id} className="rounded-3xl border border-border bg-card p-5">
+                <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
+                  <div>
+                    <div className="font-mono text-xs text-muted-foreground">#{o.id.slice(0, 8)} · {new Date(o.created_at).toLocaleDateString("de-DE")}</div>
+                    <div className="font-display text-lg font-black text-brand-ink">{(o.total_cents / 100).toFixed(2)} €</div>
+                  </div>
+                  <span className="rounded-full bg-brand/10 px-3 py-1 text-xs font-bold text-brand">{sh ? "Versendet 🚚" : o.status}</span>
+                </div>
+                {sh ? (
+                  <a href={trackingUrl(sh.carrier, sh.tracking_number)} target="_blank" rel="noreferrer" className="mt-3 flex min-h-12 items-center justify-between gap-3 rounded-2xl bg-brand-soft/50 px-4 py-2.5 hover:bg-brand-soft">
+                    <span><span className="block text-[10px] font-bold uppercase tracking-widest text-brand">Sendung verfolgen · {sh.carrier}</span><span className="font-mono text-sm font-bold text-brand-ink">{sh.tracking_number}</span></span>
+                    <Truck className="h-5 w-5 text-brand" />
+                  </a>
+                ) : <p className="mt-3 text-xs text-muted-foreground">Noch keine Versandnummer – der Verkäufer trägt sie nach dem Versand ein.</p>}
+                <div className="mt-3">
+                  {rp ? (
+                    <div className="rounded-2xl border border-border bg-surface px-4 py-2.5 text-sm">⚠️ Gemeldet: {rp.reason} – {rp.status === "open" ? "Prüfung läuft" : "Erledigt"}</div>
+                  ) : openFor === o.id ? (
+                    <div className="grid gap-2 border-t border-border pt-3">
+                      <select value={reason} onChange={(e) => setReason(e.target.value)} className="min-h-12 rounded-2xl border border-border bg-surface px-4 text-sm">
+                        {ORDER_PROBLEM_REASONS.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
+                      </select>
+                      <textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="Was ist passiert? (optional)" className="min-h-20 rounded-2xl border border-border bg-surface px-4 py-3 text-sm" />
+                      <div className="flex gap-2">
+                        <button onClick={() => submit(o.id)} disabled={saving} className="min-h-12 flex-1 rounded-2xl bg-brand text-sm font-bold text-primary-foreground disabled:opacity-50">{saving ? "…" : "Meldung senden"}</button>
+                        <button onClick={() => setOpenFor(null)} className="min-h-12 rounded-2xl border border-border px-5 text-sm font-bold">Abbrechen</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button onClick={() => setOpenFor(o.id)} className="min-h-11 rounded-full border-2 border-border px-4 text-xs font-bold text-brand-ink hover:border-brand hover:text-brand">Problem melden</button>
+                  )}
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </section>
   );
 }
 
