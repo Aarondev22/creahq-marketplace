@@ -8,6 +8,7 @@ export type MySale = {
   qty: number;
   created_at: string;
   shipment: { carrier: string; tracking_number: string; status: string } | null;
+  report: { reason: string; note: string | null; status: string; created_at: string } | null;
 };
 
 export async function fetchMySales(): Promise<MySale[]> {
@@ -25,7 +26,13 @@ export async function fetchMySales(): Promise<MySale[]> {
   const { data: shipments } = await supabase
     .from("shipments")
     .select("order_id,carrier,tracking_number,status")
-    .in("order_id", orderIds.length ? orderIds : ["-"]);
+    .in("order_id", orderIds.length ? orderIds : ["00000000-0000-0000-0000-000000000000"]);
+
+  const { data: reports } = await supabase
+    .from("reports")
+    .select("target_id,reason,note,status,created_at")
+    .eq("target_type", "order")
+    .in("target_id", orderIds.length ? orderIds : ["00000000-0000-0000-0000-000000000000"]);
 
   return (items ?? []).map((i: any) => ({
     order_item_id: i.id,
@@ -35,6 +42,7 @@ export async function fetchMySales(): Promise<MySale[]> {
     qty: i.qty,
     created_at: i.created_at,
     shipment: (shipments ?? []).find((s) => s.order_id === i.order_id) ?? null,
+    report: (reports ?? []).find((r) => r.target_id === i.order_id) ?? null,
   }));
 }
 
