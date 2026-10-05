@@ -125,7 +125,7 @@ r.style.setProperty('--brand-soft',m==='dark'?c[3]:c[2]);
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="de">
+    <html lang="de" suppressHydrationWarning>
       <head>
         <HeadContent />
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOT }} />
