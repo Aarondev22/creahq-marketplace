@@ -32,7 +32,7 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
 
     const lines = data.items
       .map((i) => ({ item: i, listing: available.find((l) => l.id === i.listing_id) }))
-      .filter((x): x is { item: CheckoutLine; listing: NonNullable<(typeof available)[number]> } => Boolean(x.listing));
+      .filter((x): x is { item: typeof x.item; listing: NonNullable<(typeof available)[number]> } => Boolean(x.listing));
 
     if (lines.length === 0) return { error: "Diese Produkte sind nicht mehr verfügbar." };
 
