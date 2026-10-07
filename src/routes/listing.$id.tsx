@@ -22,6 +22,7 @@ import {
 import { startConversation } from "@/lib/chat.functions";
 import { useCart } from "@/lib/cart";
 import { toast } from "sonner";
+import { fetchListingReviews, summarize } from "@/lib/reviews";
 
 const listingQuery = (id: string) =>
   queryOptions({
@@ -235,9 +236,7 @@ function ListingView({
           </Link>
         )}
 
-        <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-900">
-          <Star className="h-3 w-3" /> 0,0 · noch keine Bewertungen
-        </div>
+        <ListingReviews listingId={l.id} />
 
         <p className="mt-6 whitespace-pre-line text-sm leading-relaxed text-foreground/80">
           {l.description}
@@ -314,6 +313,32 @@ function ListingView({
         sellerName={l.seller?.display_name ?? "diesem Shop"}
         sellerHandle={l.seller?.handle}
       />
+    </div>
+  );
+}
+
+function ListingReviews({ listingId }: { listingId: string }) {
+  const { data: reviews = [] } = useQuery({
+    queryKey: ["reviews", listingId],
+    queryFn: () => fetchListingReviews(listingId),
+  });
+  const sum = summarize(reviews);
+  return (
+    <div className="mt-2">
+      <div className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-900">
+        <Star className="h-3 w-3 fill-current" />
+        {sum.count ? `${sum.avg.toFixed(1).replace(".", ",")} · ${sum.count} Bewertung${sum.count === 1 ? "" : "en"}` : "noch keine Bewertungen"}
+      </div>
+      {reviews.length > 0 && (
+        <ul className="mt-3 grid gap-2">
+          {reviews.slice(0, 3).map((r) => (
+            <li key={r.id} className="rounded-2xl bg-surface px-4 py-2.5 text-sm">
+              <div className="text-amber-500">{"★".repeat(r.rating)}<span className="text-muted-foreground/40">{"★".repeat(5 - r.rating)}</span></div>
+              {r.body && <p className="mt-1 text-foreground/80">{r.body}</p>}
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

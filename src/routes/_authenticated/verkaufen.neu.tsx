@@ -33,6 +33,7 @@ type WizardData = {
   condition: string;
   stock: string;
   files: File[];
+  downloadFile: File | null;
   acceptedRules: boolean;
 };
 
@@ -48,7 +49,7 @@ function NewListingPage() {
   const [data, setData] = useState<WizardData>({
     title: "", description: "", category: "", price: "9.00", kind: "digital",
     shippingMode: "digital", shippingPrice: "0",
-    location: "", condition: "neu", stock: "", files: [], acceptedRules: false,
+    location: "", condition: "neu", stock: "", files: [], downloadFile: null, acceptedRules: false,
   });
   const [sellerStatus, setSellerStatus] = useState<{ email: string | null; emailConfirmed: boolean; todayCount: number } | null>(null);
   const [resending, setResending] = useState(false);
@@ -149,6 +150,13 @@ function NewListingPage() {
           acceptedRules: data.acceptedRules,
         },
       });
+      if (data.kind === "digital" && data.downloadFile) {
+        const f = data.downloadFile;
+        const path = `${u.user.id}/${result.id}/${crypto.randomUUID()}-${f.name.replace(/[^\w.-]/g, "_")}`;
+        const { error: fErr } = await supabase.storage.from("listing-files").upload(path, f);
+        if (fErr) toast.error("Datei konnte nicht hochgeladen werden: " + fErr.message);
+        else await supabase.from("listing_files").insert({ listing_id: result.id, seller_id: u.user.id, file_path: path, file_name: f.name });
+      }
       if (result.moderation === "pending") {
         toast.warning("Dein Listing wird kurz von uns geprüft \u2014 danach ist es öffentlich sichtbar.");
       } else {
@@ -250,9 +258,17 @@ function NewListingPage() {
               </Field>
 
               {data.kind === "digital" ? (
-                <p className="rounded-2xl bg-brand-soft/60 p-4 text-sm text-brand-ink">
-                  Digitale Produkte brauchen keinen Versand — Käufer bekommen sie direkt nach dem Kauf.
-                </p>
+                <div className="grid gap-3">
+                  <p className="rounded-2xl bg-brand-soft/60 p-4 text-sm text-brand-ink">
+                    Digitale Produkte brauchen keinen Versand — Käufer laden die Datei direkt nach dem Kauf herunter.
+                  </p>
+                  <Field label="Datei zum Herunterladen (PDF, ZIP, Bild …)">
+                    <label className="flex min-h-14 cursor-pointer items-center justify-center rounded-2xl border-2 border-dashed border-brand/40 bg-surface px-4 text-sm font-bold text-brand hover:bg-brand-soft/40">
+                      {data.downloadFile ? `📎 ${data.downloadFile.name}` : "📥 Datei auswählen"}
+                      <input type="file" className="hidden" onChange={(e) => update("downloadFile", e.target.files?.[0] ?? null)} />
+                    </label>
+                  </Field>
+                </div>
               ) : (
                 <>
                   <Field label="Versand">
