@@ -15,6 +15,13 @@
       "when": 1791225122503,
       "tag": "0001_reports_seller_can_read_order_reports",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791349590609,
+      "tag": "0002_listing_downloads",
+      "breakpoints": true
     }
   ]
 }

@@ -290,6 +290,41 @@ export type Database = {
         }
         Relationships: []
       }
+      listing_files: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_path: string
+          id: string
+          listing_id: string
+          seller_id: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_path: string
+          id?: string
+          listing_id: string
+          seller_id: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_path?: string
+          id?: string
+          listing_id?: string
+          seller_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_files_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       listings: {
         Row: {
           category: string | null
