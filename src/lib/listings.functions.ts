@@ -84,14 +84,7 @@ export const searchListings = createServerFn({ method: "GET" })
   }))
   .handler(async ({ data }): Promise<ListingCard[]> => {
     const supa = serverPublic();
-    let query = supa.from("listings").select(SAFE_COLS).eq("status", "published").eq("moderation_status", "approved");
-    if (data.q) {
-      const clean = data.q.replace(/[%_,()]/g, "");
-      const like = `%${clean}%`;
-      query = query.or(
-        `title.ilike.${like},description.ilike.${like},category.ilike.${like},tags.cs.{${clean}}`,
-      );
-    }
+    let query = supa.from("listings").select(SAFE_COLS + ",description,tags").eq("status", "published").eq("moderation_status", "approved");
     if (data.kind) query = query.eq("kind", data.kind);
     if (data.category) query = query.eq("category", data.category);
     if (data.min > 0) query = query.gte("price_cents", Math.round(data.min * 100));
@@ -101,9 +94,40 @@ export const searchListings = createServerFn({ method: "GET" })
     else if (data.sort === "price_desc") query = query.order("price_cents", { ascending: false });
     else query = query.order("created_at", { ascending: false });
 
-    const { data: rows } = await query.limit(data.limit);
-    return (rows ?? []) as ListingCard[];
+    const { data: rows } = await query.limit(data.q ? 500 : data.limit);
+    let list = (rows ?? []) as unknown as (ListingCard & { description: string | null; tags: string[] | null })[];
+    if (data.q) {
+      // Schreibweisen-tolerant: "tshirt" findet "T-Shirt", "t shirt", Kategorie, Tags …
+      const words = data.q.split(/\s+/).map(norm).filter(Boolean);
+      const scored = list
+        .map((l) => {
+          const title = norm(l.title), cat = norm(l.category ?? ""), tags = (l.tags ?? []).map(norm), desc = norm(l.description ?? "");
+          let score = 0;
+          for (const w of words) {
+            let s = 0;
+            if (cat.includes(w) || (cat && w.includes(cat))) s += 5;
+            if (tags.some((t) => t.includes(w) || (t && w.includes(t)))) s += 4;
+            if (title.includes(w)) s += 3;
+            if (desc.includes(w)) s += 1;
+            if (s === 0) return { l, score: 0 };
+            score += s;
+          }
+          return { l, score };
+        })
+        .filter((x) => x.score > 0);
+      if (data.sort === "new") scored.sort((a, b) => b.score - a.score);
+      list = scored.map((x) => x.l);
+    }
+    return list.slice(0, data.limit).map(({ description: _d, tags: _t, ...c }) => c as ListingCard);
   });
+
+function norm(s: string) {
+  return s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ß/g, "ss").replace(/[^a-z0-9]/g, "");
+}
+
+function tokens(s: string) {
+  return s.toLowerCase().split(/[^a-z0-9äöüß]+/).map(norm).filter((t) => t.length >= 3);
+}
 
 export const fetchCategories = createServerFn({ method: "GET" }).handler(async (): Promise<string[]> => {
   const supa = serverPublic();
