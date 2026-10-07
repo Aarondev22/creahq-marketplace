@@ -1,13 +1,14 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { motion } from "motion/react";
-import { Plus, Trash2, Eye, Store, ShoppingBag, TrendingUp, Package, Wallet, Truck, Heart, Pause, Play } from "lucide-react";
+import { Plus, Trash2, Eye, Store, ShoppingBag, TrendingUp, Package, Wallet, Truck, Heart, Pause, Play, Download, Star } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { fetchMySales, addShipment, type MySale } from "@/lib/shipments.functions";
 import { ORDER_PROBLEM_REASONS, createReport } from "@/lib/reports";
+import { createReview } from "@/lib/reviews";
 
 const TABS = ["overview", "listings", "favorites", "orders", "sales"] as const;
 
@@ -298,6 +299,97 @@ function Dashboard() {
   );
 }
 
+type ExtraItem = { listing_id: string; seller_id: string; title: string; kind: string };
+
+function OrderItemsExtras({ orderId }: { orderId: string }) {
+  const [items, setItems] = useState<ExtraItem[]>([]);
+  const [files, setFiles] = useState<{ listing_id: string; file_path: string; file_name: string }[]>([]);
+  const [reviewed, setReviewed] = useState<Set<string>>(new Set());
+  const [openFor, setOpenFor] = useState<string | null>(null);
+  const [rating, setRating] = useState(5);
+  const [body, setBody] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  async function load() {
+    const { data: oi } = await supabase.from("order_items").select("listing_id,seller_id,listings(title,kind)").eq("order_id", orderId);
+    const list = (oi ?? []).map((r) => {
+      const l = r.listings as unknown as { title?: string; kind?: string } | null;
+      return { listing_id: r.listing_id, seller_id: r.seller_id, title: l?.title ?? "Produkt", kind: l?.kind ?? "" };
+    });
+    setItems(list);
+    const ids = list.map((i) => i.listing_id);
+    if (!ids.length) return;
+    const [{ data: f }, { data: rv }] = await Promise.all([
+      supabase.from("listing_files").select("listing_id,file_path,file_name").in("listing_id", ids),
+      supabase.from("reviews").select("listing_id").eq("order_id", orderId),
+    ]);
+    setFiles(f ?? []);
+    setReviewed(new Set((rv ?? []).map((r) => r.listing_id)));
+  }
+  useEffect(() => { load(); }, [orderId]);
+
+  async function download(path: string) {
+    const { data, error } = await supabase.storage.from("listing-files").createSignedUrl(path, 300, { download: true });
+    if (error || !data) { toast.error("Download nicht möglich"); return; }
+    window.open(data.signedUrl, "_blank");
+  }
+
+  async function sendReview(it: ExtraItem) {
+    setSaving(true);
+    try {
+      await createReview({ orderId, listingId: it.listing_id, sellerId: it.seller_id, rating, body });
+      toast.success("Danke für deine Bewertung ⭐");
+      setOpenFor(null); setBody(""); setRating(5);
+      load();
+    } catch (err) { toast.error(err instanceof Error ? err.message : "Fehler"); }
+    finally { setSaving(false); }
+  }
+
+  if (!items.length) return null;
+  return (
+    <div className="mt-3 grid gap-2 border-t border-border pt-3">
+      {items.map((it) => (
+        <div key={it.listing_id} className="rounded-2xl bg-surface p-3">
+          <div className="mb-2 truncate text-sm font-bold text-brand-ink">{it.title}</div>
+          <div className="flex flex-wrap gap-2">
+            {files.filter((f) => f.listing_id === it.listing_id).map((f) => (
+              <button key={f.file_path} onClick={() => download(f.file_path)} className="inline-flex min-h-11 items-center gap-2 rounded-full bg-brand px-4 text-xs font-bold text-primary-foreground">
+                <Download className="h-4 w-4" /> {f.file_name}
+              </button>
+            ))}
+            {it.kind === "digital" && !files.some((f) => f.listing_id === it.listing_id) && (
+              <span className="text-xs text-muted-foreground">Datei folgt – frag den Verkäufer im Chat.</span>
+            )}
+            {reviewed.has(it.listing_id) ? (
+              <span className="inline-flex min-h-11 items-center gap-1 rounded-full bg-brand-soft px-4 text-xs font-bold text-brand">⭐ Bewertet</span>
+            ) : openFor !== it.listing_id ? (
+              <button onClick={() => setOpenFor(it.listing_id)} className="inline-flex min-h-11 items-center gap-2 rounded-full border-2 border-border px-4 text-xs font-bold text-brand-ink hover:border-brand">
+                <Star className="h-4 w-4" /> Bewertung abgeben
+              </button>
+            ) : null}
+          </div>
+          {openFor === it.listing_id && (
+            <div className="mt-3 grid gap-2">
+              <div className="flex gap-1">
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <button key={n} onClick={() => setRating(n)} aria-label={`${n} Sterne`} className="p-1">
+                    <Star className={`h-8 w-8 ${n <= rating ? "fill-paint-sun text-paint-sun" : "text-muted-foreground"}`} />
+                  </button>
+                ))}
+              </div>
+              <textarea value={body} onChange={(e) => setBody(e.target.value)} placeholder="Wie war's? (optional)" className="min-h-20 rounded-2xl border border-border bg-card px-4 py-3 text-sm" />
+              <div className="flex gap-2">
+                <button onClick={() => sendReview(it)} disabled={saving} className="min-h-12 flex-1 rounded-2xl bg-brand text-sm font-bold text-primary-foreground disabled:opacity-50">{saving ? "…" : "Bewertung senden"}</button>
+                <button onClick={() => setOpenFor(null)} className="min-h-12 rounded-2xl border border-border px-5 text-sm font-bold">Abbrechen</button>
+              </div>
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function OrdersTab({ orders }: { orders: MyOrder[] }) {
   const [ships, setShips] = useState<OrderShipment[]>([]);
   const [reports, setReports] = useState<OrderReport[]>([]);
@@ -373,6 +465,7 @@ function OrdersTab({ orders }: { orders: MyOrder[] }) {
                     <button onClick={() => setOpenFor(o.id)} className="min-h-11 rounded-full border-2 border-border px-4 text-xs font-bold text-brand-ink hover:border-brand hover:text-brand">Problem melden</button>
                   )}
                 </div>
+                {(o.status === "paid" || o.status === "fulfilled") && <OrderItemsExtras orderId={o.id} />}
               </li>
             );
           })}
