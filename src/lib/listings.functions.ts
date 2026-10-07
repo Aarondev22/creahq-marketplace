@@ -188,16 +188,32 @@ export const fetchRelatedListings = createServerFn({ method: "GET" })
       .order("created_at", { ascending: false })
       .limit(4);
 
-    let similarQuery = supa
+    const { data: me } = await supa.from("listings").select("title,category,tags").eq("id", data.id).maybeSingle();
+    const { data: pool } = await supa
       .from("listings")
-      .select(SAFE_COLS)
+      .select(SAFE_COLS + ",tags")
       .eq("status", "published").eq("moderation_status", "approved")
       .neq("id", data.id)
-      .neq("seller_id", data.sellerId);
-    if (data.category) similarQuery = similarQuery.eq("category", data.category);
-    const { data: similar } = await similarQuery.order("created_at", { ascending: false }).limit(4);
+      .order("created_at", { ascending: false })
+      .limit(300);
+    const myCat = norm(me?.category ?? data.category ?? "");
+    const myTags = new Set(((me?.tags ?? []) as string[]).map(norm));
+    const myTokens = new Set(tokens(me?.title ?? ""));
+    const scored = ((pool ?? []) as unknown as (ListingCard & { tags: string[] | null })[])
+      .map((l) => {
+        let s = 0;
+        if (myCat && norm(l.category ?? "") === myCat) s += 5;
+        for (const t of l.tags ?? []) if (myTags.has(norm(t))) s += 3;
+        for (const t of tokens(l.title)) if (myTokens.has(t)) s += 4;
+        if (l.seller_id === data.sellerId) s -= 1;
+        return { l, s };
+      })
+      .filter((x) => x.s > 0)
+      .sort((a, b) => b.s - a.s)
+      .slice(0, 8)
+      .map(({ l: { tags: _t, ...c } }) => c as ListingCard);
 
-    return { fromShop: (fromShop ?? []) as ListingCard[], similar: (similar ?? []) as ListingCard[] };
+    return { fromShop: (fromShop ?? []) as ListingCard[], similar: scored };
   });
 
 
