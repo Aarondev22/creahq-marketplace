@@ -23,6 +23,8 @@ import { startConversation } from "@/lib/chat.functions";
 import { useCart } from "@/lib/cart";
 import { toast } from "sonner";
 import { fetchListingReviews, summarize } from "@/lib/reviews";
+import { parseTheme, parseBadges } from "@/lib/shopTheme";
+import { ShopBadges, FxCard, accentStyle } from "@/components/ShopFx";
 
 const listingQuery = (id: string) =>
   queryOptions({
@@ -220,21 +222,7 @@ function ListingView({
 
          <h1 className="mt-2 font-display text-4xl font-extrabold text-brand-ink">{l.title}</h1>
 
-        {l.seller && (
-          <Link
-            to="/shop/$handle"
-            params={{ handle: l.seller.handle ?? "" }}
-             className="mt-3 inline-flex min-h-11 items-center gap-2 rounded-xl border border-border bg-card px-3 py-1.5 text-sm font-semibold text-brand-ink transition-colors hover:border-brand hover:bg-brand-soft hover:text-brand"
-          >
-            <span className="grid h-7 w-7 place-items-center rounded-full bg-brand/15 text-xs font-bold text-brand">
-              {(l.seller.display_name ?? "?").slice(0, 1).toUpperCase()}
-            </span>
-            Shop: {l.seller.display_name}
-            {l.seller.handle ? (
-              <span className="text-xs font-medium text-muted-foreground">@{l.seller.handle}</span>
-            ) : null}
-          </Link>
-        )}
+        {l.seller && <SellerBox seller={l.seller} />}
 
         <ListingReviews listingId={l.id} />
 
@@ -342,6 +330,44 @@ function ListingReviews({ listingId }: { listingId: string }) {
     </div>
   );
 }
+
+function SellerBox({ seller }: { seller: NonNullable<ListingDetailSeller> }) {
+  const theme = parseTheme(seller.shop_theme, seller.is_pro);
+  const badges = parseBadges(seller.shop_badges, seller.is_pro);
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ type: "spring", stiffness: 260, damping: 22 }}
+      className="mt-3 rounded-2xl border bg-card p-3"
+      style={{ ...accentStyle(theme), borderColor: `color-mix(in oklab, ${theme.accent} 40%, transparent)`, background: `linear-gradient(135deg, color-mix(in oklab, ${theme.accent} 10%, var(--card)), var(--card))` }}
+    >
+      <Link
+        to="/shop/$handle"
+        params={{ handle: seller.handle ?? "" }}
+        className="flex min-h-11 items-center gap-2 text-sm font-semibold text-brand-ink hover:text-brand"
+      >
+        <span
+          className="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-full text-xs font-bold text-primary-foreground"
+          style={{ background: theme.accent }}
+        >
+          {seller.avatar_url ? <img src={seller.avatar_url} alt="" className="h-full w-full object-cover" /> : (seller.display_name ?? "?").slice(0, 1).toUpperCase()}
+        </span>
+        <span className="min-w-0">
+          <span className="block truncate">Shop: {seller.display_name}{seller.is_pro ? " 👑" : ""}</span>
+          {seller.handle ? <span className="block text-xs font-medium text-muted-foreground">@{seller.handle}</span> : null}
+        </span>
+      </Link>
+      {badges.length > 0 && (
+        <div className="mt-2">
+          <ShopBadges badges={badges} accent={theme.accent} size="sm" />
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
+type ListingDetailSeller = Awaited<ReturnType<typeof fetchListingById>> extends infer R ? (R extends { seller: infer S } ? S : never) : never;
 
 function RelatedRails({
   id,

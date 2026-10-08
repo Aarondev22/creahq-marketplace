@@ -1,6 +1,9 @@
 import { createFileRoute, notFound, Link } from "@tanstack/react-router";
 import { useSuspenseQuery, queryOptions } from "@tanstack/react-query";
-import { Store, Sparkles, Star, MessageCircle } from "lucide-react";
+import { Store, Sparkles, Star, MessageCircle, Truck, Crown } from "lucide-react";
+import { motion } from "motion/react";
+import { parseTheme, parseBadges } from "@/lib/shopTheme";
+import { ShopScene, ShopMarquee, ShopBadges, FxCard, accentStyle } from "@/components/ShopFx";
 import { fetchShopByHandle } from "@/lib/listings.functions";
 import { ListingGridCard, ListingGridSkeleton } from "@/components/ListingGridCard";
 import { ReportButton } from "@/components/ReportButton";
@@ -68,6 +71,9 @@ function ShopPage() {
     ? (profile.shop_sections as string[])
     : ["highlight", "listings"];
   const rest = listings.filter((l) => l.id !== highlight?.id);
+  const isPro = !!profile.is_pro;
+  const theme = parseTheme(profile.shop_theme, isPro);
+  const badges = parseBadges(profile.shop_badges, isPro);
 
   const listingsBlock = (
     <section key="listings">
@@ -87,8 +93,10 @@ function ShopPage() {
         </div>
       ) : (
         <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {rest.map((l) => (
-            <ListingGridCard key={l.id} listing={l} />
+          {rest.map((l, i) => (
+            <FxCard key={l.id} theme={theme} index={i}>
+              <ListingGridCard listing={l} />
+            </FxCard>
           ))}
         </div>
       )}
@@ -124,12 +132,37 @@ function ShopPage() {
   ) : null;
 
   return (
+    <div className="relative isolate min-h-screen" style={accentStyle(theme)}>
+    <ShopScene theme={theme} />
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
-      <header className="overflow-hidden rounded-[2rem] border border-border bg-card shadow-sm">
-        <div className="relative h-40 w-full bg-gradient-to-br from-brand-soft via-brand/20 to-amber-100/60 sm:h-56">
+      <motion.header
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ type: "spring", stiffness: 200, damping: 24 }}
+        className="overflow-hidden rounded-[2rem] border bg-card/90 shadow-sm backdrop-blur"
+        style={{ borderColor: `color-mix(in oklab, ${theme.accent} 35%, transparent)` }}
+      >
+        <div
+          className="relative h-40 w-full overflow-hidden sm:h-56"
+          style={{ background: `linear-gradient(135deg, color-mix(in oklab, ${theme.accent} 35%, var(--card)), var(--brand-soft))` }}
+        >
           {profile.banner_url && (
-            <img src={profile.banner_url} alt="" className="h-full w-full object-cover" />
+            <motion.img
+              src={profile.banner_url}
+              alt=""
+              initial={{ scale: 1.15 }}
+              animate={{ scale: 1 }}
+              transition={{ duration: 1.4, ease: [0.22, 1, 0.36, 1] }}
+              className="h-full w-full object-cover"
+            />
           )}
+          <motion.div
+            aria-hidden
+            className="absolute inset-y-0 w-1/3 -skew-x-12 bg-gradient-to-r from-transparent via-card/40 to-transparent"
+            initial={{ x: "-120%" }}
+            animate={{ x: "420%" }}
+            transition={{ duration: 2.8, repeat: Infinity, repeatDelay: 4, ease: "easeInOut" }}
+          />
         </div>
         <div className="flex flex-col gap-5 p-6 sm:flex-row sm:items-end sm:p-8">
           <div className="-mt-16 grid h-28 w-28 shrink-0 place-items-center overflow-hidden rounded-[1.75rem] border-4 border-card bg-gradient-to-br from-brand to-brand-ink text-4xl font-black text-primary-foreground shadow-lg sm:-mt-20 sm:h-32 sm:w-32">
@@ -140,18 +173,34 @@ function ShopPage() {
             )}
           </div>
           <div className="min-w-0 flex-1">
-            <div className="inline-flex items-center gap-1.5 rounded-full bg-brand-soft px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-brand">
-              <Store className="h-3 w-3" /> Shop
+            <div className="flex flex-wrap gap-2">
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-brand-soft px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-brand">
+                <Store className="h-3 w-3" /> Shop
+              </div>
+              {isPro && (
+                <div className="inline-flex items-center gap-1.5 rounded-full bg-brand px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-primary-foreground">
+                  <Crown className="h-3 w-3" /> Pro Creator
+                </div>
+              )}
             </div>
             <h1 className="mt-1.5 font-display text-3xl font-black text-brand-ink sm:text-4xl">
               {profile.display_name ?? `@${profile.handle}`}
             </h1>
             <p className="text-sm font-medium text-muted-foreground">@{profile.handle}</p>
             {profile.bio && <p className="mt-3 max-w-2xl text-sm leading-relaxed text-brand-ink/80">{profile.bio}</p>}
+            {badges.length > 0 && (
+              <div className="mt-4">
+                <ShopBadges badges={badges} accent={theme.accent} />
+              </div>
+            )}
             <div className="mt-4 flex flex-wrap items-center gap-2 text-xs font-bold">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-surface px-3 py-1.5 text-brand-ink">
                 <Sparkles className="h-3 w-3 text-brand" />
                 {listings.length} {listings.length === 1 ? "Produkt" : "Produkte"} online
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-surface px-3 py-1.5 text-brand-ink">
+                <Truck className="h-3 w-3 text-brand" />
+                {profile.shop_shipping_default ? `Versand: ${profile.shop_shipping_default}` : "Versand: 2–5 Werktage"}
               </span>
               {rating.count > 0 ? (
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-surface px-3 py-1.5 text-brand-ink">
@@ -173,9 +222,16 @@ function ShopPage() {
             </div>
           </div>
         </div>
-      </header>
+      </motion.header>
+
+      {theme.marquee && (
+        <div className="mt-6">
+          <ShopMarquee text={theme.marquee} accent={theme.accent} />
+        </div>
+      )}
 
       {sections.map((s) => (s === "highlight" ? highlightBlock : s === "listings" ? listingsBlock : null))}
+    </div>
     </div>
   );
 }

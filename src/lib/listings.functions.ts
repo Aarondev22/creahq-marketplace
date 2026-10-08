@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
+import { applyProSpotlight } from "@/lib/shopTheme";
 
 function serverPublic() {
   return createClient<Database>(
@@ -20,6 +21,7 @@ export type ListingCard = {
   kind: "digital" | "service";
   seller_id: string;
   created_at: string;
+  spotlight?: boolean;
 };
 
 const SAFE_COLS = "id,title,price_cents,currency,cover_url,category,kind,seller_id,created_at";
@@ -118,7 +120,14 @@ export const searchListings = createServerFn({ method: "GET" })
       if (data.sort === "new") scored.sort((a, b) => b.score - a.score);
       list = scored.map((x) => x.l);
     }
-    return list.slice(0, data.limit).map(({ description: _d, tags: _t, ...c }) => c as ListingCard);
+    let out = list.map(({ description: _d, tags: _t, ...c }) => c as ListingCard);
+    // Pro-Spotlight: relevanteste Pro-Treffer oben, faire Rotation (nur bei Relevanz-Sortierung).
+    if (data.sort === "new" && out.length > 0) {
+      const sellerIds = [...new Set(out.map((l) => l.seller_id))];
+      const { data: pros } = await supa.from("profiles").select("id").in("id", sellerIds).eq("is_pro", true);
+      out = applyProSpotlight(out, new Set((pros ?? []).map((p) => p.id)));
+    }
+    return out.slice(0, data.limit);
   });
 
 function norm(s: string) {
@@ -147,7 +156,15 @@ export type ListingDetail = ListingCard & {
   location: string | null;
   condition: string | null;
   stock: number | null;
-  seller: { id: string; handle: string | null; display_name: string | null; avatar_url: string | null } | null;
+  seller: {
+    id: string;
+    handle: string | null;
+    display_name: string | null;
+    avatar_url: string | null;
+    is_pro: boolean;
+    shop_badges: unknown;
+    shop_theme: unknown;
+  } | null;
 };
 
 const DETAIL_COLS = `${SAFE_COLS},description,tags,images,shipping_mode,shipping_price_cents,location,condition,stock`;
@@ -165,7 +182,7 @@ export const fetchListingById = createServerFn({ method: "GET" })
     if (!row) return null;
     const { data: seller } = await supa
       .from("profiles")
-      .select("id,handle,display_name,avatar_url")
+      .select("id,handle,display_name,avatar_url,is_pro,shop_badges,shop_theme")
       .eq("id", row.seller_id)
       .maybeSingle();
     return { ...(row as unknown as Omit<ListingDetail, "seller">), seller: seller ?? null };
@@ -223,7 +240,7 @@ export const fetchShopByHandle = createServerFn({ method: "GET" })
     const supa = serverPublic();
     const { data: profile } = await supa
       .from("profiles")
-      .select("id,handle,display_name,bio,avatar_url,theme_color,banner_url,shop_sections,highlight_listing_id")
+      .select("id,handle,display_name,bio,avatar_url,theme_color,banner_url,shop_sections,highlight_listing_id,is_pro,shop_badges,shop_theme,shop_shipping_default")
       .eq("handle", data.handle)
       .maybeSingle();
     if (!profile) return null;

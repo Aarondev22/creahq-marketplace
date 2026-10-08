@@ -20,6 +20,11 @@ export function ListingGridCard({ listing, showKind = true }: { listing: Listing
         ) : (
           <div className="grid h-full w-full place-items-center text-4xl opacity-60">{isDigital ? "💾" : "📦"}</div>
         )}
+        {listing.spotlight && (
+          <span className="absolute right-3 top-3 rounded-lg bg-brand px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-primary-foreground shadow">
+            ✦ Pro Spotlight
+          </span>
+        )}
         {showKind && (
           <span className="absolute left-3 top-3 rounded-lg bg-card/90 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-brand-ink backdrop-blur">
             {isDigital ? "💾 Digital" : "📦 Physisch"}
