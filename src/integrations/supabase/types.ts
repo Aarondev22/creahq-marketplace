@@ -641,9 +641,12 @@ export type Database = {
           handle: string | null
           highlight_listing_id: string | null
           id: string
+          is_pro: boolean
           onboarding_completed: boolean
+          shop_badges: Json
           shop_sections: string[]
           shop_shipping_default: string | null
+          shop_theme: Json
           theme_color: string | null
           updated_at: string
         }
@@ -657,9 +660,12 @@ export type Database = {
           handle?: string | null
           highlight_listing_id?: string | null
           id: string
+          is_pro?: boolean
           onboarding_completed?: boolean
+          shop_badges?: Json
           shop_sections?: string[]
           shop_shipping_default?: string | null
+          shop_theme?: Json
           theme_color?: string | null
           updated_at?: string
         }
@@ -673,9 +679,12 @@ export type Database = {
           handle?: string | null
           highlight_listing_id?: string | null
           id?: string
+          is_pro?: boolean
           onboarding_completed?: boolean
+          shop_badges?: Json
           shop_sections?: string[]
           shop_shipping_default?: string | null
+          shop_theme?: Json
           theme_color?: string | null
           updated_at?: string
         }
