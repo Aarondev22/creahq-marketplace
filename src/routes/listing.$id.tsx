@@ -18,13 +18,14 @@ import {
   fetchListingById,
   fetchRelatedListings,
   type ListingCard,
+  type ListingDetail,
 } from "@/lib/listings.functions";
 import { startConversation } from "@/lib/chat.functions";
 import { useCart } from "@/lib/cart";
 import { toast } from "sonner";
 import { fetchListingReviews, summarize } from "@/lib/reviews";
 import { parseTheme, parseBadges } from "@/lib/shopTheme";
-import { ShopBadges, FxCard, accentStyle } from "@/components/ShopFx";
+import { ShopBadges, accentStyle } from "@/components/ShopFx";
 
 const listingQuery = (id: string) =>
   queryOptions({
@@ -367,7 +368,7 @@ function SellerBox({ seller }: { seller: NonNullable<ListingDetailSeller> }) {
   );
 }
 
-type ListingDetailSeller = Awaited<ReturnType<typeof fetchListingById>> extends infer R ? (R extends { seller: infer S } ? S : never) : never;
+type ListingDetailSeller = ListingDetail["seller"];
 
 function RelatedRails({
   id,

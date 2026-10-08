@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { createClient } from "@supabase/supabase-js";
-import type { Database } from "@/integrations/supabase/types";
+import type { Database, Json } from "@/integrations/supabase/types";
 import { applyProSpotlight } from "@/lib/shopTheme";
 
 function serverPublic() {
@@ -162,8 +162,8 @@ export type ListingDetail = ListingCard & {
     display_name: string | null;
     avatar_url: string | null;
     is_pro: boolean;
-    shop_badges: unknown;
-    shop_theme: unknown;
+    shop_badges: Json;
+    shop_theme: Json;
   } | null;
 };
 
