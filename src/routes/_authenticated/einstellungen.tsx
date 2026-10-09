@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { ShopEditor } from "@/components/ShopEditor";
+import { ShopDesignEditor } from "@/components/ShopDesignEditor";
 
 export const Route = createFileRoute("/_authenticated/einstellungen")({
   head: () => ({
@@ -275,6 +276,7 @@ function SettingsPage() {
       )}
 
       {!loading && userId && <ShopEditor userId={userId} />}
+      {!loading && userId && <ShopDesignEditor userId={userId} />}
     </div>
   );
 }

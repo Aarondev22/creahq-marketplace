@@ -10,6 +10,7 @@ import {
   searchUsers,
   banUser,
   toggleUserRole,
+  setUserPro,
   listAllListings,
   setListingStatus,
   type AdminListingFull,
@@ -41,6 +42,7 @@ export function AdminPanel({ open, onClose }: { open: boolean; onClose: () => vo
   const doModerate = useServerFn(moderateListing);
   const doBan = useServerFn(banUser);
   const doRole = useServerFn(toggleUserRole);
+  const doPro = useServerFn(setUserPro);
   const getAll = useServerFn(listAllListings);
   const doStatus = useServerFn(setListingStatus);
 
@@ -293,6 +295,15 @@ export function AdminPanel({ open, onClose }: { open: boolean; onClose: () => vo
                         onClick={async () => {
                           await doBan({ data: { userId: u.id, ban: !u.banned } });
                           toast.success("Gespeichert");
+                          void load();
+                        }}
+                      />
+                      <Action
+                        label={u.is_pro ? "👑 Pro aus" : "👑 Pro an"}
+                        variant="ghost"
+                        onClick={async () => {
+                          await doPro({ data: { userId: u.id, pro: !u.is_pro } });
+                          toast.success(u.is_pro ? "Jetzt Standard" : "Jetzt Pro 👑");
                           void load();
                         }}
                       />

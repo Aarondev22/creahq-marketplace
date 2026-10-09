@@ -3,6 +3,8 @@ import { useSuspenseQuery, queryOptions } from "@tanstack/react-query";
 import { Store, Sparkles, Star, MessageCircle, Truck, Crown } from "lucide-react";
 import { motion } from "motion/react";
 import { parseTheme, parseBadges } from "@/lib/shopTheme";
+import { ShopCustomContent } from "@/components/ShopCustomContent";
+import { parseShopCode } from "@/lib/shopCode";
 import { ShopScene, ShopMarquee, ShopBadges, FxCard, accentStyle } from "@/components/ShopFx";
 import { fetchShopByHandle } from "@/lib/listings.functions";
 import { ListingGridCard, ListingGridSkeleton } from "@/components/ListingGridCard";
@@ -229,6 +231,8 @@ function ShopPage() {
           <ShopMarquee text={theme.marquee} accent={theme.accent} />
         </div>
       )}
+
+      <ShopCustomContent code={parseShopCode(profile.shop_theme, isPro)} />
 
       {sections.map((s) => (s === "highlight" ? highlightBlock : s === "listings" ? listingsBlock : null))}
     </div>
