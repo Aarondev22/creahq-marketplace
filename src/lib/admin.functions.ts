@@ -109,6 +109,7 @@ export type AdminUser = {
   display_name: string | null;
   handle: string | null;
   banned: boolean;
+  is_pro: boolean;
   roles: string[];
 };
 
@@ -118,7 +119,7 @@ export const searchUsers = createServerFn({ method: "GET" })
   .handler(async ({ data, context }): Promise<AdminUser[]> => {
     await assertAdmin(context as Ctx);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    let query = supabaseAdmin.from("profiles").select("id,display_name,handle,banned").limit(25);
+    let query = supabaseAdmin.from("profiles").select("id,display_name,handle,banned,is_pro").limit(25);
     if (data.q) {
       const like = `%${data.q.replace(/[%_,()]/g, "")}%`;
       query = query.or(`display_name.ilike.${like},handle.ilike.${like}`);
@@ -211,6 +212,17 @@ export const setListingStatus = createServerFn({ method: "POST" })
     await assertAdmin(context as Ctx);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin.from("listings").update({ status: data.status }).eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const setUserPro = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { userId: string; pro: boolean }) => ({ userId: String(d.userId), pro: Boolean(d.pro) }))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context as Ctx);
+    // Als Admin über den Nutzer-Client: der Pro-Schutz-Trigger erlaubt das nur Admins/Foundern.
+    const { error } = await (context as Ctx).supabase.from("profiles").update({ is_pro: data.pro }).eq("id", data.userId);
     if (error) throw new Error(error.message);
     return { ok: true };
   });

@@ -35,6 +35,9 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
       .filter((x): x is { item: typeof x.item; listing: NonNullable<(typeof available)[number]> } => Boolean(x.listing));
 
     if (lines.length === 0) return { error: "Diese Produkte sind nicht mehr verfügbar." };
+    if (lines.some((l) => l.listing.seller_id === userId)) {
+      return { error: "Du kannst deine eigenen Produkte nicht kaufen." };
+    }
 
     // Angenommene Preisvorschläge serverseitig prüfen und Preis/Menge daraus übernehmen.
     const offerIds = lines.map((l) => l.item.offer_id).filter((x): x is string => Boolean(x));
