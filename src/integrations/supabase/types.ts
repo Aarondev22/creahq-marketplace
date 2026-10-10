@@ -351,6 +351,8 @@ export type Database = {
           tags: string[]
           title: string
           updated_at: string
+          verification_path: string | null
+          verification_status: string
         }
         Insert: {
           category?: string | null
@@ -377,6 +379,8 @@ export type Database = {
           tags?: string[]
           title: string
           updated_at?: string
+          verification_path?: string | null
+          verification_status?: string
         }
         Update: {
           category?: string | null
@@ -403,6 +407,8 @@ export type Database = {
           tags?: string[]
           title?: string
           updated_at?: string
+          verification_path?: string | null
+          verification_status?: string
         }
         Relationships: []
       }
@@ -694,7 +700,10 @@ export type Database = {
         Row: {
           admin_note: string | null
           created_at: string
+          evidence_url: string | null
           id: string
+          loss_declared_at: string | null
+          loss_declared_name: string | null
           note: string | null
           reason: string
           reporter_id: string
@@ -708,7 +717,10 @@ export type Database = {
         Insert: {
           admin_note?: string | null
           created_at?: string
+          evidence_url?: string | null
           id?: string
+          loss_declared_at?: string | null
+          loss_declared_name?: string | null
           note?: string | null
           reason: string
           reporter_id: string
@@ -722,7 +734,10 @@ export type Database = {
         Update: {
           admin_note?: string | null
           created_at?: string
+          evidence_url?: string | null
           id?: string
+          loss_declared_at?: string | null
+          loss_declared_name?: string | null
           note?: string | null
           reason?: string
           reporter_id?: string

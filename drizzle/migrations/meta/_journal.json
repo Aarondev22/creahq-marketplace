@@ -36,6 +36,13 @@
       "when": 1791535376866,
       "tag": "0004_security_and_chat_guard",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791618328556,
+      "tag": "0005_trust_and_safety",
+      "breakpoints": true
     }
   ]
 }
