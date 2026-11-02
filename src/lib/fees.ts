@@ -15,7 +15,7 @@ export const FEES = {
   physicalStartPct: 12,
   tierSize: 25,
   reductionPerTier: 1,
-  digitalFloorPct: 10,
+  digitalFloorPct: 12,
   physicalFloorPct: 7,
 };
 export function feeRate(kind: ProductKind, salesThisMonth: number) {
