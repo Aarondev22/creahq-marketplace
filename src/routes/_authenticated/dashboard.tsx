@@ -398,6 +398,7 @@ function OrdersTab({ orders }: { orders: MyOrder[] }) {
   const [openFor, setOpenFor] = useState<string | null>(null);
   const [reason, setReason] = useState<string>(ORDER_PROBLEM_REASONS[0].value);
   const [note, setNote] = useState("");
+  const [lossName, setLossName] = useState("");
   const [saving, setSaving] = useState(false);
   const ids = orders.map((o) => o.id);
 
@@ -416,7 +417,8 @@ function OrdersTab({ orders }: { orders: MyOrder[] }) {
     setSaving(true);
     try {
       const label = ORDER_PROBLEM_REASONS.find((r) => r.value === reason)?.label ?? reason;
-      await createReport({ targetType: "order", targetId: orderId, reason: label, note });
+      if (reason === "not_received" && lossName.trim().length < 3) throw new Error("Bitte bestätige die Verlusterklärung mit deinem vollen Namen.");
+      await createReport({ targetType: "order", targetId: orderId, reason: label, note, lossName: reason === "not_received" ? lossName : undefined });
       toast.success("Problem gemeldet – wir prüfen das.");
       setOpenFor(null); setNote("");
       reload();
@@ -458,6 +460,12 @@ function OrdersTab({ orders }: { orders: MyOrder[] }) {
                         {ORDER_PROBLEM_REASONS.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
                       </select>
                       <textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="Was ist passiert? (optional)" className="min-h-20 rounded-2xl border border-border bg-surface px-4 py-3 text-sm" />
+                      {reason === "not_received" && (
+                        <label className="grid gap-1 rounded-2xl border-2 border-destructive/30 bg-destructive/5 p-3 text-xs text-brand-ink">
+                          <span className="font-bold">Verlusterklärung: Ich versichere, dass ich den Artikel nicht erhalten habe. Falsche Angaben führen zur Sperre.</span>
+                          <input value={lossName} onChange={(e) => setLossName(e.target.value)} placeholder="Dein voller Name" className="min-h-11 rounded-xl border border-border bg-background px-3 text-sm" />
+                        </label>
+                      )}
                       <div className="flex gap-2">
                         <button onClick={() => submit(o.id)} disabled={saving} className="min-h-12 flex-1 rounded-2xl bg-brand text-sm font-bold text-primary-foreground disabled:opacity-50">{saving ? "…" : "Meldung senden"}</button>
                         <button onClick={() => setOpenFor(null)} className="min-h-12 rounded-2xl border border-border px-5 text-sm font-bold">Abbrechen</button>
