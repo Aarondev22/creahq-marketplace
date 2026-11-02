@@ -1,3 +1,4 @@
+import { CopyrightReportButton } from "@/components/CopyrightReportButton";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useSuspenseQuery, useQuery, queryOptions } from "@tanstack/react-query";
 import { motion } from "motion/react";
@@ -226,6 +227,7 @@ function ListingView({
         {l.seller && <SellerBox seller={l.seller} />}
 
         <ListingReviews listingId={l.id} />
+        <div className="mt-3"><CopyrightReportButton listingId={l.id} /></div>
 
         <p className="mt-6 whitespace-pre-line text-sm leading-relaxed text-foreground/80">
           {l.description}

@@ -1,3 +1,4 @@
+import { feeCents, sellerPayoutCents } from "@/lib/fees";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "motion/react";
@@ -256,6 +257,10 @@ function NewListingPage() {
                   className={inputCls(!!errors.price)}
                 />
               </Field>
+              {(() => { const c = Math.round((parseFloat(data.price.replace(",", ".")) || 0) * 100); return c > 0 ? (
+                <p className="rounded-2xl border border-border bg-card p-4 text-sm text-brand-ink">
+                  CreaHQ-Gebühr (17 %, mind. 0,70 €): <b>{(feeCents(c) / 100).toFixed(2)} €</b> · Du erhältst: <b className="text-brand">{(sellerPayoutCents(c) / 100).toFixed(2)} €</b>
+                </p>) : null; })()}
 
               {data.kind === "digital" ? (
                 <div className="grid gap-3">

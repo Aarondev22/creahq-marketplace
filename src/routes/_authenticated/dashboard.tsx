@@ -9,6 +9,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { fetchMySales, addShipment, type MySale } from "@/lib/shipments.functions";
 import { ORDER_PROBLEM_REASONS, createReport } from "@/lib/reports";
 import { createReview } from "@/lib/reviews";
+import { escrowState } from "@/lib/escrow";
+import { sellerPayoutCents } from "@/lib/fees";
 
 const TABS = ["overview", "listings", "favorites", "orders", "sales"] as const;
 
@@ -495,8 +497,20 @@ function SalesTab({ sales, onUpdated }: { sales: MySale[]; onUpdated: () => void
 
   if (sales.length === 0) return <p className="mt-8 text-sm text-muted-foreground">Noch nichts verkauft.</p>;
 
+  const sums = { held: 0, frozen: 0, released: 0 };
+  for (const s of sales) {
+    const st = escrowState(s.created_at, s.report?.status === "open").state;
+    sums[st] += sellerPayoutCents(s.unit_price_cents) * s.qty;
+  }
+  const eur = (c: number) => (c / 100).toFixed(2).replace(".", ",") + " €";
+
   return (
     <section className="mt-8">
+      <div className="mb-6 grid gap-3 sm:grid-cols-3">
+        <div className="rounded-3xl border border-border bg-card p-5"><div className="text-xs font-bold uppercase tracking-widest text-muted-foreground">🔒 In Treuhand (10 Tage)</div><div className="mt-1 font-display text-2xl font-black text-brand-ink">{eur(sums.held)}</div></div>
+        <div className="rounded-3xl border border-border bg-card p-5"><div className="text-xs font-bold uppercase tracking-widest text-muted-foreground">❄️ Eingefroren (Meldung)</div><div className="mt-1 font-display text-2xl font-black text-destructive">{eur(sums.frozen)}</div></div>
+        <div className="rounded-3xl border border-border bg-card p-5"><div className="text-xs font-bold uppercase tracking-widest text-muted-foreground">✅ Freigegeben</div><div className="mt-1 font-display text-2xl font-black text-brand">{eur(sums.released)}</div></div>
+      </div>
       <h2 className="mb-4 inline-flex items-center gap-2 font-display text-2xl font-black text-brand-ink">
         <Truck className="h-5 w-5" /> Deine Verkäufe
       </h2>
@@ -507,6 +521,9 @@ function SalesTab({ sales, onUpdated }: { sales: MySale[]; onUpdated: () => void
               <div className="min-w-0">
                 <div className="truncate font-display text-base font-bold text-brand-ink">{s.listing_title}</div>
                 <div className="text-xs text-muted-foreground">{s.qty}× · {(s.unit_price_cents / 100).toFixed(2)} €</div>
+                {(() => { const e = escrowState(s.created_at, s.report?.status === "open"); return (
+                  <div className="mt-1 text-xs font-bold text-brand">{e.state === "held" ? `🔒 Treuhand – frei in ${e.daysLeft} Tag${e.daysLeft === 1 ? "" : "en"}` : e.state === "frozen" ? "❄️ Eingefroren bis zur Klärung" : "✅ Auszahlung freigegeben"}</div>
+                ); })()}
               </div>
               {s.shipment ? (
                 <div className="rounded-2xl bg-emerald-50 px-4 py-2.5 text-sm">

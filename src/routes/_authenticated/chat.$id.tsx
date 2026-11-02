@@ -1,3 +1,4 @@
+import { detectChatRisk } from "@/lib/chatGuard";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Send, Store, Tag, Check, X, Repeat } from "lucide-react";
@@ -136,6 +137,8 @@ function ChatRoute() {
     e.preventDefault();
     if (!draft.trim() || sending) return;
     const text = draft.trim();
+    const risk = detectChatRisk(text);
+    if (risk && !confirm(`⚠️ Achtung: Deine Nachricht enthält eine ${risk.label}.\n\nZahle und verkaufe nur über CreaHQ – sonst gilt kein Käuferschutz und die Nachricht kann blockiert werden.\n\nTrotzdem senden?`)) return;
     setDraft("");
     setSending(true);
     try {
@@ -281,6 +284,9 @@ function ChatRoute() {
           </form>
         )}
 
+        {detectChatRisk(draft) && (
+          <p className="border-t border-destructive/30 bg-destructive/5 px-4 py-2 text-xs font-bold text-destructive">⚠️ {detectChatRisk(draft)?.label} erkannt – bitte nur über CreaHQ handeln.</p>
+        )}
         <form onSubmit={submit} className="flex gap-2 border-t border-border p-3">
           {conv?.listing_id && (
             <button type="button" onClick={() => { setCounterOf(null); setOfferOpen((v) => !v); }} aria-label="Preis vorschlagen" title="Preis vorschlagen" className="grid h-11 w-11 shrink-0 place-items-center rounded-full border-2 border-brand text-brand"><Tag className="h-4 w-4" /></button>
