@@ -17,15 +17,21 @@ import {
   type AdminReport,
   type AdminListing,
   type AdminUser,
+  listVerifications,
+  reviewVerification,
+  type VerificationItem,
 } from "@/lib/admin.functions";
 
-type Tab = "reports" | "queue" | "products" | "users";
+type Tab = "reports" | "queue" | "verify" | "products" | "users";
 const POS_KEY = "creahq.adminPanel.pos";
 
 export function AdminPanel({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [tab, setTab] = useState<Tab>("reports");
   const [reports, setReports] = useState<AdminReport[]>([]);
   const [queue, setQueue] = useState<AdminListing[]>([]);
+  const [verifs, setVerifs] = useState<VerificationItem[]>([]);
+  const getVerifs = useServerFn(listVerifications);
+  const doVerify = useServerFn(reviewVerification);
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [q, setQ] = useState("");
   const [products, setProducts] = useState<AdminListingFull[]>([]);
@@ -60,6 +66,7 @@ export function AdminPanel({ open, onClose }: { open: boolean; onClose: () => vo
     try {
       if (tab === "reports") setReports(await getReports());
       else if (tab === "queue") setQueue(await getQueue());
+      else if (tab === "verify") setVerifs(await getVerifs());
       else if (tab === "products") setProducts(await getAll({ data: { q: pq, filter: pf } }));
       else setUsers(await findUsers({ data: { q } }));
     } catch (err) {
@@ -128,6 +135,7 @@ export function AdminPanel({ open, onClose }: { open: boolean; onClose: () => vo
         {([
           ["reports", "Meldungen", <Flag key="a" className="h-4 w-4" />],
           ["queue", "Moderation", <ShieldCheck key="b" className="h-4 w-4" />],
+          ["verify", "Echtheit", <ShieldCheck key="e" className="h-4 w-4" />],
           ["products", "Produkte", <Package key="d" className="h-4 w-4" />],
           ["users", "Nutzer", <Users key="c" className="h-4 w-4" />],
         ] as [Tab, string, React.ReactNode][]).map(([key, label, icon]) => (
@@ -220,6 +228,28 @@ export function AdminPanel({ open, onClose }: { open: boolean; onClose: () => vo
                         void load();
                       }}
                     />
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )
+        ) : tab === "verify" ? (
+          verifs.length === 0 ? (
+            <Empty text="Keine Echtheits-Fotos zu prüfen. ✅" />
+          ) : (
+            <ul className="space-y-3">
+              {verifs.map((v) => (
+                <li key={v.id} className="rounded-2xl border border-border p-3">
+                  <p className="text-sm font-bold text-brand-ink">{v.title}</p>
+                  {v.photo_url ? (
+                    <a href={v.photo_url} target="_blank" rel="noreferrer">
+                      <img src={v.photo_url} alt="Echtheits-Foto" className="mt-2 max-h-56 w-full rounded-xl object-contain bg-brand-soft" />
+                    </a>
+                  ) : <p className="mt-1 text-xs text-muted-foreground">Foto nicht verfügbar</p>}
+                  <p className="mt-1 text-[10px] text-muted-foreground">Prüfen: Zettel mit „CreaHQ + Name + Datum" sichtbar?</p>
+                  <div className="mt-2 flex gap-2">
+                    <Action label="Echt ✓" onClick={async () => { await doVerify({ data: { id: v.id, approve: true } }); toast.success("Als echt bestätigt"); void load(); }} />
+                    <Action variant="ghost" label="Ablehnen" onClick={async () => { await doVerify({ data: { id: v.id, approve: false } }); toast.success("Abgelehnt"); void load(); }} />
                   </div>
                 </li>
               ))}

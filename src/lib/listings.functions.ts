@@ -148,6 +148,7 @@ export const fetchCategories = createServerFn({ method: "GET" }).handler(async (
 
 
 export type ListingDetail = ListingCard & {
+  verification_status?: string | null;
   description: string | null;
   tags: string[];
   images: string[];
@@ -167,7 +168,7 @@ export type ListingDetail = ListingCard & {
   } | null;
 };
 
-const DETAIL_COLS = `${SAFE_COLS},description,tags,images,shipping_mode,shipping_price_cents,location,condition,stock`;
+const DETAIL_COLS = `${SAFE_COLS},description,tags,images,shipping_mode,shipping_price_cents,location,condition,stock,verification_status`;
 
 export const fetchListingById = createServerFn({ method: "GET" })
   .inputValidator((d: { id: string }) => ({ id: String(d.id) }))
