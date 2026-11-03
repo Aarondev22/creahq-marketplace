@@ -35,6 +35,7 @@ type WizardData = {
   stock: string;
   files: File[];
   downloadFile: File | null;
+  proofFile: File | null;
   acceptedRules: boolean;
 };
 
@@ -50,7 +51,7 @@ function NewListingPage() {
   const [data, setData] = useState<WizardData>({
     title: "", description: "", category: "", price: "9.00", kind: "digital",
     shippingMode: "digital", shippingPrice: "0",
-    location: "", condition: "neu", stock: "", files: [], downloadFile: null, acceptedRules: false,
+    location: "", condition: "neu", stock: "", files: [], downloadFile: null, proofFile: null, acceptedRules: false,
   });
   const [sellerStatus, setSellerStatus] = useState<{ email: string | null; emailConfirmed: boolean; todayCount: number } | null>(null);
   const [resending, setResending] = useState(false);
@@ -157,6 +158,13 @@ function NewListingPage() {
         const { error: fErr } = await supabase.storage.from("listing-files").upload(path, f);
         if (fErr) toast.error("Datei konnte nicht hochgeladen werden: " + fErr.message);
         else await supabase.from("listing_files").insert({ listing_id: result.id, seller_id: u.user.id, file_path: path, file_name: f.name });
+      }
+      if (data.proofFile) {
+        const pf = data.proofFile;
+        const vpath = `${u.user.id}/${result.id}/${crypto.randomUUID()}-${pf.name.replace(/[^\w.-]/g, "_")}`;
+        const { error: vErr } = await supabase.storage.from("listing-verifications").upload(vpath, pf);
+        if (vErr) toast.error("Echtheits-Foto konnte nicht hochgeladen werden: " + vErr.message);
+        else await supabase.from("listings").update({ verification_path: vpath }).eq("id", result.id);
       }
       if (result.moderation === "pending") {
         toast.warning("Dein Listing wird kurz von uns geprüft \u2014 danach ist es öffentlich sichtbar.");
@@ -379,6 +387,21 @@ function NewListingPage() {
                   </button>
                 </div>
               )}
+
+              <div className="rounded-3xl border border-border bg-surface p-5">
+                <div className="font-bold text-brand-ink">🛡️ Echtheits-Nachweis (Zettel-Probe)</div>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Lade ein Foto hoch: dein Werk (z. B. Bildschirm mit der Datei) plus ein handgeschriebener Zettel mit „CreaHQ + dein Name + heutiges Datum". Nur du und das CreaHQ-Team sehen das Foto. Geprüfte Angebote bekommen ein Echtheits-Häkchen.
+                </p>
+                <label className="mt-3 inline-flex min-h-11 cursor-pointer items-center rounded-full bg-brand-soft px-5 text-sm font-bold text-brand-ink hover:bg-brand hover:text-primary-foreground">
+                  {data.proofFile ? `📎 ${data.proofFile.name}` : "📸 Foto auswählen"}
+                  <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={(e) => {
+                    const f = e.target.files?.[0] ?? null;
+                    if (f && f.size > 10 * 1024 * 1024) { toast.error("Foto ist größer als 10 MB."); return; }
+                    update("proofFile", f);
+                  }} />
+                </label>
+              </div>
 
               <label className="flex items-start gap-3 rounded-3xl border border-border bg-surface p-5">
                 <input
