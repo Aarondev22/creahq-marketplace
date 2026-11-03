@@ -25,6 +25,7 @@ function CartPage() {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
+  const [waiver, setWaiver] = useState(false);
 
   async function checkout() {
     if (!user) {
@@ -32,12 +33,14 @@ function CartPage() {
       navigate({ to: "/auth", search: { mode: "signin" as const } });
       return;
     }
+    if (!waiver) { toast.error("Bitte bestätige zuerst den Download-Hinweis."); return; }
     setBusy(true);
     try {
       const res = await createCheckoutSession({
         data: {
           items: items.map((i) => ({ listing_id: i.id, qty: i.qty, offer_id: i.offer_id })),
           origin: window.location.origin,
+          waiverAccepted: waiver,
         },
       });
       if ("url" in res) {
@@ -111,9 +114,16 @@ function CartPage() {
         <div className="font-display text-3xl font-black text-brand">{(totalCents / 100).toFixed(2)} €</div>
       </div>
 
+      <label className="mt-4 flex items-start gap-3 rounded-3xl border border-border bg-surface p-5">
+        <input type="checkbox" checked={waiver} onChange={(e) => setWaiver(e.target.checked)} className="mt-0.5 h-6 w-6 shrink-0 accent-[var(--brand,#7c3aed)]" />
+        <span className="text-sm text-brand-ink">
+          Ich stimme ausdrücklich zu, dass der Download sofort bereitgestellt wird, und weiß, dass mein Widerrufsrecht mit Beginn des Downloads erlischt (§ 356 Abs. 5 BGB).
+        </span>
+      </label>
+
       <button
         onClick={checkout}
-        disabled={busy || authLoading}
+        disabled={busy || authLoading || !waiver}
         className="mt-4 inline-flex w-full min-h-14 items-center justify-center gap-2 rounded-full bg-brand px-6 text-base font-bold text-primary-foreground brand-glow transition-transform hover:scale-[1.02] disabled:opacity-60"
       >
         {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <CreditCard className="h-5 w-5" />}

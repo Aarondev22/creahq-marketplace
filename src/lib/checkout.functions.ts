@@ -7,7 +7,8 @@ export type CheckoutResult = { url: string } | { error: string };
 
 export const createCheckoutSession = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { items: CheckoutLine[]; origin: string }) => ({
+  .inputValidator((d: { items: CheckoutLine[]; origin: string; waiverAccepted?: boolean }) => ({
+    waiverAccepted: d?.waiverAccepted === true,
     items: (Array.isArray(d?.items) ? d.items : [])
       .slice(0, 50)
       .map((i) => ({ listing_id: String(i.listing_id), qty: Math.min(Math.max(Number(i.qty) || 1, 1), 99), offer_id: i.offer_id ? String(i.offer_id) : undefined })),
@@ -17,6 +18,7 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
     const secret = process.env["STRIPE_SECRET_KEY"];
     if (!secret) return { error: "Stripe ist noch nicht verbunden. Bitte den Stripe-Schlüssel hinterlegen." };
     if (data.items.length === 0) return { error: "Dein Warenkorb ist leer." };
+    if (!data.waiverAccepted) return { error: "Bitte bestätige den sofortigen Download und das Erlöschen des Widerrufsrechts." };
 
     const { supabase, userId } = context;
 
