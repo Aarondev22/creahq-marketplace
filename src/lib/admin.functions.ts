@@ -226,3 +226,43 @@ export const setUserPro = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+export type VerificationItem = { id: string; title: string; seller_id: string; photo_url: string | null; created_at: string };
+
+export const listVerifications = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<VerificationItem[]> => {
+    await assertAdmin(context as Ctx);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await supabaseAdmin
+      .from("listings")
+      .select("id,title,seller_id,verification_path,created_at")
+      .eq("verification_status", "submitted")
+      .order("created_at", { ascending: true })
+      .limit(50);
+    if (error) throw new Error(error.message);
+    const out: VerificationItem[] = [];
+    for (const l of data ?? []) {
+      let photo_url: string | null = null;
+      if (l.verification_path) {
+        const { data: s } = await supabaseAdmin.storage.from("listing-verifications").createSignedUrl(l.verification_path, 600);
+        photo_url = s?.signedUrl ?? null;
+      }
+      out.push({ id: l.id, title: l.title, seller_id: l.seller_id, photo_url, created_at: l.created_at });
+    }
+    return out;
+  });
+
+export const reviewVerification = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string; approve: boolean }) => ({ id: String(d.id), approve: d.approve === true }))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context as Ctx);
+    // Als angemeldeter Admin aktualisieren, damit die Schutzregel den Admin erkennt.
+    const { error } = await (context as Ctx).supabase
+      .from("listings")
+      .update({ verification_status: data.approve ? "verified" : "rejected" })
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
