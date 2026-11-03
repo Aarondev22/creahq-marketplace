@@ -223,6 +223,9 @@ function ListingView({
         </div>
 
          <h1 className="mt-2 font-display text-4xl font-extrabold text-brand-ink">{l.title}</h1>
+         {l.verification_status === "verified" && (
+           <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-brand-soft px-3 py-1 text-xs font-bold text-brand">🛡️ Echtheit geprüft</span>
+         )}
 
         {l.seller && <SellerBox seller={l.seller} />}
 

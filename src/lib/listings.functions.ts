@@ -148,6 +148,7 @@ export const fetchCategories = createServerFn({ method: "GET" }).handler(async (
 
 
 export type ListingDetail = ListingCard & {
+  verification_status?: string | null;
   description: string | null;
   tags: string[];
   images: string[];
