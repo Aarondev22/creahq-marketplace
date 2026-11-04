@@ -41,7 +41,7 @@ type WizardData = {
 
 const SIGNED_URL_TTL = 60 * 60 * 24 * 365;
 const TOTAL_STEPS = 4;
-const STEP_LABELS = ["Art", "Basics", "Preis & Versand", "Bilder & Check"];
+const STEP_LABELS = ["Art", "Basics", "Preis & Datei", "Bilder & Check"];
 
 function NewListingPage() {
   const navigate = useNavigate();
@@ -207,19 +207,16 @@ function NewListingPage() {
           {step === 1 && (
             <div>
               <h2 className="font-display text-2xl font-black text-brand-ink">Was verkaufst du?</h2>
-              <p className="mt-1 text-sm text-muted-foreground">Wähle die Art deines Angebots.</p>
-              <div className="mt-5 grid gap-4 sm:grid-cols-2">
+              <p className="mt-1 text-sm text-muted-foreground">CreaHQ startet mit rein digitalen Produkten — kein Versand, sofortiger Download.</p>
+              <div className="mt-5 grid gap-4">
                 <KindCard
                   active={data.kind === "digital"}
                   onClick={() => { update("kind", "digital"); update("shippingMode", "digital"); }}
                   icon={<Download className="h-6 w-6" />}
                   title="Digital"
-                  desc="Downloads, Templates, Presets, Chatbots oder Services. Kein Versand — sofort verfügbar."
+                  desc="Downloads, Templates, Presets, 3D-Dateien, Fonts, Code. Käufer laden sofort nach der Zahlung herunter."
                 />
-                <KindCard
-                  active={data.kind === "service"}
-                  onClick={() => { update("kind", "service"); update("shippingMode", "included"); }}
-                  icon={<Truck className="h-6 w-6" />}
+
                   title="Physisch"
                   desc="Etwas zum Anfassen: Prints, Handgemachtes, Verpackungen. Wird verschickt."
                 />
@@ -256,7 +253,7 @@ function NewListingPage() {
 
           {step === 3 && (
             <div className="space-y-5">
-              <h2 className="font-display text-2xl font-black text-brand-ink">Preis &amp; Versand</h2>
+              <h2 className="font-display text-2xl font-black text-brand-ink">Preis &amp; Datei</h2>
               <Field label="Preis in €" required error={errors.price}>
                 <input
                   type="number" step="0.01" min="0"
