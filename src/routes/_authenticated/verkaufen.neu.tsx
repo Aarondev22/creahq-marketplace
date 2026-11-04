@@ -41,7 +41,7 @@ type WizardData = {
 
 const SIGNED_URL_TTL = 60 * 60 * 24 * 365;
 const TOTAL_STEPS = 4;
-const STEP_LABELS = ["Art", "Basics", "Preis & Versand", "Bilder & Check"];
+const STEP_LABELS = ["Art", "Basics", "Preis & Datei", "Bilder & Check"];
 
 function NewListingPage() {
   const navigate = useNavigate();
@@ -91,6 +91,7 @@ function NewListingPage() {
     if (target > 3) {
       const p = parseFloat(data.price.replace(",", "."));
       if (!(p > 0)) e.price = "Bitte einen Preis größer als 0 € angeben.";
+      if (!data.downloadFile) e.file = "Bitte die Datei hochladen, die Käufer herunterladen.";
     }
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -207,21 +208,14 @@ function NewListingPage() {
           {step === 1 && (
             <div>
               <h2 className="font-display text-2xl font-black text-brand-ink">Was verkaufst du?</h2>
-              <p className="mt-1 text-sm text-muted-foreground">Wähle die Art deines Angebots.</p>
-              <div className="mt-5 grid gap-4 sm:grid-cols-2">
+              <p className="mt-1 text-sm text-muted-foreground">CreaHQ startet mit rein digitalen Produkten — kein Versand, sofortiger Download.</p>
+              <div className="mt-5 grid gap-4">
                 <KindCard
                   active={data.kind === "digital"}
                   onClick={() => { update("kind", "digital"); update("shippingMode", "digital"); }}
                   icon={<Download className="h-6 w-6" />}
                   title="Digital"
-                  desc="Downloads, Templates, Presets, Chatbots oder Services. Kein Versand — sofort verfügbar."
-                />
-                <KindCard
-                  active={data.kind === "service"}
-                  onClick={() => { update("kind", "service"); update("shippingMode", "included"); }}
-                  icon={<Truck className="h-6 w-6" />}
-                  title="Physisch"
-                  desc="Etwas zum Anfassen: Prints, Handgemachtes, Verpackungen. Wird verschickt."
+                  desc="Downloads, Templates, Presets, 3D-Dateien, Fonts, Code. Käufer laden sofort nach der Zahlung herunter."
                 />
               </div>
             </div>
@@ -256,7 +250,7 @@ function NewListingPage() {
 
           {step === 3 && (
             <div className="space-y-5">
-              <h2 className="font-display text-2xl font-black text-brand-ink">Preis &amp; Versand</h2>
+              <h2 className="font-display text-2xl font-black text-brand-ink">Preis &amp; Datei</h2>
               <Field label="Preis in €" required error={errors.price}>
                 <input
                   type="number" step="0.01" min="0"
@@ -275,7 +269,7 @@ function NewListingPage() {
                   <p className="rounded-2xl bg-brand-soft/60 p-4 text-sm text-brand-ink">
                     Digitale Produkte brauchen keinen Versand — Käufer laden die Datei direkt nach dem Kauf herunter.
                   </p>
-                  <Field label="Datei zum Herunterladen (PDF, ZIP, Bild …)">
+                  <Field label="Datei zum Herunterladen (PDF, ZIP, Bild …)" required error={errors.file}>
                     <label className="flex min-h-14 cursor-pointer items-center justify-center rounded-2xl border-2 border-dashed border-brand/40 bg-surface px-4 text-sm font-bold text-brand hover:bg-brand-soft/40">
                       {data.downloadFile ? `📎 ${data.downloadFile.name}` : "📥 Datei auswählen"}
                       <input type="file" className="hidden" onChange={(e) => update("downloadFile", e.target.files?.[0] ?? null)} />
