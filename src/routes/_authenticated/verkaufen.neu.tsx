@@ -217,10 +217,6 @@ function NewListingPage() {
                   title="Digital"
                   desc="Downloads, Templates, Presets, 3D-Dateien, Fonts, Code. Käufer laden sofort nach der Zahlung herunter."
                 />
-
-                  title="Physisch"
-                  desc="Etwas zum Anfassen: Prints, Handgemachtes, Verpackungen. Wird verschickt."
-                />
               </div>
             </div>
           )}
