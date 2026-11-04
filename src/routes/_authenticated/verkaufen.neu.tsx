@@ -91,6 +91,7 @@ function NewListingPage() {
     if (target > 3) {
       const p = parseFloat(data.price.replace(",", "."));
       if (!(p > 0)) e.price = "Bitte einen Preis größer als 0 € angeben.";
+      if (!data.downloadFile) e.file = "Bitte die Datei hochladen, die Käufer herunterladen.";
     }
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -272,7 +273,7 @@ function NewListingPage() {
                   <p className="rounded-2xl bg-brand-soft/60 p-4 text-sm text-brand-ink">
                     Digitale Produkte brauchen keinen Versand — Käufer laden die Datei direkt nach dem Kauf herunter.
                   </p>
-                  <Field label="Datei zum Herunterladen (PDF, ZIP, Bild …)">
+                  <Field label="Datei zum Herunterladen (PDF, ZIP, Bild …)" required error={errors.file}>
                     <label className="flex min-h-14 cursor-pointer items-center justify-center rounded-2xl border-2 border-dashed border-brand/40 bg-surface px-4 text-sm font-bold text-brand hover:bg-brand-soft/40">
                       {data.downloadFile ? `📎 ${data.downloadFile.name}` : "📥 Datei auswählen"}
                       <input type="file" className="hidden" onChange={(e) => update("downloadFile", e.target.files?.[0] ?? null)} />
