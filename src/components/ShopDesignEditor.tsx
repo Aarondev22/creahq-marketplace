@@ -16,6 +16,7 @@ const NEW_BLOCK: Record<ShopBlock["type"], ShopBlock> = {
   image: { type: "image", url: "" },
 };
 const BLOCK_LABEL: Record<ShopBlock["type"], string> = { text: "📝 Text", quote: "💬 Kundenstimme", faq: "❓ FAQ", image: "🖼️ Bild" };
+const STEPS = ["Style & Thema", "Badges & Laufband", "Code / Bausteine", "Vorschau & Live"];
 const field = "w-full rounded-2xl border border-border bg-background px-3 py-2 text-sm text-brand-ink focus:border-brand focus:outline-none";
 
 export function ShopDesignEditor({ userId }: { userId: string }) {
@@ -28,6 +29,8 @@ export function ShopDesignEditor({ userId }: { userId: string }) {
   const [css, setCss] = useState("");
   const [blocks, setBlocks] = useState<ShopBlock[]>([]);
   const [saving, setSaving] = useState(false);
+  const [step, setStep] = useState(1);
+  const [device, setDevice] = useState<"phone" | "desktop">("desktop");
 
   useEffect(() => {
     void supabase.from("profiles").select("is_pro,shop_theme,shop_badges").eq("id", userId).maybeSingle().then(({ data }) => {
@@ -61,6 +64,18 @@ export function ShopDesignEditor({ userId }: { userId: string }) {
         🎨 Shop-Design {isPro ? <span className="inline-flex items-center gap-1 rounded-full bg-brand px-3 py-1 text-xs text-primary-foreground"><Crown className="h-3 w-3" /> Pro</span> : <span className="rounded-full bg-muted px-3 py-1 text-xs">Standard</span>}
       </h2>
 
+      <ol className="flex flex-wrap items-center gap-2">
+        {STEPS.map((label, i) => (
+          <li key={label} className="flex items-center gap-2">
+            <button type="button" onClick={() => setStep(i + 1)} className={`inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-sm font-bold ${step === i + 1 ? "bg-brand text-primary-foreground" : step > i + 1 ? "bg-brand-soft text-brand-ink" : "border border-border text-muted-foreground"}`}>
+              <span className="grid h-6 w-6 place-items-center rounded-full bg-background/30 text-xs">{step > i + 1 ? "✓" : i + 1}</span>{label}
+            </button>
+            {i < STEPS.length - 1 && <span className="h-0.5 w-4 bg-border" />}
+          </li>
+        ))}
+      </ol>
+
+      {step === 1 && (<>
       {isPro && (
         <div>
           <p className="mb-2 text-xs font-bold uppercase tracking-widest text-muted-foreground">1-Klick-Designs</p>
@@ -88,7 +103,9 @@ export function ShopDesignEditor({ userId }: { userId: string }) {
           </select>
         </label>
       </div>
+      </>)}
 
+      {step === 2 && (<>
       <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground">Laufband-Text
         <input value={theme.marquee} maxLength={120} onChange={(e) => setTheme({ ...theme, marquee: e.target.value })} className={`${field} mt-1.5 min-h-12`} placeholder="✨ Neue Drops jeden Freitag ✨" />
       </label>
@@ -111,7 +128,9 @@ export function ShopDesignEditor({ userId }: { userId: string }) {
           )}
         </div>
       </div>
+      </>)}
 
+      {step === 3 && (<>
       <div className="flex gap-2">
         <button type="button" onClick={() => setMode("code")} className={`inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-sm font-bold ${mode === "code" ? "bg-brand text-primary-foreground" : "border border-border"}`}><Code2 className="h-4 w-4" /> Eigener Code</button>
         <button type="button" onClick={() => isPro ? setMode("blocks") : toast("Bausteine gibt's mit Pro 👑")} className={`inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-sm font-bold ${mode === "blocks" ? "bg-brand text-primary-foreground" : "border border-border"} ${!isPro ? "opacity-60" : ""}`}><Puzzle className="h-4 w-4" /> Bausteine {!isPro && "(Pro)"}</button>
@@ -155,10 +174,31 @@ export function ShopDesignEditor({ userId }: { userId: string }) {
           <ShopCustomContent code={{ mode: "blocks", html: "", css: "", blocks }} />
         </div>
       )}
+      </>)}
 
-      <button type="button" onClick={save} disabled={saving} className="inline-flex min-h-12 items-center gap-2 rounded-full bg-brand px-6 text-sm font-bold text-primary-foreground disabled:opacity-60">
-        <Check className="h-4 w-4" /> {saving ? "Speichere …" : "Design speichern"}
-      </button>
+      {step === 4 && (
+        <div className="space-y-3">
+          <div className="flex gap-2">
+            <button type="button" onClick={() => setDevice("phone")} className={`min-h-11 rounded-full px-4 text-sm font-bold ${device === "phone" ? "bg-brand text-primary-foreground" : "border border-border"}`}>📱 Handy</button>
+            <button type="button" onClick={() => setDevice("desktop")} className={`min-h-11 rounded-full px-4 text-sm font-bold ${device === "desktop" ? "bg-brand text-primary-foreground" : "border border-border"}`}>🖥️ Desktop</button>
+          </div>
+          <div className={`mx-auto overflow-hidden rounded-3xl border-4 border-border bg-background p-4 ${device === "phone" ? "max-w-[380px]" : "w-full"}`} style={{ borderColor: theme.accent }}>
+            {theme.marquee && <div className="mb-3 truncate rounded-full px-4 py-2 text-sm font-bold text-primary-foreground" style={{ background: theme.accent }}>{theme.marquee}</div>}
+            {badges.length > 0 && <div className="mb-3 flex flex-wrap gap-2">{badges.slice(0, maxBadges).map((b, i) => <span key={i} className="rounded-full bg-brand-soft px-3 py-1 text-xs font-bold text-brand-ink">{b.emoji} {b.text}</span>)}</div>}
+            <ShopCustomContent code={{ mode, html, css, blocks: isPro ? blocks : [] }} />
+          </div>
+          <p className="text-xs text-muted-foreground">So sehen Käufer deinen Shop. Erst nach „Veröffentlichen" ist es live.</p>
+        </div>
+      )}
+
+      <div className="flex flex-wrap gap-2">
+        {step > 1 && <button type="button" onClick={() => setStep(step - 1)} className="min-h-12 rounded-full border border-border px-6 text-sm font-bold">← Zurück</button>}
+        {step < 4 && <button type="button" onClick={() => setStep(step + 1)} className="min-h-12 rounded-full bg-brand px-6 text-sm font-bold text-primary-foreground">Weiter →</button>}
+      </div>
+
+      {step === 4 && <button type="button" onClick={save} disabled={saving} className="inline-flex min-h-12 items-center gap-2 rounded-full bg-brand px-6 text-sm font-bold text-primary-foreground disabled:opacity-60">
+        <Check className="h-4 w-4" /> {saving ? "Speichere …" : "✨ Shop-Design veröffentlichen"}
+      </button>}
     </section>
   );
 }
