@@ -95,7 +95,7 @@ function BrowsePage() {
         <div className="flex flex-wrap gap-2">
           <Chip label="Alles" active={search.kind === ""} onClick={() => set({ kind: "" })} />
           <Chip label="💾 Digital" active={search.kind === "digital"} onClick={() => set({ kind: "digital" })} />
-          <Chip label="📦 Physisch" active={search.kind === "service"} onClick={() => set({ kind: "service" })} />
+          <Chip label="📦 Physisch · Bald (Phase 2)" active={search.kind === "service"} onClick={() => set({ kind: "service" })} />
         </div>
 
         <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto_auto_auto]">

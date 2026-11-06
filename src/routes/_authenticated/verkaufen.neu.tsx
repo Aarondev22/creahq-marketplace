@@ -92,6 +92,7 @@ function NewListingPage() {
       const p = parseFloat(data.price.replace(",", "."));
       if (!(p > 0)) e.price = "Bitte einen Preis größer als 0 € angeben.";
       if (!data.downloadFile) e.file = "Bitte die Datei hochladen, die Käufer herunterladen.";
+      else if (data.downloadFile.size === 0) e.file = "Die Datei ist leer (0 KB) – bitte eine gültige Datei hochladen.";
     }
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -272,7 +273,11 @@ function NewListingPage() {
                   <Field label="Datei zum Herunterladen (PDF, ZIP, Bild …)" required error={errors.file}>
                     <label className="flex min-h-14 cursor-pointer items-center justify-center rounded-2xl border-2 border-dashed border-brand/40 bg-surface px-4 text-sm font-bold text-brand hover:bg-brand-soft/40">
                       {data.downloadFile ? `📎 ${data.downloadFile.name}` : "📥 Datei auswählen"}
-                      <input type="file" className="hidden" onChange={(e) => update("downloadFile", e.target.files?.[0] ?? null)} />
+                      <input type="file" className="hidden" onChange={(e) => {
+                        const f = e.target.files?.[0] ?? null;
+                        if (f && f.size === 0) { toast.error("Die Datei ist leer (0 KB) – bitte eine gültige Datei hochladen."); return; }
+                        update("downloadFile", f);
+                      }} />
                     </label>
                   </Field>
                 </div>
@@ -391,6 +396,7 @@ function NewListingPage() {
                   {data.proofFile ? `📎 ${data.proofFile.name}` : "📸 Foto auswählen"}
                   <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={(e) => {
                     const f = e.target.files?.[0] ?? null;
+                    if (f && f.size === 0) { toast.error("Das Foto ist leer (0 KB) – bitte ein gültiges Foto hochladen."); return; }
                     if (f && f.size > 10 * 1024 * 1024) { toast.error("Foto ist größer als 10 MB."); return; }
                     update("proofFile", f);
                   }} />
