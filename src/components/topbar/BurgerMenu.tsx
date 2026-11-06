@@ -77,16 +77,8 @@ export function BurgerMenu() {
           </Link>
         </Section>
 
-        <Section icon={<Gamepad2 className="h-4 w-4" />} title="Spielen & Codes">
+        <Section icon={<Gamepad2 className="h-4 w-4" />} title="Codes">
           <ul className="space-y-1.5">
-            <li>
-              <button
-                onClick={() => { close(); navigate({ to: "/spielen" }); }}
-                className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium text-brand-ink transition-colors hover:bg-brand-soft"
-              >
-                <span className="text-base">✨</span> Glücksstern-Sammler
-              </button>
-            </li>
             <li>
               <button
                 onClick={() => { close(); navigate({ to: "/redeem" }); }}
@@ -103,7 +95,7 @@ export function BurgerMenu() {
             onClick={() => { close(); navigate({ to: "/spielen" }); }}
             className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium text-brand-ink transition-colors hover:bg-brand-soft"
           >
-            <span className="text-base">🏳️</span> Sprache per Flagge malen
+            Sprache wählen (Liste oder Flagge malen)
           </button>
         </Section>
 

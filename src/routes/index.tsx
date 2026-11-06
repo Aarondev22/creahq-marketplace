@@ -4,7 +4,6 @@ import { Hero } from "@/components/landing/Hero";
 import { DiscoverRail } from "@/components/landing/DiscoverRail";
 import { SellerInvite } from "@/components/landing/SellerInvite";
 import { FaqStickerBoard } from "@/components/landing/FaqStickerBoard";
-import { StarField } from "@/components/StarField";
 import { fetchTopWeek, fetchFresh } from "@/lib/listings.functions";
 
 const topQuery = queryOptions({ queryKey: ["top-week"], queryFn: () => fetchTopWeek() });
@@ -46,9 +45,6 @@ function Index() {
   const { data: fresh } = useSuspenseQuery(freshQuery);
   return (
     <div className="relative">
-      {/* Stars are scattered across the whole homepage container (absolute inset-0).
-          The floating toggle pill lives inside <StarField /> too. */}
-      <StarField count={7} />
       <Hero />
       <div id="entdecken" className="scroll-mt-24">
         <DiscoverRail slug="top-10"         title="Top 10 gerade beliebt"         subtitle="Was die Community diese Woche feiert." emoji="🔥" emptyMessage="Hier wohnen die 10 beliebtesten Sachen. Aktuell ist es noch ganz still." items={top?.slice(0, 10)} />

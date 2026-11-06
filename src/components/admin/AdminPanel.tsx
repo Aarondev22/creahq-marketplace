@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { X, GripHorizontal, Flag, ShieldCheck, Users, Package } from "lucide-react";
+import { X, GripHorizontal, Flag, ShieldCheck, Users, Package, Power } from "lucide-react";
 import {
   listReports,
   resolveReport,
@@ -20,9 +20,11 @@ import {
   listVerifications,
   reviewVerification,
   type VerificationItem,
+  getPlatformSettings,
+  setPhysicalEnabled,
 } from "@/lib/admin.functions";
 
-type Tab = "reports" | "queue" | "verify" | "products" | "users";
+type Tab = "reports" | "queue" | "verify" | "products" | "users" | "system";
 const POS_KEY = "creahq.adminPanel.pos";
 
 export function AdminPanel({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -138,6 +140,7 @@ export function AdminPanel({ open, onClose }: { open: boolean; onClose: () => vo
           ["verify", "Echtheit", <ShieldCheck key="e" className="h-4 w-4" />],
           ["products", "Produkte", <Package key="d" className="h-4 w-4" />],
           ["users", "Nutzer", <Users key="c" className="h-4 w-4" />],
+          ["system", "System", <Power key="s" className="h-4 w-4" />],
         ] as [Tab, string, React.ReactNode][]).map(([key, label, icon]) => (
           <button
             key={key}
@@ -159,6 +162,8 @@ export function AdminPanel({ open, onClose }: { open: boolean; onClose: () => vo
               <div key={i} className="h-16 animate-pulse rounded-2xl bg-brand-soft/50" />
             ))}
           </div>
+        ) : tab === "system" ? (
+          <SystemTab />
         ) : tab === "reports" ? (
           reports.length === 0 ? (
             <Empty text="Keine Meldungen – alles ruhig. 🎉" />
@@ -402,5 +407,38 @@ function Action({
     >
       {label}
     </button>
+  );
+}
+
+function SystemTab() {
+  const getFn = useServerFn(getPlatformSettings);
+  const setFn = useServerFn(setPhysicalEnabled);
+  const [on, setOn] = useState<boolean | null>(null);
+  const [notify, setNotify] = useState(true);
+  const [busy, setBusy] = useState(false);
+  useEffect(() => { getFn().then((r) => setOn(r.physicalEnabled)).catch(() => setOn(false)); }, [getFn]);
+  if (on === null) return <div className="h-24 animate-pulse rounded-2xl bg-muted" />;
+  async function toggle() {
+    const next = !on;
+    if (!confirm(next ? "Physische Produkte für alle freischalten?" : "Zurück auf nur digital?")) return;
+    setBusy(true);
+    try {
+      const r = await setFn({ data: { enabled: next, notify } });
+      setOn(next);
+      toast.success(notify ? `Umgestellt – Patch-Note an ${r.sent} Nutzer gesendet.` : "Umgestellt.");
+    } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
+  }
+  return (
+    <div className="space-y-3 rounded-3xl border border-border p-4">
+      <div className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Plattform-Modus</div>
+      <div className="text-sm font-semibold text-foreground">{on ? "Digital & Physisch (Phase 2 live)" : "Nur digital"}</div>
+      <label className="flex min-h-11 items-center gap-2 text-sm text-foreground">
+        <input type="checkbox" checked={notify} onChange={(e) => setNotify(e.target.checked)} />
+        Patch-Note an alle Nutzer senden
+      </label>
+      <button type="button" disabled={busy} onClick={toggle} className="min-h-11 w-full rounded-full bg-brand px-4 text-sm font-bold text-primary-foreground disabled:opacity-60">
+        {busy ? "Wird umgestellt …" : on ? "Auf nur digital zurückschalten" : "Physische Produkte freischalten"}
+      </button>
+    </div>
   );
 }
