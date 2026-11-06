@@ -266,3 +266,39 @@ export const reviewVerification = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+export const getPlatformSettings = createServerFn({ method: "GET" }).handler(async () => {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data } = await supabaseAdmin.from("platform_settings").select("physical_enabled").eq("id", 1).maybeSingle();
+  return { physicalEnabled: !!data?.physical_enabled };
+});
+
+export const setPhysicalEnabled = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { enabled: boolean; notify: boolean }) => ({ enabled: !!d.enabled, notify: !!d.notify }))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context as Ctx);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.from("platform_settings")
+      .update({ physical_enabled: data.enabled, updated_at: new Date().toISOString() }).eq("id", 1);
+    if (error) throw new Error(error.message);
+    let sent = 0;
+    if (data.notify) {
+      const { data: users } = await supabaseAdmin.from("profiles").select("id").limit(50000);
+      const rows = (users ?? []).map((u: { id: string }) => ({
+        user_id: u.id,
+        category: "system",
+        title: data.enabled ? "Update: Physische Produkte sind jetzt verfügbar" : "Update: CreaHQ ist wieder rein digital",
+        body: data.enabled
+          ? "Ab sofort können auf CreaHQ neben digitalen Downloads auch physische Produkte mit Sendungsverfolgung verkauft werden."
+          : "Physische Produkte sind vorübergehend pausiert. Digitale Downloads laufen wie gewohnt weiter.",
+        link: "/hilfe",
+      }));
+      for (let i = 0; i < rows.length; i += 500) {
+        const { error: e } = await supabaseAdmin.from("notifications").insert(rows.slice(i, i + 500));
+        if (e) throw new Error(e.message);
+      }
+      sent = rows.length;
+    }
+    return { ok: true, sent };
+  });

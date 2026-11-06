@@ -43,6 +43,13 @@
       "when": 1791618328556,
       "tag": "0005_trust_and_safety",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1793960866798,
+      "tag": "0006_platform_settings",
+      "breakpoints": true
     }
   ]
 }

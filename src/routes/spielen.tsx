@@ -1,100 +1,70 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PageShell } from "@/components/PageShell";
-import { Sparkles, Star as StarIcon } from "lucide-react";
 import { FlagLangDoodle } from "@/components/FlagLangDoodle";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-const LS_ENABLED = "creahq:stars-enabled";
-const LS_FOUND = "creahq:star-found";
+const LS_LANG = "creahq:lang";
+const LANGS = [
+  { code: "de", label: "Deutsch" },
+  { code: "en", label: "English" },
+  { code: "fr", label: "Français" },
+  { code: "es", label: "Español" },
+  { code: "it", label: "Italiano" },
+  { code: "nl", label: "Nederlands" },
+  { code: "pl", label: "Polski" },
+  { code: "tr", label: "Türkçe" },
+];
 
 export const Route = createFileRoute("/spielen")({
   head: () => ({
     meta: [
-      { title: "Spielen — CreaHQ" },
-      { name: "description", content: "Kleine Spielereien: Glückssterne sammeln und Sprache per Flagge zeichnen." },
-      { property: "og:title", content: "Spielen — CreaHQ" },
-      { property: "og:description", content: "Sterne-Zähler und Sprache per Flagge — nur zum Spaß." },
+      { title: "Sprache wählen — CreaHQ" },
+      { name: "description", content: "Wähle deine Sprache auf CreaHQ aus einer Liste oder male eine Flagge." },
+      { property: "og:title", content: "Sprache wählen — CreaHQ" },
+      { property: "og:description", content: "Sprache per Liste oder per Flagge malen einstellen." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: SpielenPage,
+  component: SprachePage,
 });
 
-function SpielenPage() {
-  const [found, setFound] = useState(0);
-  const [enabled, setEnabled] = useState(true);
+function SprachePage() {
+  const [mode, setMode] = useState<"list" | "draw">("list");
+  const [current, setCurrent] = useState<string | null>(null);
+  useEffect(() => { try { setCurrent(localStorage.getItem(LS_LANG)); } catch { /* noop */ } }, []);
 
-  useEffect(() => {
-    try {
-      setFound(Number(localStorage.getItem(LS_FOUND) ?? 0));
-      const raw = localStorage.getItem(LS_ENABLED);
-      if (raw !== null) setEnabled(raw === "1");
-    } catch { /* noop */ }
-  }, []);
-
-  function toggle() {
-    setEnabled((v) => {
-      const nv = !v;
-      try { localStorage.setItem(LS_ENABLED, nv ? "1" : "0"); } catch { /* noop */ }
-      toast(nv ? "✨ Sterne wieder an." : "Sterne aus — ruhig hier jetzt.");
-      return nv;
-    });
-  }
-
-  function resetCounter() {
-    try { localStorage.setItem(LS_FOUND, "0"); } catch { /* noop */ }
-    setFound(0);
-    toast("Zähler auf 0 gesetzt.");
+  function pick(code: string, label: string) {
+    try { localStorage.setItem(LS_LANG, code); } catch { /* noop */ }
+    setCurrent(code);
+    try { window.dispatchEvent(new CustomEvent("creahq:lang-change", { detail: { lang: code } })); } catch { /* noop */ }
+    toast(`Sprache: ${label}`);
   }
 
   return (
-    <PageShell
-      eyebrow="Spielen"
-      title="Kleine Spielereien."
-      lead="Sterne sammeln und Sprache per Flagge zeichnen. Kein Zwang, kein Preis."
-    >
-      <div className="not-prose grid gap-6">
-        {/* Sterne-Zähler + Toggle */}
-        <div className="rounded-3xl border border-border bg-card p-6 sm:p-8">
-          <div className="flex flex-wrap items-center gap-3">
-            <Sparkles className="h-8 w-8 text-brand" />
-            <div className="min-w-0">
-              <h3 className="font-display text-xl font-black text-brand-ink">Glücksstern-Sammler</h3>
-              <p className="text-sm text-muted-foreground">
-                Auf der Startseite wandern Sterne rum. Klick sie an — Zähler steigt.
-              </p>
-            </div>
-            <div className="ml-auto rounded-2xl bg-brand-soft px-4 py-2 text-2xl font-black text-brand-ink">
-              {found}×
-            </div>
-          </div>
-          <div className="mt-4 flex flex-wrap items-center gap-2">
-            <button
-              onClick={toggle}
-              aria-pressed={enabled}
-              className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold transition-colors ${
-                enabled
-                  ? "bg-amber-300 text-amber-900 hover:bg-amber-400"
-                  : "bg-brand-soft text-brand-ink hover:bg-brand hover:text-primary-foreground"
-              }`}
-            >
-              <StarIcon className={`h-4 w-4 ${enabled ? "fill-current" : ""}`} />
-              {enabled ? "Sterne sind an — ausschalten" : "Sterne sind aus — einschalten"}
+    <PageShell eyebrow="Sprache" title="Sprache wählen" lead="Einfach aus der Liste wählen – oder optional eine Flagge malen.">
+      <div className="not-prose grid gap-4">
+        <div className="flex gap-2">
+          {([["list", "Aus Liste wählen"], ["draw", "Flagge malen"]] as const).map(([k, l]) => (
+            <button key={k} type="button" onClick={() => setMode(k)}
+              className={`min-h-11 flex-1 rounded-full px-4 text-sm font-bold ${mode === k ? "bg-brand text-primary-foreground" : "border border-border text-foreground"}`}>
+              {l}
             </button>
-            <button
-              onClick={resetCounter}
-              className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-sm font-semibold text-brand-ink hover:border-brand hover:text-brand"
-            >
-              Zähler zurücksetzen
-            </button>
+          ))}
+        </div>
+        {mode === "list" ? (
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {LANGS.map((l) => (
+              <button key={l.code} type="button" onClick={() => pick(l.code, l.label)}
+                className={`min-h-11 rounded-3xl border px-4 text-sm font-semibold ${current === l.code ? "border-brand bg-brand-soft text-foreground" : "border-border text-foreground"}`}>
+                {l.label}
+              </button>
+            ))}
           </div>
-        </div>
-
-        <FlagLangDoodle />
-
-        <div className="rounded-3xl border border-dashed border-brand/40 bg-card/60 p-6 text-sm text-muted-foreground">
-          Farb-Themes (inkl. Flaggen) findest du jetzt oben im <strong className="text-brand-ink">Hero-Theme-Mixer</strong> auf der Startseite.
-        </div>
+        ) : (
+          <FlagLangDoodle />
+        )}
       </div>
     </PageShell>
   );
