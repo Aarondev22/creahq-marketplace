@@ -570,6 +570,24 @@ export type Database = {
         }
         Relationships: []
       }
+      platform_settings: {
+        Row: {
+          id: number
+          physical_enabled: boolean
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          physical_enabled?: boolean
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          physical_enabled?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       private_offers: {
         Row: {
           accepted_at: string | null
