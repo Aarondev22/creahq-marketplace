@@ -341,7 +341,9 @@ export type Database = {
           moderation_note: string | null
           moderation_status: string
           price_cents: number
+          processing_time: string | null
           seller_id: string
+          shipping_carrier: string | null
           shipping_mode: string
           shipping_price_cents: number
           slug: string | null
@@ -369,7 +371,9 @@ export type Database = {
           moderation_note?: string | null
           moderation_status?: string
           price_cents: number
+          processing_time?: string | null
           seller_id: string
+          shipping_carrier?: string | null
           shipping_mode?: string
           shipping_price_cents?: number
           slug?: string | null
@@ -397,7 +401,9 @@ export type Database = {
           moderation_note?: string | null
           moderation_status?: string
           price_cents?: number
+          processing_time?: string | null
           seller_id?: string
+          shipping_carrier?: string | null
           shipping_mode?: string
           shipping_price_cents?: number
           slug?: string | null
