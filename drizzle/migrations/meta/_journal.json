@@ -50,6 +50,13 @@
       "when": 1793960866798,
       "tag": "0006_platform_settings",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1794127180874,
+      "tag": "0007_physical_listing_shipping_rules",
+      "breakpoints": true
     }
   ]
 }

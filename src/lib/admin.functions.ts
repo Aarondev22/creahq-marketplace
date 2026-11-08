@@ -267,11 +267,7 @@ export const reviewVerification = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-export const getPlatformSettings = createServerFn({ method: "GET" }).handler(async () => {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data } = await supabaseAdmin.from("platform_settings").select("physical_enabled").eq("id", 1).maybeSingle();
-  return { physicalEnabled: !!data?.physical_enabled };
-});
+export { fetchMarketplaceSettings as getPlatformSettings } from "@/lib/listings.functions";
 
 export const setPhysicalEnabled = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

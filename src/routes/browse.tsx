@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useSuspenseQuery, useQuery, queryOptions } from "@tanstack/react-query";
 import { Search, SlidersHorizontal, X } from "lucide-react";
-import { searchListings, fetchCategories, type SearchInput } from "@/lib/listings.functions";
+import { searchListings, fetchCategories, fetchMarketplaceSettings, type SearchInput } from "@/lib/listings.functions";
 import { ListingGridCard } from "@/components/ListingGridCard";
 
 type Sort = "new" | "price_asc" | "price_desc";
@@ -44,7 +44,7 @@ export const Route = createFileRoute("/browse")({
       { title: "Stöbern & Filtern — CreaHQ" },
       { name: "description", content: "Durchsuche alle Produkte auf CreaHQ: digital oder physisch, nach Preis, Kategorie und Neuheit gefiltert." },
       { property: "og:title", content: "Stöbern & Filtern — CreaHQ" },
-      { property: "og:description", content: "Finde digitale & physische Produkte, Services und Chatbots von echten Creatorn." },
+      { property: "og:description", content: "Finde Kreativprodukte von echten Creatorn." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -59,6 +59,7 @@ function BrowsePage() {
   const navigate = useNavigate();
   const { data: items } = useSuspenseQuery(listQuery(toInput(search)));
   const { data: categories } = useQuery(catQuery);
+  const { data: settings } = useQuery({ queryKey: ["platform-settings"], queryFn: () => fetchMarketplaceSettings(), staleTime: 0 });
 
   const set = (patch: Partial<BrowseSearch>) =>
     navigate({ to: "/browse", search: { ...search, ...patch }, resetScroll: false });
@@ -95,7 +96,7 @@ function BrowsePage() {
         <div className="flex flex-wrap gap-2">
           <Chip label="Alles" active={search.kind === ""} onClick={() => set({ kind: "" })} />
           <Chip label="💾 Digital" active={search.kind === "digital"} onClick={() => set({ kind: "digital" })} />
-          <Chip label="📦 Physisch · Bald (Phase 2)" active={search.kind === "service"} onClick={() => set({ kind: "service" })} />
+          <Chip label={settings?.physicalEnabled ? "📦 Physisch" : "📦 Physisch · Noch nicht freigeschaltet"} active={search.kind === "service"} onClick={() => set({ kind: "service" })} />
         </div>
 
         <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto_auto_auto]">
