@@ -39,7 +39,6 @@ export function BurgerMenu() {
   const [open, setOpen] = useState(false);
   const [adminOpen, setAdminOpen] = useState(false);
   const { isAdmin, isFounder } = useAuth();
-  const { mode, setMode } = useTheme();
   const navigate = useNavigate();
   const close = () => setOpen(false);
 
@@ -90,16 +89,6 @@ export function BurgerMenu() {
           </ul>
         </Section>
 
-        <Section icon={<Languages className="h-4 w-4" />} title="Sprache">
-          <button
-            onClick={() => { close(); navigate({ to: "/spielen" }); }}
-            className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium text-brand-ink transition-colors hover:bg-brand-soft"
-          >
-            Sprache wählen (Liste oder Flagge malen)
-          </button>
-        </Section>
-
-
         <Section icon={<Palette className="h-4 w-4" />} title="Themenwelten">
           <ul className="space-y-1.5">
             {themen.map((t) => (
@@ -115,28 +104,6 @@ export function BurgerMenu() {
           </ul>
         </Section>
 
-
-        <Section icon={mode === "dark" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />} title="Aussehen">
-          <div className="flex gap-2">
-            <button
-              onClick={() => setMode("light")}
-              className={`flex flex-1 items-center justify-center gap-2 rounded-xl border px-3 py-2 text-sm font-semibold transition-colors ${
-                mode === "light" ? "border-brand bg-card text-brand-ink" : "border-border bg-card/60 text-muted-foreground hover:text-brand-ink"
-              }`}
-            >
-              <Sun className="h-4 w-4" /> Hell
-            </button>
-            <button
-              onClick={() => setMode("dark")}
-              className={`flex flex-1 items-center justify-center gap-2 rounded-xl border px-3 py-2 text-sm font-semibold transition-colors ${
-                mode === "dark" ? "border-brand bg-card text-brand-ink" : "border-border bg-card/60 text-muted-foreground hover:text-brand-ink"
-              }`}
-            >
-              <Moon className="h-4 w-4" /> Dunkel
-            </button>
-          </div>
-          <p className="mt-2 text-[11px] text-muted-foreground">Wirkt auf alle Seiten und wird gespeichert.</p>
-        </Section>
 
         <Section icon={<FileText className="h-4 w-4" />} title="Rechtliches">
           <ul className="space-y-1 text-sm">

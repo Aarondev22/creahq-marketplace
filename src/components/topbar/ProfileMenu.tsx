@@ -1,3 +1,4 @@
+import { SettingsDrawer } from "@/components/SettingsDrawer";
 import { useEffect, useState } from "react";
 import {
   DropdownMenu,
@@ -21,6 +22,7 @@ export function ProfileMenu() {
   const router = useRouter();
   const qc = useQueryClient();
   const { totalCount } = useCart();
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [displayName, setDisplayName] = useState<string | null>(null);
 
   useEffect(() => {
@@ -69,6 +71,8 @@ export function ProfileMenu() {
   const initial = (shownName || "?").toString().slice(0, 1).toUpperCase();
 
   return (
+    <>
+    <SettingsDrawer open={settingsOpen} onOpenChange={setSettingsOpen} />
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button
@@ -92,9 +96,7 @@ export function ProfileMenu() {
             <DropdownMenuItem asChild>
               <Link to="/dashboard" search={{ tab: "overview" as const }}><LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard</Link>
             </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link to="/einstellungen"><Settings className="mr-2 h-4 w-4" /> Einstellungen</Link>
-            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => setSettingsOpen(true)}><Settings className="mr-2 h-4 w-4" /> Einstellungen</DropdownMenuItem>
 
             <DropdownMenuItem asChild>
               <Link to="/warenkorb">
@@ -115,6 +117,7 @@ export function ProfileMenu() {
         ) : (
           <>
             <DropdownMenuLabel>Willkommen bei CreaHQ</DropdownMenuLabel>
+            <DropdownMenuItem onSelect={() => setSettingsOpen(true)}><Settings className="mr-2 h-4 w-4" /> Einstellungen</DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link to="/auth" search={{ mode: "signin" }}><LogIn className="mr-2 h-4 w-4" /> Anmelden</Link>
             </DropdownMenuItem>
@@ -125,5 +128,6 @@ export function ProfileMenu() {
         )}
       </DropdownMenuContent>
     </DropdownMenu>
+    </>
   );
 }
