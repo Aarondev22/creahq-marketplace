@@ -249,6 +249,8 @@ function ListingView({
           />
           <Detail icon={<Shield className="h-3.5 w-3.5" />} label="Käuferschutz" value="Über CreaHQ" />
           <Detail icon={<MessageCircle className="h-3.5 w-3.5" />} label="Support" value="Direkt vom Creator" />
+          {!isDigital && l.shipping_carrier && <Detail icon={<Truck className="h-3.5 w-3.5" />} label="Dienstleister" value={l.shipping_carrier} />}
+          {!isDigital && l.processing_time && <Detail icon={<Package className="h-3.5 w-3.5" />} label="Bearbeitungszeit" value={l.processing_time} />}
           {l.location && <Detail icon={<Package className="h-3.5 w-3.5" />} label="Ort" value={l.location} />}
           {l.condition && <Detail icon={<Star className="h-3.5 w-3.5" />} label="Zustand" value={l.condition} />}
           {typeof l.stock === "number" && (

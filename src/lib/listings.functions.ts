@@ -4,12 +4,22 @@ import type { Database, Json } from "@/integrations/supabase/types";
 import { applyProSpotlight } from "@/lib/shopTheme";
 
 function serverPublic() {
-  return createClient<Database>(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_PUBLISHABLE_KEY!,
-    { auth: { storage: undefined, persistSession: false, autoRefreshToken: false } },
-  );
+  const key = process.env["SUPABASE_PUBLISHABLE_KEY"]!;
+  return createClient<Database>(process.env["SUPABASE_URL"]!, key, {
+    auth: { storage: undefined, persistSession: false, autoRefreshToken: false },
+    global: { fetch: (input, init) => {
+      const headers = new Headers(init?.headers);
+      if (key.startsWith("sb_") && headers.get("Authorization") === `Bearer ${key}`) headers.delete("Authorization");
+      headers.set("apikey", key);
+      return fetch(input, { ...init, headers });
+    } },
+  });
 }
+export const fetchMarketplaceSettings = createServerFn({ method: "GET" }).handler(async () => {
+  const { data, error } = await serverPublic().from("platform_settings").select("physical_enabled").eq("id", 1).maybeSingle();
+  if (error) throw new Error("Verkaufsfreigabe konnte nicht geladen werden.");
+  return { physicalEnabled: data?.physical_enabled === true };
+});
 
 export type ListingCard = {
   id: string;
@@ -154,6 +164,8 @@ export type ListingDetail = ListingCard & {
   images: string[];
   shipping_mode: string;
   shipping_price_cents: number;
+  shipping_carrier: string | null;
+  processing_time: string | null;
   location: string | null;
   condition: string | null;
   stock: number | null;
@@ -168,7 +180,7 @@ export type ListingDetail = ListingCard & {
   } | null;
 };
 
-const DETAIL_COLS = `${SAFE_COLS},description,tags,images,shipping_mode,shipping_price_cents,location,condition,stock,verification_status`;
+const DETAIL_COLS = `${SAFE_COLS},description,tags,images,shipping_mode,shipping_price_cents,shipping_carrier,processing_time,location,condition,stock,verification_status`;
 
 export const fetchListingById = createServerFn({ method: "GET" })
   .inputValidator((d: { id: string }) => ({ id: String(d.id) }))
@@ -254,7 +266,7 @@ export const fetchShopByHandle = createServerFn({ method: "GET" })
 
     const { data: reviews } = await supa.from("reviews").select("rating").eq("seller_id", profile.id);
     const count = reviews?.length ?? 0;
-    const avg = count > 0 ? Math.round((reviews!.reduce((a, r) => a + (r.rating ?? 0), 0) / count) * 10) / 10 : 0;
+    const avg = count > 0 ? Math.round(((reviews ?? []).reduce((a, r) => a + (r.rating ?? 0), 0) / count) * 10) / 10 : 0;
 
     return { profile, listings: (listings ?? []) as ListingCard[], rating: { avg, count } };
   });

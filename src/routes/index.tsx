@@ -13,9 +13,11 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "CreaHQ — Mach deins. Find ihres." },
-      { name: "description", content: "Marktplatz für digitale & physische Produkte, Services und Chatbots von echten Creatorn. Entdecken, kaufen, sofort starten." },
+      { name: "description", content: "CreaHQ: Kreativprodukte entdecken, eigene Shops gestalten und digitale Downloads finden." },
       { property: "og:title", content: "CreaHQ — Mach deins. Find ihres." },
-      { property: "og:description", content: "Digitale & physische Produkte, Services und Chatbots — mit Mini-Games und Sticker-FAQ." },
+      { property: "og:description", content: "Kreativprodukte und individuelle Shops von echten Creatorn." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   loader: async ({ context }) => {

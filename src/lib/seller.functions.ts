@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { validatePhysicalShipping } from "@/lib/shipping";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 export type CreateListingInput = {
@@ -14,6 +15,8 @@ export type CreateListingInput = {
   stock: number | null;
   images: string[];
   acceptedRules: boolean;
+  shippingCarrier?: string;
+  processingTime?: string;
 };
 
 export type CreateListingResult = {
@@ -73,6 +76,12 @@ export const createListing = createServerFn({ method: "POST" })
       throw new Error("E-Mail nicht bestätigt: Bitte bestätige zuerst deine E-Mail-Adresse, dann kannst du verkaufen.");
     }
 
+    let shipping: ReturnType<typeof validatePhysicalShipping> | null = null;
+    if (data.kind === "service") {
+      const { data: setting, error: settingError } = await supabase.from("platform_settings").select("physical_enabled").eq("id", 1).maybeSingle();
+      if (settingError) throw new Error("Verkaufsfreigabe konnte nicht geprüft werden.");
+      shipping = validatePhysicalShipping(setting?.physical_enabled === true, data);
+    } else if (data.kind !== "digital") throw new Error("Ungültige Produktart.");
     const verdict = await moderate(title, description);
     const moderation_status = verdict.flagged ? "pending" : "approved";
 
@@ -90,6 +99,8 @@ export const createListing = createServerFn({ method: "POST" })
         price_cents: priceCents,
         shipping_mode: kind === "digital" ? "digital" : data.shippingMode === "extra" ? "extra" : "included",
         shipping_price_cents: kind === "digital" ? 0 : Math.max(0, Math.round(Number(data.shippingPriceCents) || 0)),
+        shipping_carrier: shipping?.shippingCarrier ?? null,
+        processing_time: shipping?.processingTime ?? null,
         cover_url: data.images[0] ?? null,
         images: (data.images ?? []).slice(0, 8),
         location: String(data.location ?? "").slice(0, 120) || null,
