@@ -93,7 +93,7 @@ function BrowsePage() {
           )}
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="no-scrollbar flex touch-pan-x gap-2 overflow-x-auto">
           <Chip label="Alles" active={search.kind === ""} onClick={() => set({ kind: "" })} />
           <Chip label="💾 Digital" active={search.kind === "digital"} onClick={() => set({ kind: "digital" })} />
           <Chip label={settings?.physicalEnabled ? "📦 Physisch" : "📦 Physisch · Noch nicht freigeschaltet"} active={search.kind === "service"} onClick={() => set({ kind: "service" })} />

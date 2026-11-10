@@ -133,7 +133,7 @@ export function AdminPanel({ open, onClose }: { open: boolean; onClose: () => vo
         </button>
       </header>
 
-      <div className="flex gap-1.5 border-b border-border px-3 py-2">
+      <div className="no-scrollbar flex touch-pan-x gap-1.5 overflow-x-auto border-b border-border px-3 py-2">
         {([
           ["reports", "Meldungen", <Flag key="a" className="h-4 w-4" />],
           ["queue", "Moderation", <ShieldCheck key="b" className="h-4 w-4" />],
@@ -146,7 +146,7 @@ export function AdminPanel({ open, onClose }: { open: boolean; onClose: () => vo
             key={key}
             type="button"
             onClick={() => setTab(key)}
-            className={`flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-full px-2 text-[11px] font-bold transition ${
+            className={`flex min-h-11 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-3 text-[11px] font-bold transition ${
               tab === key ? "bg-brand text-primary-foreground" : "border border-border text-muted-foreground"
             }`}
           >
@@ -319,7 +319,7 @@ export function AdminPanel({ open, onClose }: { open: boolean; onClose: () => vo
               <ul className="space-y-2">
                 {users.map((u) => (
                   <li key={u.id} className="rounded-2xl border border-border p-3">
-                    <p className="text-sm font-bold text-brand-ink">{u.display_name ?? "Ohne Namen"}</p>
+                    <p className="flex items-center gap-2 text-sm font-bold text-brand-ink">{u.display_name ?? "Ohne Namen"}{u.is_pro && <span className="rounded-full bg-gold px-2 py-0.5 text-[10px] font-black text-gold-foreground shadow-sm">👑 PRO</span>}</p>
                     <p className="text-xs text-muted-foreground">
                       @{u.handle ?? "—"} · {u.roles.join(", ") || "buyer"} {u.banned ? "· gesperrt" : ""}
                     </p>
@@ -334,8 +334,8 @@ export function AdminPanel({ open, onClose }: { open: boolean; onClose: () => vo
                         }}
                       />
                       <Action
-                        label={u.is_pro ? "👑 Pro aus" : "👑 Pro an"}
-                        variant="ghost"
+                        label={u.is_pro ? "👑 Pro aktiv – entziehen" : "+ Pro vergeben"}
+                        variant={u.is_pro ? "gold" : "ghost"}
                         onClick={async () => {
                           await doPro({ data: { userId: u.id, pro: !u.is_pro } });
                           toast.success(u.is_pro ? "Jetzt Standard" : "Jetzt Pro 👑");
@@ -382,7 +382,7 @@ function Action({
 }: {
   label: string;
   onClick: () => Promise<void>;
-  variant?: "solid" | "ghost";
+  variant?: "solid" | "ghost" | "gold";
 }) {
   const [busy, setBusy] = useState(false);
   return (
@@ -402,6 +402,8 @@ function Action({
       className={`min-h-11 rounded-full px-4 text-xs font-bold transition disabled:opacity-60 ${
         variant === "solid"
           ? "bg-brand text-primary-foreground"
+          : variant === "gold"
+          ? "bg-gold text-gold-foreground shadow-md"
           : "border border-border text-brand-ink hover:border-brand hover:text-brand"
       }`}
     >
@@ -431,7 +433,7 @@ function SystemTab() {
   return (
     <div className="space-y-3 rounded-3xl border border-border p-4">
       <div className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Plattform-Modus</div>
-      <div className="text-sm font-semibold text-foreground">{on ? "Digital & Physisch (Phase 2 live)" : "Nur digital"}</div>
+      <span className={`inline-flex rounded-full px-3 py-1 text-sm font-bold ${on ? "bg-success text-success-foreground" : "bg-muted text-muted-foreground"}`}>{on ? "● Digital & Physisch aktiv" : "○ Nur digital"}</span>
       <label className="flex min-h-11 items-center gap-2 text-sm text-foreground">
         <input type="checkbox" checked={notify} onChange={(e) => setNotify(e.target.checked)} />
         Patch-Note an alle Nutzer senden
