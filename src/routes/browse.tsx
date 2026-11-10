@@ -164,7 +164,7 @@ function Chip({ label, active, onClick }: { label: string; active: boolean; onCl
   return (
     <button
       onClick={onClick}
-       className={`inline-flex min-h-11 items-center rounded-xl px-4 text-sm font-bold transition-all ${
+       className={`inline-flex min-h-11 shrink-0 whitespace-nowrap items-center rounded-xl px-4 text-sm font-bold transition-all ${
          active ? "bg-brand text-primary-foreground brand-glow" : "border border-border bg-surface text-brand-ink hover:border-brand hover:bg-brand-soft"
       }`}
     >
