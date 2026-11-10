@@ -23,17 +23,17 @@ const topics = [
 ];
 
 export function FaqStickerBoard() {
-  return <section aria-labelledby="faq-heading" className="border-y border-border bg-card py-14 sm:py-20">
+  return <section aria-labelledby="faq-heading" className="relative overflow-hidden border-y border-brand/20 bg-brand-soft/40 py-14 sm:py-20">
     <div className="mx-auto max-w-6xl px-4 sm:px-6">
-      <p className="text-sm font-medium text-muted-foreground">CreaHQ · Gut zu wissen</p>
-      <h2 id="faq-heading" className="mt-3 text-3xl font-semibold text-foreground sm:text-4xl">Fragen & Antworten</h2>
+      <span className="inline-flex rounded-full bg-brand px-3 py-1 text-xs font-bold text-primary-foreground">CreaHQ · Gut zu wissen</span>
+      <h2 id="faq-heading" className="mt-3 font-display text-3xl font-bold text-brand-ink sm:text-4xl">Fragen & Antworten</h2>
       <Tabs defaultValue="buyers" className="mt-8">
-        <TabsList className="h-auto w-full flex-wrap justify-start gap-1 rounded-lg bg-muted p-1 sm:w-auto">
-          {topics.map(t => <TabsTrigger key={t.id} value={t.id} className="min-h-11 whitespace-normal rounded-md px-4 text-sm">{t.label}</TabsTrigger>)}
+        <TabsList className="no-scrollbar h-auto w-full max-w-full touch-pan-x justify-start gap-1 overflow-x-auto rounded-full border border-brand/20 bg-card p-1 sm:w-auto">
+          {topics.map(t => <TabsTrigger key={t.id} value={t.id} className="min-h-11 shrink-0 whitespace-nowrap rounded-full px-4 text-sm font-bold data-[state=active]:bg-brand data-[state=active]:text-primary-foreground">{t.label}</TabsTrigger>)}
         </TabsList>
         {topics.map(t => <TabsContent key={t.id} value={t.id} className="mt-6">
-          <div className="grid gap-x-12 sm:grid-cols-2">{t.questions.map(([q, a]) => <article key={q} className="border-b border-border py-6">
-            <h3 className="text-lg font-semibold leading-relaxed text-foreground">{q}</h3>
+          <div className="grid gap-4 sm:grid-cols-2">{t.questions.map(([q, a]) => <article key={q} className="rounded-3xl border border-brand/20 bg-card p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-brand/50">
+            <h3 className="font-display text-lg font-bold leading-snug text-brand-ink">{q}</h3>
             <p className="mt-3 text-sm leading-7 text-muted-foreground">{a}</p>
           </article>)}</div>
         </TabsContent>)}
