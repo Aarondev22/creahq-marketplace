@@ -1,29 +1,38 @@
 import { Logo } from "@/components/topbar/Logo";
-import { Instagram, Twitter, Youtube, Github } from "lucide-react";
+import { Github, Instagram, MessageCircle, Music2, Twitter, Youtube } from "lucide-react";
 import { Link } from "@tanstack/react-router";
+import { siteConfig } from "@/lib/site-config";
 
 type Item = { label: string; to: string; search?: Record<string, string> };
 
+type SocialKey = keyof typeof siteConfig.socials;
+type Social = { key: SocialKey; label: string; Icon: typeof Instagram };
+
 const columns: { title: string; items: Item[] }[] = [
-  { title: "Entdecken", items: [
-    { label: "Stöbern", to: "/browse" },
-    { label: "Top 20", to: "/browse", search: { q: "" } },
-    { label: "Frisch da", to: "/browse", search: { q: "" } },
-    { label: "Kategorien", to: "/kategorien" },
-  ]},
-  { title: "Verkaufen", items: [
-    { label: "Shop eröffnen", to: "/auth" },
-    { label: "Gebühren", to: "/gebuehren" },
-    { label: "Dashboard", to: "/dashboard" },
-    { label: "Verkaufs-Guide", to: "/verkaufen/guide" },
-  ]},
-  { title: "Hilfe", items: [
-    { label: "FAQ", to: "/hilfe" },
-    { label: "Kontakt", to: "/kontakt" },
-  ]},
-  { title: "Über", items: [
-    { label: "Über CreaHQ", to: "/ueber" },
-  ]},
+  {
+    title: "Entdecken",
+    items: [
+      { label: "Stöbern", to: "/browse" },
+      { label: "Kategorien", to: "/kategorien" },
+    ],
+  },
+  {
+    title: "Verkaufen",
+    items: [
+      { label: "Shop eröffnen", to: "/auth" },
+      { label: "Gebühren", to: "/gebuehren" },
+      { label: "Dashboard", to: "/dashboard" },
+      { label: "Verkaufs-Guide", to: "/verkaufen/guide" },
+    ],
+  },
+  {
+    title: "Hilfe & Über",
+    items: [
+      { label: "Häufige Fragen", to: "/hilfe" },
+      { label: "Kontakt", to: "/kontakt" },
+      { label: "Über CreaHQ", to: "/ueber" },
+    ],
+  },
 ];
 
 const legal: Item[] = [
@@ -34,41 +43,61 @@ const legal: Item[] = [
   { label: "Regeln", to: "/regeln" },
 ];
 
-const socials = [
-  { Icon: Instagram, href: "https://instagram.com", label: "Instagram" },
-  { Icon: Twitter, href: "https://twitter.com", label: "Twitter" },
-  { Icon: Youtube, href: "https://youtube.com", label: "YouTube" },
-  { Icon: Github, href: "https://github.com", label: "GitHub" },
+const socialOptions: Social[] = [
+  { key: "instagram", label: "Instagram", Icon: Instagram },
+  { key: "tiktok", label: "TikTok", Icon: Music2 },
+  { key: "youtube", label: "YouTube", Icon: Youtube },
+  { key: "x", label: "X", Icon: Twitter },
+  { key: "discord", label: "Discord", Icon: MessageCircle },
+  { key: "github", label: "GitHub", Icon: Github },
 ];
 
 export function Footer() {
+  const socials = socialOptions
+    .map(({ key, ...social }) => ({ ...social, href: siteConfig.socials[key].trim() }))
+    .filter((social) => social.href.length > 0);
+
   return (
     <footer className="relative mt-20 overflow-hidden border-t border-border/70 bg-surface-warm/85 backdrop-blur">
       <span className="paint-splash -right-16 top-8 rotate-[22deg] bg-paint-cyan/15" aria-hidden="true" />
-      <div className="relative mx-auto grid max-w-7xl gap-10 px-6 py-12 md:grid-cols-[1.2fr_2.5fr_1fr]">
+      <div className="relative mx-auto grid max-w-7xl gap-10 px-6 py-12 md:grid-cols-[1.1fr_2fr_1fr]">
         <div>
           <Logo />
           <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted-foreground">
             CreaHQ ist der Marktplatz für Sachen, die Creator selbst gemacht haben — digital, sofort, mit Charakter.
           </p>
-          <div className="mt-5 flex gap-2">
-            {socials.map(({ Icon, href, label }) => (
-              <a key={label} href={href} target="_blank" rel="noreferrer" aria-label={label} className="grid h-9 w-9 place-items-center rounded-full border border-border bg-card text-brand-ink transition-colors hover:bg-brand hover:text-primary-foreground">
-                <Icon className="h-4 w-4" />
-              </a>
-            ))}
-          </div>
+          {socials.length > 0 && (
+            <nav aria-label="CreaHQ auf Social Media" className="mt-5 flex flex-wrap gap-2">
+              {socials.map(({ Icon, href, label }) => (
+                <a
+                  key={label}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={label}
+                  title={label}
+                  className="grid h-11 w-11 place-items-center rounded-full border border-border bg-card text-brand-ink transition hover:-translate-y-0.5 hover:border-brand hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
+                >
+                  <Icon aria-hidden="true" className="h-4 w-4" />
+                </a>
+              ))}
+            </nav>
+          )}
         </div>
 
-        <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-8 sm:grid-cols-3">
           {columns.map((col) => (
             <div key={col.title}>
-              <div className="mb-3 text-xs font-bold uppercase tracking-widest text-brand">{col.title}</div>
+              <h2 className="mb-3 text-xs font-bold uppercase tracking-widest text-brand">{col.title}</h2>
               <ul className="space-y-2">
-                {col.items.map((l) => (
-                  <li key={l.label}>
-                    <Link to={l.to} search={l.search as never} className="text-sm text-muted-foreground transition-colors hover:text-brand-ink">
-                      {l.label}
+                {col.items.map((item) => (
+                  <li key={item.label}>
+                    <Link
+                      to={item.to}
+                      search={item.search as never}
+                      className="inline-flex min-h-8 items-center text-sm text-muted-foreground transition-colors hover:text-brand-ink focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                    >
+                      {item.label}
                     </Link>
                   </li>
                 ))}
@@ -78,12 +107,15 @@ export function Footer() {
         </div>
 
         <div>
-          <div className="mb-3 text-xs font-bold uppercase tracking-widest text-brand">Rechtliches</div>
+          <h2 className="mb-3 text-xs font-bold uppercase tracking-widest text-brand">Rechtliches</h2>
           <ul className="space-y-2">
-            {legal.map((l) => (
-              <li key={l.label}>
-                <Link to={l.to} className="text-sm text-muted-foreground transition-colors hover:text-brand-ink">
-                  {l.label}
+            {legal.map((item) => (
+              <li key={item.label}>
+                <Link
+                  to={item.to}
+                  className="inline-flex min-h-8 items-center text-sm text-muted-foreground transition-colors hover:text-brand-ink focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                >
+                  {item.label}
                 </Link>
               </li>
             ))}
@@ -93,8 +125,8 @@ export function Footer() {
 
       <div className="border-t border-border">
         <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-2 px-6 py-5 text-xs text-muted-foreground sm:flex-row sm:items-center">
-          <div>© {new Date().getFullYear()} CreaHQ. Mit ♥ in der Werkstatt zusammengebaut.</div>
-          <div>Made for Creators. Powered by Coffee.</div>
+          <div>© {new Date().getFullYear()} {siteConfig.brand.name}. {siteConfig.brand.tagline}</div>
+          <div>{siteConfig.brand.footerNote}</div>
         </div>
       </div>
     </footer>
