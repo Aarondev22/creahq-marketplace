@@ -52,7 +52,7 @@ export function SearchBar() {
           value={q}
           onChange={(e) => { setQ(e.target.value); setOpen(true); }}
           onFocus={() => setOpen(true)}
-          placeholder="Such nach Mustern, Presets, Sounds, Services …"
+          placeholder="Such nach Mustern, Presets, Sounds, Fonts …"
           className="min-w-0 flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
         />
         <button

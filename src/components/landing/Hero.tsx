@@ -56,7 +56,7 @@ export function Hero() {
 
           <p className="mt-5 max-w-lg text-sm leading-relaxed text-muted-foreground sm:mt-6 sm:text-lg">
             CreaHQ ist der verspielte Marktplatz für{" "}
-            <span className="font-semibold text-brand-ink">digitale &amp; physische Produkte, Services und Chatbots</span> von echten Creatorn.
+            <span className="font-semibold text-brand-ink">digitale &amp; physische Produkte</span> von echten Creatorn.
             Stöbern, entdecken, sofort loslegen — oder selbst einen Shop eröffnen.
           </p>
 

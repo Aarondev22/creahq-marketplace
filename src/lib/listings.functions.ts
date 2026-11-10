@@ -251,11 +251,13 @@ export const fetchShopByHandle = createServerFn({ method: "GET" })
   .inputValidator((d: { handle: string }) => ({ handle: String(d.handle) }))
   .handler(async ({ data }) => {
     const supa = serverPublic();
-    const { data: profile } = await supa
-      .from("profiles")
-      .select("id,handle,display_name,bio,avatar_url,theme_color,banner_url,shop_sections,highlight_listing_id,is_pro,shop_badges,shop_theme,shop_shipping_default")
-      .eq("handle", data.handle)
-      .maybeSingle();
+    const cols = "id,handle,display_name,bio,avatar_url,theme_color,banner_url,shop_sections,highlight_listing_id,is_pro,shop_badges,shop_theme,shop_shipping_default";
+    const h = decodeURIComponent(data.handle).trim().replace(/^@/, "").slice(0, 64);
+    const safe = h.replace(/[%_\\]/g, "");
+    let { data: profile } = await supa.from("profiles").select(cols).ilike("handle", safe).limit(1).maybeSingle();
+    if (!profile && /^[0-9a-f-]{36}$/i.test(h)) {
+      ({ data: profile } = await supa.from("profiles").select(cols).eq("id", h).maybeSingle());
+    }
     if (!profile) return null;
     const { data: listings } = await supa
       .from("listings")

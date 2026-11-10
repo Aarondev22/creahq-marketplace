@@ -87,7 +87,7 @@ function RulesPage() {
         Verkaufs- & Nutzungsregeln
       </h1>
       <p className="mt-3 text-base text-muted-foreground">
-        CreaHQ soll ein sicherer Marktplatz für digitale und physische Produkte, Services und Chatbots sein. Wer hier
+        CreaHQ soll ein sicherer Marktplatz für digitale und physische Produkte sein. Wer hier
         verkauft oder kauft, akzeptiert diese Regeln.
       </p>
 
