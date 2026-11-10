@@ -33,6 +33,10 @@
   --color-ring: var(--ring);
   --color-ring-offset-background: var(--background);
   --color-brand: var(--brand);
+  --color-gold: oklch(0.82 0.15 80);
+  --color-gold-foreground: oklch(0.3 0.08 60);
+  --color-success: oklch(0.68 0.16 150);
+  --color-success-foreground: oklch(0.99 0 0);
   --color-brand-soft: var(--brand-soft);
   --color-brand-ink: var(--brand-ink);
   --color-surface: var(--surface);
@@ -343,4 +347,10 @@ html[data-theme-backgrounds="off"] .theme-scenery {
     animation-duration: 0.001ms !important;
     transition-duration: 0.001ms !important;
   }
+}
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  &::-webkit-scrollbar { display: none; }
 }
