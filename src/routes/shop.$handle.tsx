@@ -1,241 +1,146 @@
-import { createFileRoute, notFound, Link } from "@tanstack/react-router";
-import { useSuspenseQuery, queryOptions } from "@tanstack/react-query";
-import { Store, Sparkles, Star, MessageCircle, Truck, Crown } from "lucide-react";
-import { motion } from "motion/react";
-import { parseTheme, parseBadges } from "@/lib/shopTheme";
-import { ShopCustomContent } from "@/components/ShopCustomContent";
-import { parseShopCode } from "@/lib/shopCode";
-import { ShopScene, ShopMarquee, ShopBadges, FxCard, accentStyle } from "@/components/ShopFx";
-import { fetchShopByHandle } from "@/lib/listings.functions";
-import { ListingGridCard, ListingGridSkeleton } from "@/components/ListingGridCard";
-import { ReportButton } from "@/components/ReportButton";
+import { useMemo, useState } from "react";
+import { Link } from "@tanstack/react-router";
+import { Settings, Store, Sun, Moon, Languages, UserRound, ShieldCheck, ArrowLeft, ChevronRight, ExternalLink } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
+import { useTheme } from "@/hooks/useTheme";
+import { useAuth } from "@/hooks/useAuth";
+import { LanguageSettings } from "@/components/LanguageSettings";
+import { AccountSettings } from "@/components/AccountSettings";
+import { SettingsContent } from "@/components/SettingsContent";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
-const shopQuery = (handle: string) => queryOptions({
-  queryKey: ["shop", handle],
-  queryFn: () => fetchShopByHandle({ data: { handle } }),
-});
+const sections = [
+  { id: "shop", label: "Dein Shop", icon: Store },
+  { id: "brightness", label: "Helligkeit", icon: Sun },
+  { id: "language", label: "Sprache", icon: Languages },
+  { id: "profile", label: "Profil & Name", icon: UserRound },
+  { id: "security", label: "Konto & Sicherheit", icon: ShieldCheck },
+] as const;
 
-export const Route = createFileRoute("/shop/$handle")({
-  loader: async ({ params, context }) => {
-    const data = await context.queryClient.ensureQueryData(shopQuery(params.handle));
-    if (!data) throw notFound();
-  },
-  head: ({ params }) => ({
-    meta: [
-      { title: `@${params.handle} — Shop auf CreaHQ` },
-      { name: "description", content: `Alle Produkte von @${params.handle} auf CreaHQ: digitale & physische Sachen direkt von Creator zu Käufer.` },
-      { property: "og:title", content: `@${params.handle} — Shop auf CreaHQ` },
-      { property: "og:description", content: `Stöber durch den Shop von @${params.handle} auf CreaHQ.` },
-      { property: "og:type", content: "profile" },
-      { name: "twitter:card", content: "summary" },
-    ],
-  }),
-  component: ShopPage,
-  pendingComponent: () => (
-    <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
-      <div className="h-48 animate-pulse rounded-[2rem] bg-brand-soft" />
-      <div className="mt-10">
-        <ListingGridSkeleton count={8} />
-      </div>
-    </div>
-  ),
-  errorComponent: ({ error }) => <div className="p-10 text-center text-sm">{(error as Error).message}</div>,
-  notFoundComponent: () => (
-    <div className="mx-auto max-w-md px-6 py-24 text-center">
-      <div className="text-6xl">🔍</div>
-      <h1 className="mt-4 font-display text-2xl font-black text-brand-ink">Diesen Shop gibt's (noch) nicht.</h1>
-      <p className="mt-2 text-sm text-muted-foreground">Vielleicht ein Tippfehler im Handle?</p>
-    </div>
-  ),
-});
-
-function Stars({ value }: { value: number }) {
-  return (
-    <span className="inline-flex items-center gap-0.5">
-      {[1, 2, 3, 4, 5].map((i) => (
-        <Star
-          key={i}
-          className={`h-3.5 w-3.5 ${i <= Math.round(value) ? "fill-amber-400 text-amber-400" : "text-muted-foreground/40"}`}
-        />
-      ))}
-    </span>
-  );
+function slugify(value: string) {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 24) || "shop";
 }
 
-function ShopPage() {
-  const { handle } = Route.useParams();
-  const { data } = useSuspenseQuery(shopQuery(handle));
-  if (!data) return null;
-  const { profile, listings, rating } = data;
-  const initial = (profile.display_name ?? profile.handle ?? "?").slice(0, 1).toUpperCase();
-  const highlight = listings.find((l) => l.id === profile.highlight_listing_id);
-  const sections: string[] = Array.isArray(profile.shop_sections) && profile.shop_sections.length > 0
-    ? (profile.shop_sections as string[])
-    : ["highlight", "listings"];
-  const rest = listings.filter((l) => l.id !== highlight?.id);
-  const isPro = !!profile.is_pro;
-  const theme = parseTheme(profile.shop_theme, isPro);
-  const badges = parseBadges(profile.shop_badges, isPro);
+export function SettingsDrawer({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
+  const [section, setSection] = useState<string | null>(null);
+  const { mode, setMode } = useTheme();
+  const { user } = useAuth();
+  const { data: profile } = useQuery({
+    queryKey: ["profile", "settings", user?.id],
+    enabled: !!user && open,
+    queryFn: async () => {
+      if (!user) return null;
+      const { data } = await supabase.from("profiles").select("id, handle, display_name").eq("id", user.id).maybeSingle();
+      return data;
+    },
+  });
 
-  const listingsBlock = (
-    <section key="listings">
-      <h2 className="mt-10 font-display text-2xl font-black text-brand-ink">Im Schaufenster 🪟</h2>
-      {rest.length === 0 ? (
-        <div className="mt-4 grid place-items-center rounded-[2rem] border-2 border-dashed border-brand/30 bg-brand-soft/20 p-12 text-center">
-          <div className="text-5xl">🪟</div>
-          <p className="mt-3 font-display text-lg font-bold text-brand-ink">Noch nichts im Schaufenster.</p>
-          <p className="mt-1 text-sm text-muted-foreground">Dieser Shop hat aktuell keine veröffentlichten Produkte.</p>
-          <Link
-            to="/browse"
-            search={{ q: "", kind: "" as const, cat: "", min: "", max: "", sort: "new" as const }}
-            className="mt-5 inline-flex min-h-12 items-center rounded-full bg-brand px-6 text-sm font-bold text-primary-foreground"
-          >
-            Andere Shops entdecken
-          </Link>
-        </div>
-      ) : (
-        <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {rest.map((l, i) => (
-            <FxCard key={l.id} theme={theme} index={i}>
-              <ListingGridCard listing={l} />
-            </FxCard>
-          ))}
-        </div>
-      )}
-    </section>
-  );
+  const shopHandle = useMemo(() => {
+    if (!profile) return null;
+    if (profile.handle) return profile.handle;
+    const fromName = slugify(profile.display_name ?? "");
+    return fromName !== "shop" ? fromName : profile.id.slice(0, 8);
+  }, [profile]);
 
-  const highlightBlock = highlight ? (
-    <section key="highlight" className="mt-10">
-      <h2 className="font-display text-2xl font-black text-brand-ink">Highlight ⭐</h2>
-      <Link
-        to="/listing/$id"
-        params={{ id: highlight.id }}
-        className="mt-4 flex flex-col gap-5 overflow-hidden rounded-[2rem] border border-border bg-card p-5 transition hover:-translate-y-0.5 hover:shadow-lg sm:flex-row sm:items-center"
-      >
-        <div className="grid aspect-[4/3] w-full shrink-0 place-items-center overflow-hidden rounded-3xl bg-brand-soft sm:w-64">
-          {highlight.cover_url ? (
-            <img src={highlight.cover_url} alt={highlight.title} className="h-full w-full object-cover" />
-          ) : (
-            <span className="text-5xl">🎨</span>
-          )}
-        </div>
-        <div className="min-w-0">
-          <div className="text-[11px] font-bold uppercase tracking-widest text-brand">
-            {highlight.category ?? (highlight.kind === "digital" ? "Digital" : "Physisch")}
-          </div>
-          <p className="mt-1 font-display text-2xl font-black text-brand-ink">{highlight.title}</p>
-          <p className="mt-2 font-display text-xl font-black text-brand">
-            {(highlight.price_cents / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" })}
-          </p>
-        </div>
-      </Link>
-    </section>
-  ) : null;
+  const selected = sections.find((s) => s.id === section);
 
   return (
-    <div className="relative isolate min-h-screen" style={accentStyle(theme)}>
-    <ShopScene theme={theme} />
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
-      <motion.header
-        initial={{ opacity: 0, y: 24 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ type: "spring", stiffness: 200, damping: 24 }}
-        className="overflow-hidden rounded-[2rem] border bg-card/90 shadow-sm backdrop-blur"
-        style={{ borderColor: `color-mix(in oklab, ${theme.accent} 35%, transparent)` }}
-      >
-        <div
-          className="relative h-40 w-full overflow-hidden sm:h-56"
-          style={{ background: `linear-gradient(135deg, color-mix(in oklab, ${theme.accent} 35%, var(--card)), var(--brand-soft))` }}
-        >
-          {profile.banner_url && (
-            <motion.img
-              src={profile.banner_url}
-              alt=""
-              initial={{ scale: 1.15 }}
-              animate={{ scale: 1 }}
-              transition={{ duration: 1.4, ease: [0.22, 1, 0.36, 1] }}
-              className="h-full w-full object-cover"
-            />
-          )}
-          <motion.div
-            aria-hidden
-            className="absolute inset-y-0 w-1/3 -skew-x-12 bg-gradient-to-r from-transparent via-card/40 to-transparent"
-            initial={{ x: "-120%" }}
-            animate={{ x: "420%" }}
-            transition={{ duration: 2.8, repeat: Infinity, repeatDelay: 4, ease: "easeInOut" }}
-          />
-        </div>
-        <div className="flex flex-col gap-5 p-6 sm:flex-row sm:items-end sm:p-8">
-          <div className="-mt-16 grid h-28 w-28 shrink-0 place-items-center overflow-hidden rounded-[1.75rem] border-4 border-card bg-gradient-to-br from-brand to-brand-ink text-4xl font-black text-primary-foreground shadow-lg sm:-mt-20 sm:h-32 sm:w-32">
-            {profile.avatar_url ? (
-              <img src={profile.avatar_url} alt={profile.display_name ?? handle} className="h-full w-full object-cover" />
-            ) : (
-              initial
-            )}
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap gap-2">
-              <div className="inline-flex items-center gap-1.5 rounded-full bg-brand-soft px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-brand">
-                <Store className="h-3 w-3" /> Shop
-              </div>
-              {isPro && (
-                <div className="inline-flex items-center gap-1.5 rounded-full bg-brand px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-primary-foreground">
-                  <Crown className="h-3 w-3" /> Pro Creator
+    <Sheet open={open} onOpenChange={(value) => { onOpenChange(value); if (!value) setSection(null); }}>
+      <SheetContent side="left" className="w-[88vw] max-w-[460px] overflow-y-auto bg-background p-0 sm:w-[36vw] sm:min-w-[360px] sm:max-w-[460px]">
+        <SheetHeader className="border-b border-border px-6 py-6 text-left">
+          <SheetTitle className="flex items-center gap-2 text-xl">
+            <Settings className="h-5 w-5" /> Einstellungen
+          </SheetTitle>
+          <SheetDescription className="text-sm text-muted-foreground">Dein Shop, Profil und Sicherheit.</SheetDescription>
+        </SheetHeader>
+
+        <div className="px-6 py-5">
+          {!selected ? (
+            <nav aria-label="Einstellungen" className="space-y-1">
+              {sections.map((s, i) => (
+                <Button key={s.id} variant="ghost" className="h-auto min-h-16 w-full justify-start gap-3 rounded-none border-b border-border px-0 py-3 text-left" onClick={() => setSection(s.id)}>
+                  <s.icon className="h-4 w-4" />
+                  <span className="flex-1 text-left">{s.label}</span>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                </Button>
+              ))}
+            </nav>
+          ) : (
+            <>
+              <Button variant="ghost" className="mb-5 px-0" onClick={() => setSection(null)}>
+                <ArrowLeft className="h-4 w-4" /> Alle Einstellungen
+              </Button>
+              <h2 className="mb-6 text-xl font-semibold">{selected.label}</h2>
+
+              {section === "brightness" && (
+                <div className="grid grid-cols-2 gap-3">
+                  <Button variant={mode === "light" ? "secondary" : "outline"} aria-pressed={mode === "light"} className="h-14" onClick={() => setMode("light")}>
+                    <Sun className="h-4 w-4" /> Hell
+                  </Button>
+                  <Button variant={mode === "dark" ? "secondary" : "outline"} aria-pressed={mode === "dark"} className="h-14" onClick={() => setMode("dark")}>
+                    <Moon className="h-4 w-4" /> Dunkel
+                  </Button>
                 </div>
               )}
-            </div>
-            <h1 className="mt-1.5 font-display text-3xl font-black text-brand-ink sm:text-4xl">
-              {profile.display_name ?? `@${profile.handle}`}
-            </h1>
-            <p className="text-sm font-medium text-muted-foreground">@{profile.handle}</p>
-            {profile.bio && <p className="mt-3 max-w-2xl text-sm leading-relaxed text-brand-ink/80">{profile.bio}</p>}
-            {badges.length > 0 && (
-              <div className="mt-4">
-                <ShopBadges badges={badges} accent={theme.accent} />
-              </div>
-            )}
-            <div className="mt-4 flex flex-wrap items-center gap-2 text-xs font-bold">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-surface px-3 py-1.5 text-brand-ink">
-                <Sparkles className="h-3 w-3 text-brand" />
-                {listings.length} {listings.length === 1 ? "Produkt" : "Produkte"} online
-              </span>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-surface px-3 py-1.5 text-brand-ink">
-                <Truck className="h-3 w-3 text-brand" />
-                {profile.shop_shipping_default ? `Versand: ${profile.shop_shipping_default}` : "Versand: 2–5 Werktage"}
-              </span>
-              {rating.count > 0 ? (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-surface px-3 py-1.5 text-brand-ink">
-                  <Stars value={rating.avg} /> {rating.avg.toFixed(1)} · {rating.count} Bewertung{rating.count === 1 ? "" : "en"}
-                </span>
-              ) : (
-                <span className="rounded-full bg-surface px-3 py-1.5 text-muted-foreground">Noch keine Bewertungen</span>
+
+              {section === "language" && <LanguageSettings />}
+
+              {(section === "shop" || section === "profile" || section === "security") && !user && (
+                <Button asChild>
+                  <Link to="/auth" search={{ mode: "signin" }} onClick={() => onOpenChange(false)}>
+                    Anmelden
+                  </Link>
+                </Button>
               )}
-              {listings[0] && (
-                <Link
-                  to="/listing/$id"
-                  params={{ id: listings[0].id }}
-                  className="inline-flex items-center gap-1.5 rounded-full bg-brand px-4 py-2 text-primary-foreground hover:opacity-90"
-                >
-                  <MessageCircle className="h-3.5 w-3.5" /> Shop anschreiben
-                </Link>
+
+              {user && section === "profile" && <SettingsContent />}
+              {user && section === "security" && <AccountSettings />}
+
+              {user && section === "shop" && (
+                <div className="space-y-3">
+                  {shopHandle ? (
+                    <Button asChild variant="outline" className="min-h-12 w-full justify-between">
+                      <Link to="/shop/$handle" params={{ handle: shopHandle }} onClick={() => onOpenChange(false)}>
+                        Meinen Shop ansehen
+                      </Link>
+                      <ExternalLink className="h-4 w-4" />
+                    </Button>
+                  ) : (
+                    <Button asChild variant="outline" className="min-h-12 w-full justify-between">
+                      <Link to="/shop/$handle" params={{ handle: profile?.id ?? "shop" }} onClick={() => onOpenChange(false)}>
+                        Meinen Shop ansehen
+                      </Link>
+                      <ExternalLink className="h-4 w-4" />
+                    </Button>
+                  )}
+
+                  <Button asChild variant="outline" className="min-h-12 w-full justify-between">
+                    <Link to="/einstellungen" search={{ section: "shop" }} onClick={() => onOpenChange(false)}>
+                      Shop-Profil bearbeiten
+                    </Link>
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+
+                  <Button asChild className="min-h-12 w-full justify-between">
+                    <Link to="/einstellungen" search={{ section: "studio" }} onClick={() => onOpenChange(false)}>
+                      Shop-Studio
+                    </Link>
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
               )}
-              <ReportButton targetType="shop" targetId={profile.id} label="Shop melden" className="!min-h-9 !px-3 !text-xs" />
-            </div>
-          </div>
+            </>
+          )}
         </div>
-      </motion.header>
-
-      {theme.marquee && (
-        <div className="mt-6">
-          <ShopMarquee text={theme.marquee} accent={theme.accent} />
-        </div>
-      )}
-
-      <ShopCustomContent code={parseShopCode(profile.shop_theme, isPro)} />
-
-      {sections.map((s) => (s === "highlight" ? highlightBlock : s === "listings" ? listingsBlock : null))}
-    </div>
-    </div>
+      </SheetContent>
+    </Sheet>
   );
 }

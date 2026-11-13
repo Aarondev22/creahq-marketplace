@@ -1,204 +1,181 @@
-import { useEffect, useState } from "react";
-import { Code2, Puzzle, Plus, Trash2, Check, Crown } from "lucide-react";
-import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
-import {
-  parseTheme, parseBadges, TEMPLATES, CARD_FX_OPTIONS, BG_OPTIONS, BADGE_STYLES, FREE_BADGES, PRO_BADGES,
-  type ShopTheme, type ShopBadge,
-} from "@/lib/shopTheme";
-import { parseShopCode, CODE_CHEATSHEET, MAX_BLOCKS, type ShopBlock } from "@/lib/shopCode";
-import { CodeFrame, ShopCustomContent } from "./ShopCustomContent";
+import { createFileRoute, notFound, Link } from "@tanstack/react-router";
+import { useSuspenseQuery, queryOptions } from "@tanstack/react-query";
+import { Store, Sparkles, Star, MessageCircle, Truck, Crown } from "lucide-react";
+import { motion } from "motion/react";
+import { parseTheme, parseBadges } from "@/lib/shopTheme";
+import { ShopCustomContent } from "@/components/ShopCustomContent";
+import { parseShopCode } from "@/lib/shopCode";
+import { ShopScene, ShopMarquee, ShopBadges, FxCard, accentStyle } from "@/components/ShopFx";
+import { fetchShopByHandle } from "@/lib/listings.functions";
+import { ListingGridCard, ListingGridSkeleton } from "@/components/ListingGridCard";
+import { ReportButton } from "@/components/ReportButton";
+import { useAuth } from "@/hooks/useAuth";
 
-const NEW_BLOCK: Record<ShopBlock["type"], ShopBlock> = {
-  text: { type: "text", title: "Über uns", body: "" },
-  quote: { type: "quote", text: "", author: "" },
-  faq: { type: "faq", q: "Frage?", a: "" },
-  image: { type: "image", url: "" },
-};
-const BLOCK_LABEL: Record<ShopBlock["type"], string> = { text: "📝 Text", quote: "💬 Kundenstimme", faq: "❓ FAQ", image: "🖼️ Bild" };
-const STEPS = ["Style & Thema", "Badges & Laufband", "Code / Bausteine", "Vorschau & Live"];
-const field = "w-full rounded-2xl border border-border bg-background px-3 py-2 text-sm text-brand-ink focus:border-brand focus:outline-none";
+const shopQuery = (handle: string, viewerId?: string) => queryOptions({
+  queryKey: ["shop", handle, viewerId ?? "guest"],
+  queryFn: () => fetchShopByHandle({ data: { handle, viewerId } }),
+});
 
-export function ShopDesignEditor({ userId }: { userId: string }) {
-  const [isPro, setIsPro] = useState(false);
-  const [raw, setRaw] = useState<Record<string, unknown>>({});
-  const [theme, setTheme] = useState<ShopTheme | null>(null);
-  const [badges, setBadges] = useState<ShopBadge[]>([]);
-  const [mode, setMode] = useState<"code" | "blocks">("code");
-  const [html, setHtml] = useState("");
-  const [css, setCss] = useState("");
-  const [blocks, setBlocks] = useState<ShopBlock[]>([]);
-  const [saving, setSaving] = useState(false);
-  const [step, setStep] = useState(1);
-  const [device, setDevice] = useState<"phone" | "desktop">("desktop");
+export const Route = createFileRoute("/shop/$handle")({
+  loader: async ({ params, context }) => {
+    const viewerId = context.session?.user?.id ?? undefined;
+    const data = await context.queryClient.ensureQueryData(shopQuery(params.handle, viewerId));
+    if (!data) throw notFound();
+  },
+  head: ({ params }) => ({
+    meta: [
+      { title: `@${params.handle} — Shop auf CreaHQ` },
+      { name: "description", content: `Alle Produkte von @${params.handle} auf CreaHQ: digitale & physische Sachen direkt von Creator zu Käufer.` },
+      { property: "og:title", content: `@${params.handle} — Shop auf CreaHQ` },
+      { property: "og:description", content: `Stöber durch den Shop von @${params.handle} auf CreaHQ.` },
+      { property: "og:type", content: "profile" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
+  component: ShopPage,
+  pendingComponent: () => (
+    <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
+      <div className="h-48 animate-pulse rounded-[2rem] bg-brand-soft" />
+      <div className="mt-10"><ListingGridSkeleton count={8} /></div>
+    </div>
+  ),
+  errorComponent: ({ error }) => <div className="p-10 text-center text-sm">{(error as Error).message}</div>,
+  notFoundComponent: () => (
+    <div className="mx-auto max-w-md px-6 py-24 text-center">
+      <div className="text-6xl">🔍</div>
+      <h1 className="mt-4 font-display text-2xl font-black text-brand-ink">Diesen Shop gibt's (noch) nicht.</h1>
+      <p className="mt-2 text-sm text-muted-foreground">Vielleicht ein Tippfehler im Handle?</p>
+    </div>
+  ),
+});
 
-  useEffect(() => {
-    void supabase.from("profiles").select("is_pro,shop_theme,shop_badges").eq("id", userId).maybeSingle().then(({ data }) => {
-      const pro = !!data?.is_pro;
-      const r = (data?.shop_theme && typeof data.shop_theme === "object" ? data.shop_theme : {}) as Record<string, unknown>;
-      setIsPro(pro); setRaw(r);
-      setTheme(parseTheme(r, pro));
-      setBadges(parseBadges(data?.shop_badges, pro));
-      const c = parseShopCode(r, pro);
-      setMode(c.mode); setHtml(c.html); setCss(c.css); setBlocks(c.blocks);
-    });
-  }, [userId]);
-
-  if (!theme) return <div className="mt-6 h-40 animate-pulse rounded-3xl bg-brand-soft/50" />;
-  const maxBadges = isPro ? PRO_BADGES : FREE_BADGES;
-
-  async function save() {
-    if (!theme) return;
-    setSaving(true);
-    const shop_theme = { ...raw, ...theme, mode, customHtml: html, customCss: css, blocks: isPro ? blocks : [] };
-    const { error } = await supabase.from("profiles").update({ shop_theme, shop_badges: badges.slice(0, maxBadges) }).eq("id", userId);
-    setSaving(false);
-    if (error) toast.error(error.message); else toast.success("Design gespeichert ✨");
-  }
-
-  const setB = (i: number, b: ShopBlock) => setBlocks(blocks.map((x, j) => (j === i ? b : x)));
-
+function Stars({ value }: { value: number }) {
   return (
-    <section className="mt-6 space-y-5 rounded-3xl border border-border bg-card p-6 sm:p-8">
-      <h2 className="inline-flex items-center gap-2 font-display text-2xl font-black text-brand-ink">
-        🎨 Shop-Design {isPro ? <span className="inline-flex items-center gap-1 rounded-full bg-brand px-3 py-1 text-xs text-primary-foreground"><Crown className="h-3 w-3" /> Pro</span> : <span className="rounded-full bg-muted px-3 py-1 text-xs">Standard</span>}
-      </h2>
+    <span className="inline-flex items-center gap-0.5">
+      {[1, 2, 3, 4, 5].map((i) => (
+        <Star key={i} className={`h-3.5 w-3.5 ${i <= Math.round(value) ? "fill-amber-400 text-amber-400" : "text-muted-foreground/40"}`} />
+      ))}
+    </span>
+  );
+}
 
-      <ol className="flex flex-wrap items-center gap-2">
-        {STEPS.map((label, i) => (
-          <li key={label} className="flex items-center gap-2">
-            <button type="button" onClick={() => setStep(i + 1)} className={`inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-sm font-bold ${step === i + 1 ? "bg-brand text-primary-foreground" : step > i + 1 ? "bg-brand-soft text-brand-ink" : "border border-border text-muted-foreground"}`}>
-              <span className="grid h-6 w-6 place-items-center rounded-full bg-background/30 text-xs">{step > i + 1 ? "✓" : i + 1}</span>{label}
-            </button>
-            {i < STEPS.length - 1 && <span className="h-0.5 w-4 bg-border" />}
-          </li>
-        ))}
-      </ol>
+function ShopPage() {
+  const { handle } = Route.useParams();
+  const { user } = useAuth();
+  const { data } = useSuspenseQuery(shopQuery(handle, user?.id));
+  if (!data) return null;
+  const { profile, listings, rating } = data;
+  const initial = (profile.display_name ?? profile.handle ?? "?").slice(0, 1).toUpperCase();
+  const ownShop = Boolean(user && user.id === profile.id);
+  const visibleListings = listings.filter((listing) => listing.status === "published" && (ownShop || listing.moderation_status === "approved"));
+  const pendingListings = ownShop ? listings.filter((listing) => listing.status === "published" && listing.moderation_status === "pending") : [];
 
-      {step === 1 && (<>
-      {isPro && (
-        <div>
-          <p className="mb-2 text-xs font-bold uppercase tracking-widest text-muted-foreground">1-Klick-Designs</p>
-          <div className="flex flex-wrap gap-2">
-            {TEMPLATES.map((t) => (
-              <button key={t.key} type="button" onClick={() => setTheme({ ...theme, ...t.theme, template: t.key, marquee: t.marquee })}
-                className={`min-h-11 rounded-full border px-4 text-sm font-bold ${theme.template === t.key ? "border-brand bg-brand-soft" : "border-border"}`}>{t.label}</button>
-            ))}
-          </div>
-        </div>
-      )}
+  const highlight = visibleListings.find((l) => l.id === profile.highlight_listing_id);
+  const sections: string[] = Array.isArray(profile.shop_sections) && profile.shop_sections.length > 0 ? (profile.shop_sections as string[]) : ["highlight", "listings"];
+  const rest = visibleListings.filter((l) => l.id !== highlight?.id);
+  const isPro = !!profile.is_pro;
+  const theme = parseTheme(profile.shop_theme, isPro);
+  const badges = parseBadges(profile.shop_badges, isPro);
 
-      <div className="grid gap-3 sm:grid-cols-3">
-        <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Akzentfarbe
-          <input type="color" value={theme.accent} onChange={(e) => setTheme({ ...theme, accent: e.target.value, template: null })} className="mt-1.5 h-12 w-full rounded-2xl" />
-        </label>
-        <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Hintergrund
-          <select value={theme.bg} onChange={(e) => setTheme({ ...theme, bg: e.target.value as ShopTheme["bg"] })} className={`${field} mt-1.5 min-h-12`}>
-            {BG_OPTIONS.filter((o) => o.key !== "image").map((o) => <option key={o.key} value={o.key} disabled={o.pro && !isPro}>{o.label}{o.pro && !isPro ? " (Pro)" : ""}</option>)}
-          </select>
-        </label>
-        <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Animation
-          <select value={theme.cardFx} onChange={(e) => setTheme({ ...theme, cardFx: e.target.value as ShopTheme["cardFx"] })} className={`${field} mt-1.5 min-h-12`}>
-            {CARD_FX_OPTIONS.map((o) => <option key={o.key} value={o.key} disabled={o.pro && !isPro}>{o.label}{o.pro && !isPro ? " (Pro)" : ""}</option>)}
-          </select>
-        </label>
-      </div>
-      </>)}
-
-      {step === 2 && (<>
-      <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground">Laufband-Text
-        <input value={theme.marquee} maxLength={120} onChange={(e) => setTheme({ ...theme, marquee: e.target.value })} className={`${field} mt-1.5 min-h-12`} placeholder="✨ Neue Drops jeden Freitag ✨" />
-      </label>
-
-      <div>
-        <p className="mb-2 text-xs font-bold uppercase tracking-widest text-muted-foreground">Badges ({badges.length}/{maxBadges})</p>
-        <div className="space-y-2">
-          {badges.map((b, i) => (
-            <div key={i} className="flex gap-2">
-              <input value={b.emoji} maxLength={4} onChange={(e) => setBadges(badges.map((x, j) => j === i ? { ...x, emoji: e.target.value } : x))} className={`${field} w-16`} />
-              <input value={b.text} maxLength={32} onChange={(e) => setBadges(badges.map((x, j) => j === i ? { ...x, text: e.target.value } : x))} className={field} />
-              <select value={b.style} onChange={(e) => setBadges(badges.map((x, j) => j === i ? { ...x, style: e.target.value as ShopBadge["style"] } : x))} className={`${field} w-32`}>
-                {BADGE_STYLES.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
-              </select>
-              <button type="button" aria-label="Badge löschen" onClick={() => setBadges(badges.filter((_, j) => j !== i))} className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-muted"><Trash2 className="h-4 w-4" /></button>
-            </div>
-          ))}
-          {badges.length < maxBadges && (
-            <button type="button" onClick={() => setBadges([...badges, { emoji: "✨", text: "Handgemacht", style: "pill" }])} className="inline-flex min-h-11 items-center gap-1 rounded-full border border-dashed border-brand/50 px-4 text-sm font-bold text-brand-ink"><Plus className="h-4 w-4" /> Badge</button>
+  const listingsBlock = (
+    <section key="listings">
+      <h2 className="mt-10 font-display text-2xl font-black text-brand-ink">Im Schaufenster 🪟</h2>
+      {rest.length === 0 ? (
+        <div className="mt-4 grid place-items-center rounded-[2rem] border-2 border-dashed border-brand/30 bg-brand-soft/20 p-12 text-center">
+          <div className="text-5xl">🪟</div>
+          <p className="mt-3 font-display text-lg font-bold text-brand-ink">Noch nichts im Schaufenster.</p>
+          <p className="mt-1 text-sm text-muted-foreground">{ownShop ? "Dein Shop ist noch leer — füge dein erstes Produkt hinzu." : "Dieser Shop hat aktuell keine veröffentlichten Produkte."}</p>
+          {!ownShop && (
+            <Link to="/browse" search={{ q: "", kind: "" as const, cat: "", min: "", max: "", sort: "new" as const }} className="mt-5 inline-flex min-h-12 items-center rounded-full bg-brand px-6 text-sm font-bold text-primary-foreground">
+              Andere Shops entdecken
+            </Link>
           )}
-        </div>
-      </div>
-      </>)}
-
-      {step === 3 && (<>
-      <div className="flex gap-2">
-        <button type="button" onClick={() => setMode("code")} className={`inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-sm font-bold ${mode === "code" ? "bg-brand text-primary-foreground" : "border border-border"}`}><Code2 className="h-4 w-4" /> Eigener Code</button>
-        <button type="button" onClick={() => isPro ? setMode("blocks") : toast("Bausteine gibt's mit Pro 👑")} className={`inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-sm font-bold ${mode === "blocks" ? "bg-brand text-primary-foreground" : "border border-border"} ${!isPro ? "opacity-60" : ""}`}><Puzzle className="h-4 w-4" /> Bausteine {!isPro && "(Pro)"}</button>
-      </div>
-
-      {mode === "code" ? (
-        <div className="space-y-3">
-          <div className="flex flex-wrap gap-2">
-            {CODE_CHEATSHEET.map((c) => (
-              <button key={c.label} type="button" onClick={() => c.code.startsWith("<") ? setHtml(html + "\n" + c.code) : setCss(css + "\n" + c.code)} className="rounded-full bg-muted px-3 py-1.5 text-xs font-bold">+ {c.label}</button>
-            ))}
-          </div>
-          <div className="grid gap-3 lg:grid-cols-2">
-            <textarea value={html} onChange={(e) => setHtml(e.target.value)} rows={8} placeholder="HTML …" className={`${field} font-mono`} spellCheck={false} />
-            <textarea value={css} onChange={(e) => setCss(e.target.value)} rows={8} placeholder="CSS …" className={`${field} font-mono`} spellCheck={false} />
-          </div>
-          <p className="text-xs text-muted-foreground">Live-Vorschau · Skripte sind aus Sicherheitsgründen gesperrt.</p>
-          <CodeFrame html={html} css={css} />
         </div>
       ) : (
-        <div className="space-y-3">
-          {blocks.map((b, i) => (
-            <div key={i} className="space-y-2 rounded-2xl border border-border p-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-bold">{BLOCK_LABEL[b.type]}</span>
-                <button type="button" aria-label="Baustein löschen" onClick={() => setBlocks(blocks.filter((_, j) => j !== i))} className="grid h-10 w-10 place-items-center rounded-xl bg-muted"><Trash2 className="h-4 w-4" /></button>
-              </div>
-              {b.type === "text" && (<><input value={b.title} onChange={(e) => setB(i, { ...b, title: e.target.value })} className={field} placeholder="Titel" /><textarea value={b.body} onChange={(e) => setB(i, { ...b, body: e.target.value })} className={field} rows={3} placeholder="Text" /></>)}
-              {b.type === "quote" && (<><textarea value={b.text} onChange={(e) => setB(i, { ...b, text: e.target.value })} className={field} rows={2} placeholder="Zitat" /><input value={b.author} onChange={(e) => setB(i, { ...b, author: e.target.value })} className={field} placeholder="Name" /></>)}
-              {b.type === "faq" && (<><input value={b.q} onChange={(e) => setB(i, { ...b, q: e.target.value })} className={field} placeholder="Frage" /><textarea value={b.a} onChange={(e) => setB(i, { ...b, a: e.target.value })} className={field} rows={2} placeholder="Antwort" /></>)}
-              {b.type === "image" && <input value={b.url} onChange={(e) => setB(i, { ...b, url: e.target.value })} className={field} placeholder="https://… Bild-Link" />}
+        <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {rest.map((l, i) => (
+            <div key={l.id} className="relative">
+              {ownShop && l.moderation_status === "pending" && (
+                <span className="absolute left-3 top-3 z-10 rounded-full bg-amber-400/90 px-2 py-1 text-[10px] font-bold text-amber-950 shadow-sm">⏳ In Prüfung (nur für dich sichtbar)</span>
+              )}
+              <FxCard theme={theme} index={i}><ListingGridCard listing={l} /></FxCard>
             </div>
           ))}
-          {blocks.length < MAX_BLOCKS && (
-            <div className="flex flex-wrap gap-2">
-              {(Object.keys(NEW_BLOCK) as ShopBlock["type"][]).map((t) => (
-                <button key={t} type="button" onClick={() => setBlocks([...blocks, NEW_BLOCK[t]])} className="inline-flex min-h-11 items-center gap-1 rounded-full border border-dashed border-brand/50 px-4 text-sm font-bold"><Plus className="h-4 w-4" /> {BLOCK_LABEL[t]}</button>
-              ))}
-            </div>
-          )}
-          <ShopCustomContent code={{ mode: "blocks", html: "", css: "", blocks }} />
         </div>
       )}
-      </>)}
-
-      {step === 4 && (
-        <div className="space-y-3">
-          <div className="flex gap-2">
-            <button type="button" onClick={() => setDevice("phone")} className={`min-h-11 rounded-full px-4 text-sm font-bold ${device === "phone" ? "bg-brand text-primary-foreground" : "border border-border"}`}>📱 Handy</button>
-            <button type="button" onClick={() => setDevice("desktop")} className={`min-h-11 rounded-full px-4 text-sm font-bold ${device === "desktop" ? "bg-brand text-primary-foreground" : "border border-border"}`}>🖥️ Desktop</button>
-          </div>
-          <div className={`mx-auto overflow-hidden rounded-3xl border-4 border-border bg-background p-4 ${device === "phone" ? "max-w-[380px]" : "w-full"}`} style={{ borderColor: theme.accent }}>
-            {theme.marquee && <div className="mb-3 truncate rounded-full px-4 py-2 text-sm font-bold text-primary-foreground" style={{ background: theme.accent }}>{theme.marquee}</div>}
-            {badges.length > 0 && <div className="mb-3 flex flex-wrap gap-2">{badges.slice(0, maxBadges).map((b, i) => <span key={i} className="rounded-full bg-brand-soft px-3 py-1 text-xs font-bold text-brand-ink">{b.emoji} {b.text}</span>)}</div>}
-            <ShopCustomContent code={{ mode, html, css, blocks: isPro ? blocks : [] }} />
-          </div>
-          <p className="text-xs text-muted-foreground">So sehen Käufer deinen Shop. Erst nach „Veröffentlichen" ist es live.</p>
+      {ownShop && pendingListings.length > 0 && (
+        <div className="mt-4 rounded-2xl border border-amber-300 bg-amber-100/50 p-3 text-sm text-amber-900">
+          <div className="font-bold">⏳ In Prüfung</div>
+          <p className="mt-1">Diese Produkte sind nur für dich sichtbar. Andere Besucher sehen nur freigegebene Listings.</p>
         </div>
       )}
-
-      <div className="flex flex-wrap gap-2">
-        {step > 1 && <button type="button" onClick={() => setStep(step - 1)} className="min-h-12 rounded-full border border-border px-6 text-sm font-bold">← Zurück</button>}
-        {step < 4 && <button type="button" onClick={() => setStep(step + 1)} className="min-h-12 rounded-full bg-brand px-6 text-sm font-bold text-primary-foreground">Weiter →</button>}
-      </div>
-
-      {step === 4 && <button type="button" onClick={save} disabled={saving} className="inline-flex min-h-12 items-center gap-2 rounded-full bg-brand px-6 text-sm font-bold text-primary-foreground disabled:opacity-60">
-        <Check className="h-4 w-4" /> {saving ? "Speichere …" : "✨ Shop-Design veröffentlichen"}
-      </button>}
     </section>
+  );
+
+  const highlightBlock = highlight ? (
+    <section key="highlight" className="mt-10">
+      <h2 className="font-display text-2xl font-black text-brand-ink">Highlight ⭐</h2>
+      <Link to="/listing/$id" params={{ id: highlight.id }} className="mt-4 flex flex-col gap-5 overflow-hidden rounded-[2rem] border border-border bg-card p-5 transition hover:-translate-y-0.5 hover:shadow-lg sm:flex-row sm:items-center">
+        <div className="grid aspect-[4/3] w-full shrink-0 place-items-center overflow-hidden rounded-3xl bg-brand-soft sm:w-64">
+          {highlight.cover_url ? <img src={highlight.cover_url} alt={highlight.title} className="h-full w-full object-cover" /> : <span className="text-5xl">🎨</span>}
+        </div>
+        <div className="min-w-0">
+          <div className="text-[11px] font-bold uppercase tracking-widest text-brand">{highlight.category ?? (highlight.kind === "digital" ? "Digital" : "Physisch")}</div>
+          <p className="mt-1 font-display text-2xl font-black text-brand-ink">{highlight.title}</p>
+          <p className="mt-2 font-display text-xl font-black text-brand">{(highlight.price_cents / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" })}</p>
+        </div>
+      </Link>
+    </section>
+  ) : null;
+
+  return (
+    <div className="relative isolate min-h-screen" style={accentStyle(theme)}>
+      <ShopScene theme={theme} />
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
+        <motion.header initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ type: "spring", stiffness: 200, damping: 24 }} className="overflow-hidden rounded-[2rem] border bg-card/90 shadow-sm backdrop-blur" style={{ borderColor: `color-mix(in oklab, ${theme.accent} 35%, transparent)` }}>
+          <div className="relative h-40 w-full overflow-hidden sm:h-56" style={{ background: `linear-gradient(135deg, color-mix(in oklab, ${theme.accent} 35%, var(--card)), var(--brand-soft))` }}>
+            {profile.banner_url && (
+              <motion.img src={profile.banner_url} alt="" initial={{ scale: 1.15 }} animate={{ scale: 1 }} transition={{ duration: 1.4, ease: [0.22, 1, 0.36, 1] }} className="h-full w-full object-cover" />
+            )}
+            <motion.div aria-hidden className="absolute inset-y-0 w-1/3 -skew-x-12 bg-gradient-to-r from-transparent via-card/40 to-transparent" initial={{ x: "-120%" }} animate={{ x: "420%" }} transition={{ duration: 2.8, repeat: Infinity, repeatDelay: 4, ease: "easeInOut" }} />
+          </div>
+          <div className="flex flex-col gap-5 p-6 sm:flex-row sm:items-end sm:p-8">
+            <div className="-mt-16 grid h-28 w-28 shrink-0 place-items-center overflow-hidden rounded-[1.75rem] border-4 border-card bg-gradient-to-br from-brand to-brand-ink text-4xl font-black text-primary-foreground">
+              {profile.avatar_url ? <img src={profile.avatar_url} alt={profile.display_name ?? handle} className="h-full w-full object-cover" /> : initial}
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap gap-2">
+                <div className="inline-flex items-center gap-1.5 rounded-full bg-brand-soft px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-brand"><Store className="h-3 w-3" /> Shop</div>
+                {isPro && <div className="inline-flex items-center gap-1.5 rounded-full bg-brand px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-primary-foreground"><Crown className="h-3 w-3" /> Pro Creator</div>}
+              </div>
+              <h1 className="mt-1.5 font-display text-3xl font-black text-brand-ink sm:text-4xl">{profile.display_name ?? `@${profile.handle}`}</h1>
+              <p className="text-sm font-medium text-muted-foreground">@{profile.handle}</p>
+              {profile.bio && <p className="mt-3 max-w-2xl text-sm leading-relaxed text-brand-ink/80">{profile.bio}</p>}
+              {badges.length > 0 && <div className="mt-4"><ShopBadges badges={badges} accent={theme.accent} /></div>}
+              <div className="mt-4 flex flex-wrap items-center gap-2 text-xs font-bold">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-surface px-3 py-1.5 text-brand-ink"><Sparkles className="h-3 w-3 text-brand" />{visibleListings.length} {visibleListings.length === 1 ? "Produkt" : "Produkte"} online</span>
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-surface px-3 py-1.5 text-brand-ink"><Truck className="h-3 w-3 text-brand" />{profile.shop_shipping_default ? `Versand: ${profile.shop_shipping_default}` : "Versand: 2–5 Werktage"}</span>
+                {rating.count > 0 ? (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-surface px-3 py-1.5 text-brand-ink"><Stars value={rating.avg} /> {rating.avg.toFixed(1)} · {rating.count} Bewertung{rating.count === 1 ? "" : "en"}</span>
+                ) : <span className="rounded-full bg-surface px-3 py-1.5 text-muted-foreground">Noch keine Bewertungen</span>}
+                {visibleListings[0] && (
+                  <Link to="/listing/$id" params={{ id: visibleListings[0].id }} className="inline-flex items-center gap-1.5 rounded-full bg-brand px-4 py-2 text-primary-foreground hover:opacity-90">
+                    <MessageCircle className="h-3.5 w-3.5" /> Shop anschreiben
+                  </Link>
+                )}
+                <ReportButton targetType="shop" targetId={profile.id} label="Shop melden" className="!min-h-9 !px-3 !text-xs" />
+              </div>
+            </div>
+          </div>
+        </motion.header>
+
+        {theme.marquee && (
+          <div className="mt-6"><ShopMarquee text={theme.marquee} accent={theme.accent} /></div>
+        )}
+
+        <ShopCustomContent code={parseShopCode(profile.shop_theme, isPro)} />
+        {sections.map((s) => (s === "highlight" ? highlightBlock : s === "listings" ? listingsBlock : null))}
+      </div>
+    </div>
   );
 }
