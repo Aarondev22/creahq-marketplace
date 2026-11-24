@@ -1,7 +1,9 @@
 import { createServerFn } from "@tanstack/react-start";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { Database } from "@/integrations/supabase/types";
 
-type Ctx = { supabase: any; userId: string };
+type Ctx = { supabase: SupabaseClient<Database>; userId: string };
 
 async function assertAdmin(context: Ctx) {
   const { data } = await context.supabase.from("user_roles").select("role").eq("user_id", context.userId);
@@ -110,6 +112,7 @@ export type AdminUser = {
   handle: string | null;
   banned: boolean;
   is_pro: boolean;
+  is_verified: boolean;
   roles: string[];
 };
 
@@ -119,7 +122,7 @@ export const searchUsers = createServerFn({ method: "GET" })
   .handler(async ({ data, context }): Promise<AdminUser[]> => {
     await assertAdmin(context as Ctx);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    let query = supabaseAdmin.from("profiles").select("id,display_name,handle,banned,is_pro").limit(25);
+    let query = supabaseAdmin.from("profiles").select("id,display_name,handle,banned,is_pro,is_verified").limit(25);
     if (data.q) {
       const like = `%${data.q.replace(/[%_,()]/g, "")}%`;
       query = query.or(`display_name.ilike.${like},handle.ilike.${like}`);
@@ -227,42 +230,86 @@ export const setUserPro = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-export type VerificationItem = { id: string; title: string; seller_id: string; photo_url: string | null; created_at: string };
-
-export const listVerifications = createServerFn({ method: "GET" })
+export const setUserVerified = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }): Promise<VerificationItem[]> => {
+  .inputValidator((d: { userId: string; verified: boolean }) => ({
+    userId: String(d.userId),
+    verified: Boolean(d.verified),
+  }))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context as Ctx);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
+      .from("profiles")
+      .update({ is_verified: data.verified })
+      .eq("id", data.userId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export type AdminRedeemCode = {
+  id: string;
+  code: string;
+  code_type: "founder" | "pro" | "beta_tester";
+  max_uses: number | null;
+  used_count: number;
+  created_at: string;
+};
+
+export const listRedeemCodes = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<AdminRedeemCode[]> => {
     await assertAdmin(context as Ctx);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data, error } = await supabaseAdmin
-      .from("listings")
-      .select("id,title,seller_id,verification_path,created_at")
-      .eq("verification_status", "submitted")
-      .order("created_at", { ascending: true })
-      .limit(50);
+      .from("founder_redeem_codes")
+      .select("id,code,code_type,max_uses,used_count,created_at")
+      .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
-    const out: VerificationItem[] = [];
-    for (const l of data ?? []) {
-      let photo_url: string | null = null;
-      if (l.verification_path) {
-        const { data: s } = await supabaseAdmin.storage.from("listing-verifications").createSignedUrl(l.verification_path, 600);
-        photo_url = s?.signedUrl ?? null;
-      }
-      out.push({ id: l.id, title: l.title, seller_id: l.seller_id, photo_url, created_at: l.created_at });
-    }
-    return out;
+    return (data ?? []) as AdminRedeemCode[];
   });
 
-export const reviewVerification = createServerFn({ method: "POST" })
+export const createRedeemCode = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { id: string; approve: boolean }) => ({ id: String(d.id), approve: d.approve === true }))
+  .inputValidator((d: { code?: string; codeType: string; maxUses?: number | null }) => {
+    const codeType = ["founder", "pro", "beta_tester"].includes(d.codeType)
+      ? (d.codeType as AdminRedeemCode["code_type"])
+      : null;
+    const code = String(d.code ?? "").trim().toUpperCase();
+    const maxUses = d.maxUses == null ? null : Number(d.maxUses);
+    if (!codeType) throw new Error("Ungültiger Code-Typ.");
+    if (code && !/^[A-Z0-9-]{3,40}$/.test(code)) throw new Error("Der Code darf nur Buchstaben, Zahlen und Bindestriche enthalten.");
+    if (maxUses !== null && (!Number.isInteger(maxUses) || maxUses < 1 || maxUses > 1000000)) {
+      throw new Error("Die maximale Einlösungszahl muss mindestens 1 sein.");
+    }
+    return { code, codeType, maxUses };
+  })
   .handler(async ({ data, context }) => {
     await assertAdmin(context as Ctx);
-    // Als angemeldeter Admin aktualisieren, damit die Schutzregel den Admin erkennt.
-    const { error } = await (context as Ctx).supabase
-      .from("listings")
-      .update({ verification_status: data.approve ? "verified" : "rejected" })
-      .eq("id", data.id);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const code = data.code || `CREAHQ-${crypto.randomUUID().replace(/-/g, "").slice(0, 12).toUpperCase()}`;
+    const grantsRole = data.codeType === "founder" ? "founder" : data.codeType === "beta_tester" ? "beta_tester" : "buyer";
+    const { data: created, error } = await supabaseAdmin
+      .from("founder_redeem_codes")
+      .insert({
+        code,
+        code_type: data.codeType,
+        grants_role: grantsRole,
+        max_uses: data.maxUses,
+      })
+      .select("id,code,code_type,max_uses,used_count,created_at")
+      .single();
+    if (error) throw new Error(error.message);
+    return created as AdminRedeemCode;
+  });
+
+export const deleteRedeemCode = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string }) => ({ id: String(d.id) }))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context as Ctx);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.from("founder_redeem_codes").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });

@@ -213,10 +213,10 @@
 .motif-three { left: 5%; top: 52rem; transform: rotate(8deg); animation-delay: -4s; }
 .motif-four { right: 5%; top: 82rem; transform: rotate(-8deg); animation-delay: -6s; }
 
-html[data-creahq-theme="candy"] .theme-motif::before { content: "🍬"; }
-html[data-creahq-theme="sun"] .theme-motif::before { content: "☀"; }
-html[data-creahq-theme="forest"] .theme-motif::before { content: "❧"; }
-html[data-creahq-theme="ocean"] .theme-motif::before { content: "💧"; }
+html[data-creahq-theme="candy"] .theme-motif::before { content: ""; }
+html[data-creahq-theme="sun"] .theme-motif::before { content: ""; }
+html[data-creahq-theme="forest"] .theme-motif::before { content: ""; }
+html[data-creahq-theme="ocean"] .theme-motif::before { content: ""; }
 html[data-creahq-theme="violet"] .theme-motif::before { content: "✦"; }
 
 html[data-creahq-theme="candy"] .app-canvas.is-inner-page {

@@ -93,7 +93,7 @@ export function Footer() {
 
       <div className="border-t border-border">
         <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-2 px-6 py-5 text-xs text-muted-foreground sm:flex-row sm:items-center">
-          <div>© {new Date().getFullYear()} CreaHQ. Mit ♥ in der Werkstatt zusammengebaut.</div>
+          <div>© {new Date().getFullYear()} CreaHQ. Sorgfältig für Creator entwickelt.</div>
           <div>Made for Creators. Powered by Coffee.</div>
         </div>
       </div>

@@ -1,5 +1,5 @@
 import { motion } from "motion/react";
-import { ArrowRight, Sparkles, Store, RotateCcw, Eye, EyeOff } from "lucide-react";
+import { ArrowRight, Sparkles, Store, RotateCcw, Eye, EyeOff, Palette } from "lucide-react";
 import { useTheme, HERO_THEMES } from "@/hooks/useTheme";
 
 
@@ -79,9 +79,9 @@ export function Hero() {
 
           <div className="mt-6 flex items-center gap-4 text-xs text-muted-foreground sm:mt-8">
             <div className="flex -space-x-2">
-              {["🎨","🎧","✏️","📦","🧩"].map((e, i) => (
+              {[Store, Sparkles, Eye, Palette, ArrowRight].map((Icon, i) => (
                 <div key={i} className="grid h-7 w-7 place-items-center rounded-full border-2 border-surface bg-brand-soft text-xs">
-                  {e}
+                  <Icon className="h-3.5 w-3.5 text-brand" />
                 </div>
               ))}
             </div>
@@ -124,7 +124,7 @@ export function Hero() {
 
             <div className="mt-6 font-display text-3xl font-black leading-none text-brand-ink sm:text-4xl">
               {active.label}
-              <span className="ml-2 inline-block [animation:wiggle_3s_ease-in-out_infinite]">{active.emoji}</span>
+              <active.icon className="ml-2 inline-block h-7 w-7 text-brand" />
             </div>
 
             <div className="mt-6 grid grid-cols-5 gap-2 sm:gap-2.5">
@@ -141,7 +141,7 @@ export function Hero() {
                     }`}
                     style={{ background: isActive ? "var(--surface)" : t.softLight }}
                   >
-                    <span className="drop-shadow-sm">{t.emoji}</span>
+                    <t.icon className="h-5 w-5 text-brand" />
                   </button>
                 );
               })}
@@ -160,7 +160,7 @@ export function Hero() {
             animate={{ y: [0, -8, 0] }}
             transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
           >
-            ✦
+            <Sparkles className="h-7 w-7" />
           </motion.div>
         </motion.div>
       </div>

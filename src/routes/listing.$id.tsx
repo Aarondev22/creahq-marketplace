@@ -12,6 +12,11 @@ import {
   MessageCircle,
   Star,
   Package,
+  Store,
+  Sparkles,
+  BadgeCheck,
+  Crown,
+  Palette,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -188,7 +193,7 @@ function ListingView({
           {allImages[activeImg] ? (
             <img src={allImages[activeImg]} alt={l.title} className="h-full w-full object-cover" />
           ) : (
-            <div className="grid h-full place-items-center text-6xl">🎨</div>
+            <div className="grid h-full place-items-center text-brand/50"><Palette className="h-9 w-9" /></div>
           )}
         </motion.div>
         {allImages.length > 1 && (
@@ -223,10 +228,6 @@ function ListingView({
         </div>
 
          <h1 className="mt-2 font-display text-4xl font-extrabold text-brand-ink">{l.title}</h1>
-         {l.verification_status === "verified" && (
-           <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-brand-soft px-3 py-1 text-xs font-bold text-brand">🛡️ Echtheit geprüft</span>
-         )}
-
         {l.seller && <SellerBox seller={l.seller} />}
 
         <ListingReviews listingId={l.id} />
@@ -329,7 +330,9 @@ function ListingReviews({ listingId }: { listingId: string }) {
         <ul className="mt-3 grid gap-2">
           {reviews.slice(0, 3).map((r) => (
             <li key={r.id} className="rounded-2xl bg-surface px-4 py-2.5 text-sm">
-              <div className="text-amber-500">{"★".repeat(r.rating)}<span className="text-muted-foreground/40">{"★".repeat(5 - r.rating)}</span></div>
+              <div className="flex items-center text-amber-500" aria-label={`${r.rating} von 5 Sternen`}>
+                {Array.from({ length: 5 }, (_, i) => <Star key={i} className={`h-3.5 w-3.5 ${i < r.rating ? "fill-current" : "text-muted-foreground/40"}`} />)}
+              </div>
               {r.body && <p className="mt-1 text-foreground/80">{r.body}</p>}
             </li>
           ))}
@@ -362,7 +365,9 @@ function SellerBox({ seller }: { seller: NonNullable<ListingDetailSeller> }) {
           {seller.avatar_url ? <img src={seller.avatar_url} alt="" className="h-full w-full object-cover" /> : (seller.display_name ?? "?").slice(0, 1).toUpperCase()}
         </span>
         <span className="min-w-0">
-          <span className="block truncate">Shop: {seller.display_name}{seller.is_pro ? " 👑" : ""}</span>
+          <span className="block truncate">Shop: {seller.display_name}</span>
+          {seller.is_verified && <span className="inline-flex items-center gap-1 text-xs font-semibold text-brand"><BadgeCheck className="h-3.5 w-3.5" /> Geprüfter Creator</span>}
+          {seller.is_pro && <span className="inline-flex items-center gap-1 text-xs font-semibold text-gold-foreground"><Crown className="h-3.5 w-3.5" /> Pro</span>}
           {seller.handle ? <span className="block text-xs font-medium text-muted-foreground">@{seller.handle}</span> : null}
         </span>
       </Link>
@@ -390,6 +395,8 @@ function RelatedRails({
   sellerName: string;
   sellerHandle?: string | null;
 }) {
+  const [similarVisible, setSimilarVisible] = useState(4);
+  useEffect(() => setSimilarVisible(4), [id]);
   const { data } = useQuery({
     queryKey: ["related", id],
     queryFn: () => fetchRelatedListings({ data: { id, sellerId, category } }),
@@ -400,22 +407,28 @@ function RelatedRails({
       <Rail
         title={`Sachen vom Shop · ${sellerName}`}
         subtitle="Weitere Produkte von diesem Creator."
-        emoji="🏪"
-        items={data?.fromShop ?? []}
+        icon={<Store className="mr-2 inline h-5 w-5 text-brand" />}
+        items={data?.fromShop.slice(0, 4) ?? []}
         empty={`${sellerName} hat aktuell keine weiteren Produkte online.`}
         viewAll={
-          sellerHandle
-            ? { to: "/shop/$handle" as const, params: { handle: sellerHandle } }
+          sellerHandle || (data?.fromShop.length ?? 0) > 4
+            ? {
+                to: "/shop/$handle" as const,
+                params: { handle: sellerHandle ?? sellerId },
+                label: "Alle Produkte des Shops ansehen →",
+              }
             : null
         }
       />
       <Rail
         title="Ähnliche Produkte"
         subtitle="Passt vielleicht auch — kuratiert aus CreaHQ."
-        emoji="✨"
-        items={data?.similar ?? []}
+        icon={<Sparkles className="mr-2 inline h-5 w-5 text-brand" />}
+        items={data?.similar.slice(0, similarVisible) ?? []}
         empty="Noch nichts Ähnliches auf CreaHQ. Schau später nochmal rein."
-        viewAll={{ to: "/browse" as const, params: undefined }}
+        viewAll={{ to: "/browse" as const, params: undefined, label: "Alle ähnlichen Produkte ansehen →" }}
+        canLoadMore={(data?.similar.length ?? 0) > similarVisible}
+        onLoadMore={() => setSimilarVisible((count) => count + 4)}
       />
     </div>
   );
@@ -424,43 +437,47 @@ function RelatedRails({
 function Rail({
   title,
   subtitle,
-  emoji,
+  icon,
   items,
   empty,
   viewAll,
+  canLoadMore = false,
+  onLoadMore,
 }: {
   title: string;
   subtitle: string;
-  emoji: string;
+  icon: React.ReactNode;
   items: ListingCard[];
   empty: string;
   viewAll:
-    | { to: "/browse"; params: undefined }
-    | { to: "/shop/$handle"; params: { handle: string } }
+    | { to: "/browse"; params: undefined; label: string }
+    | { to: "/shop/$handle"; params: { handle: string }; label: string }
     | null;
+  canLoadMore?: boolean;
+  onLoadMore?: () => void;
 }) {
   return (
     <section>
       <div className="mb-4 flex items-end justify-between gap-4">
         <div>
           <h2 className="font-display text-2xl font-black text-brand-ink">
-            <span className="mr-1">{emoji}</span>
+            {icon}
             {title}
           </h2>
           <p className="text-sm text-muted-foreground">{subtitle}</p>
         </div>
-        {viewAll && items.length > 0 && (
+        {viewAll && (
           viewAll.to === "/browse" ? (
             <Link to="/browse" search={{ q: "", kind: "" as const, cat: "", min: "", max: "", sort: "new" as const }} className="text-xs font-semibold text-brand hover:underline">
-              Alle ansehen →
+              {viewAll.label}
             </Link>
           ) : (
             <Link
               to="/shop/$handle"
               params={viewAll.params}
-              className="text-xs font-semibold text-brand hover:underline"
+              className="inline-flex min-h-10 items-center rounded-full bg-brand px-4 text-xs font-bold text-primary-foreground hover:opacity-90"
             >
-              Alle ansehen →
+              {viewAll.label}
             </Link>
           )
         )}
@@ -482,7 +499,7 @@ function Rail({
                 {item.cover_url ? (
                   <img src={item.cover_url} alt={item.title} className="h-full w-full object-cover" />
                 ) : (
-                  "🎨"
+                  <Palette className="h-8 w-8 text-brand/60" />
                 )}
               </div>
               <div className="p-3">
@@ -499,6 +516,11 @@ function Rail({
             </Link>
           ))}
         </div>
+      )}
+      {canLoadMore && onLoadMore && (
+        <button type="button" onClick={onLoadMore} className="mt-4 min-h-11 rounded-full border border-brand px-5 text-sm font-bold text-brand hover:bg-brand-soft">
+          Mehr ähnliche Produkte laden
+        </button>
       )}
     </section>
   );
@@ -553,7 +575,7 @@ function PlaceholderListing({ id }: { id: string }) {
             className="relative flex aspect-square items-center justify-center overflow-hidden rounded-[2rem] border-2 border-dashed border-brand/30 bg-gradient-to-br from-brand-soft/60 via-transparent to-amber-100/40"
           >
             <div className="text-center">
-              <div className="text-7xl">📦</div>
+              <Package className="h-14 w-14 text-brand/60" />
               <p className="mt-4 text-xs font-bold uppercase tracking-widest text-brand/70">
                 Platzhalter #{String(nr).padStart(2, "0")}
               </p>

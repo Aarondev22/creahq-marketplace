@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { X, GripHorizontal, Flag, ShieldCheck, Users, Package, Power } from "lucide-react";
+import { X, GripHorizontal, Flag, ShieldCheck, Users, Package, Power, TicketCheck, Bot, BadgeCheck } from "lucide-react";
 import {
   listReports,
   resolveReport,
@@ -11,29 +11,28 @@ import {
   banUser,
   toggleUserRole,
   setUserPro,
+  setUserVerified,
   listAllListings,
   setListingStatus,
   type AdminListingFull,
   type AdminReport,
   type AdminListing,
   type AdminUser,
-  listVerifications,
-  reviewVerification,
-  type VerificationItem,
+  listRedeemCodes,
+  createRedeemCode,
+  deleteRedeemCode,
+  type AdminRedeemCode,
   getPlatformSettings,
   setPhysicalEnabled,
 } from "@/lib/admin.functions";
 
-type Tab = "reports" | "queue" | "verify" | "products" | "users" | "system";
+type Tab = "reports" | "queue" | "products" | "users" | "codes" | "ai" | "system";
 const POS_KEY = "creahq.adminPanel.pos";
 
 export function AdminPanel({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [tab, setTab] = useState<Tab>("reports");
   const [reports, setReports] = useState<AdminReport[]>([]);
   const [queue, setQueue] = useState<AdminListing[]>([]);
-  const [verifs, setVerifs] = useState<VerificationItem[]>([]);
-  const getVerifs = useServerFn(listVerifications);
-  const doVerify = useServerFn(reviewVerification);
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [q, setQ] = useState("");
   const [products, setProducts] = useState<AdminListingFull[]>([]);
@@ -51,6 +50,7 @@ export function AdminPanel({ open, onClose }: { open: boolean; onClose: () => vo
   const doBan = useServerFn(banUser);
   const doRole = useServerFn(toggleUserRole);
   const doPro = useServerFn(setUserPro);
+  const doSetVerified = useServerFn(setUserVerified);
   const getAll = useServerFn(listAllListings);
   const doStatus = useServerFn(setListingStatus);
 
@@ -68,9 +68,8 @@ export function AdminPanel({ open, onClose }: { open: boolean; onClose: () => vo
     try {
       if (tab === "reports") setReports(await getReports());
       else if (tab === "queue") setQueue(await getQueue());
-      else if (tab === "verify") setVerifs(await getVerifs());
       else if (tab === "products") setProducts(await getAll({ data: { q: pq, filter: pf } }));
-      else setUsers(await findUsers({ data: { q } }));
+      else if (tab === "users") setUsers(await findUsers({ data: { q } }));
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Laden fehlgeschlagen");
     } finally {
@@ -137,9 +136,10 @@ export function AdminPanel({ open, onClose }: { open: boolean; onClose: () => vo
         {([
           ["reports", "Meldungen", <Flag key="a" className="h-4 w-4" />],
           ["queue", "Moderation", <ShieldCheck key="b" className="h-4 w-4" />],
-          ["verify", "Echtheit", <ShieldCheck key="e" className="h-4 w-4" />],
           ["products", "Produkte", <Package key="d" className="h-4 w-4" />],
           ["users", "Nutzer", <Users key="c" className="h-4 w-4" />],
+          ["codes", "Codes", <TicketCheck key="t" className="h-4 w-4" />],
+          ["ai", "KI-Konsole", <Bot key="i" className="h-4 w-4" />],
           ["system", "System", <Power key="s" className="h-4 w-4" />],
         ] as [Tab, string, React.ReactNode][]).map(([key, label, icon]) => (
           <button
@@ -164,9 +164,13 @@ export function AdminPanel({ open, onClose }: { open: boolean; onClose: () => vo
           </div>
         ) : tab === "system" ? (
           <SystemTab />
+        ) : tab === "codes" ? (
+          <CodesTab />
+        ) : tab === "ai" ? (
+          <AiConsoleTab />
         ) : tab === "reports" ? (
           reports.length === 0 ? (
-            <Empty text="Keine Meldungen – alles ruhig. 🎉" />
+            <Empty text="Keine Meldungen – alles ruhig." />
           ) : (
             <ul className="space-y-2">
               {reports.map((r) => (
@@ -203,13 +207,13 @@ export function AdminPanel({ open, onClose }: { open: boolean; onClose: () => vo
           )
         ) : tab === "queue" ? (
           queue.length === 0 ? (
-            <Empty text="Keine Produkte in der Warteschlange. ✅" />
+            <Empty text="Keine Produkte in der Warteschlange." />
           ) : (
             <ul className="space-y-2">
               {queue.map((l) => (
                 <li key={l.id} className="flex items-center gap-3 rounded-2xl border border-border p-3">
                   <span className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-xl bg-brand-soft">
-                    {l.cover_url ? <img src={l.cover_url} alt="" className="h-full w-full object-cover" /> : "📦"}
+                    {l.cover_url ? <img src={l.cover_url} alt="" className="h-full w-full object-cover" /> : <Package className="h-5 w-5 text-brand" />}
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-bold text-brand-ink">{l.title}</p>
@@ -238,28 +242,6 @@ export function AdminPanel({ open, onClose }: { open: boolean; onClose: () => vo
               ))}
             </ul>
           )
-        ) : tab === "verify" ? (
-          verifs.length === 0 ? (
-            <Empty text="Keine Echtheits-Fotos zu prüfen. ✅" />
-          ) : (
-            <ul className="space-y-3">
-              {verifs.map((v) => (
-                <li key={v.id} className="rounded-2xl border border-border p-3">
-                  <p className="text-sm font-bold text-brand-ink">{v.title}</p>
-                  {v.photo_url ? (
-                    <a href={v.photo_url} target="_blank" rel="noreferrer">
-                      <img src={v.photo_url} alt="Echtheits-Foto" className="mt-2 max-h-56 w-full rounded-xl object-contain bg-brand-soft" />
-                    </a>
-                  ) : <p className="mt-1 text-xs text-muted-foreground">Foto nicht verfügbar</p>}
-                  <p className="mt-1 text-[10px] text-muted-foreground">Prüfen: Zettel mit „CreaHQ + Name + Datum" sichtbar?</p>
-                  <div className="mt-2 flex gap-2">
-                    <Action label="Echt ✓" onClick={async () => { await doVerify({ data: { id: v.id, approve: true } }); toast.success("Als echt bestätigt"); void load(); }} />
-                    <Action variant="ghost" label="Ablehnen" onClick={async () => { await doVerify({ data: { id: v.id, approve: false } }); toast.success("Abgelehnt"); void load(); }} />
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )
         ) : tab === "products" ? (
           <div className="space-y-3">
             <form onSubmit={(e) => { e.preventDefault(); void load(); }} className="flex gap-2">
@@ -277,7 +259,7 @@ export function AdminPanel({ open, onClose }: { open: boolean; onClose: () => vo
                   <li key={l.id} className="rounded-2xl border border-border p-3">
                     <div className="flex items-center gap-3">
                       <span className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-xl bg-brand-soft">
-                        {l.cover_url ? <img src={l.cover_url} alt="" className="h-full w-full object-cover" /> : "📦"}
+                        {l.cover_url ? <img src={l.cover_url} alt="" className="h-full w-full object-cover" /> : <Package className="h-5 w-5 text-brand" />}
                       </span>
                       <div className="min-w-0 flex-1">
                         <a href={`/listing/${l.id}`} target="_blank" rel="noreferrer" className="block truncate text-sm font-bold text-brand-ink hover:text-brand">{l.title}</a>
@@ -319,7 +301,11 @@ export function AdminPanel({ open, onClose }: { open: boolean; onClose: () => vo
               <ul className="space-y-2">
                 {users.map((u) => (
                   <li key={u.id} className="rounded-2xl border border-border p-3">
-                    <p className="flex items-center gap-2 text-sm font-bold text-brand-ink">{u.display_name ?? "Ohne Namen"}{u.is_pro && <span className="rounded-full bg-gold px-2 py-0.5 text-[10px] font-black text-gold-foreground shadow-sm">👑 PRO</span>}</p>
+                    <p className="flex items-center gap-2 text-sm font-bold text-brand-ink">
+                      {u.display_name ?? "Ohne Namen"}
+                      {u.is_pro && <span className="rounded-full bg-gold px-2 py-0.5 text-[10px] font-black text-gold-foreground shadow-sm">PRO</span>}
+                      {u.is_verified && <span className="inline-flex items-center gap-1 rounded-full bg-brand-soft px-2 py-0.5 text-[10px] font-bold text-brand"><BadgeCheck className="h-3 w-3" /> Verifiziert</span>}
+                    </p>
                     <p className="text-xs text-muted-foreground">
                       @{u.handle ?? "—"} · {u.roles.join(", ") || "buyer"} {u.banned ? "· gesperrt" : ""}
                     </p>
@@ -334,11 +320,20 @@ export function AdminPanel({ open, onClose }: { open: boolean; onClose: () => vo
                         }}
                       />
                       <Action
-                        label={u.is_pro ? "👑 Pro aktiv – entziehen" : "+ Pro vergeben"}
+                        label={u.is_pro ? "Pro entziehen" : "Pro vergeben"}
                         variant={u.is_pro ? "gold" : "ghost"}
                         onClick={async () => {
                           await doPro({ data: { userId: u.id, pro: !u.is_pro } });
-                          toast.success(u.is_pro ? "Jetzt Standard" : "Jetzt Pro 👑");
+                          toast.success(u.is_pro ? "Jetzt Standard" : "Jetzt Pro");
+                          void load();
+                        }}
+                      />
+                      <Action
+                        label={u.is_verified ? "Verifizierung entziehen" : "Geprüfter Creator"}
+                        variant="ghost"
+                        onClick={async () => {
+                          await doSetVerified({ data: { userId: u.id, verified: !u.is_verified } });
+                          toast.success(u.is_verified ? "Verifizierung entzogen" : "Creator verifiziert");
                           void load();
                         }}
                       />
@@ -373,6 +368,146 @@ export function AdminPanel({ open, onClose }: { open: boolean; onClose: () => vo
 
 function Empty({ text }: { text: string }) {
   return <p className="px-4 py-10 text-center text-sm text-muted-foreground">{text}</p>;
+}
+
+function CodesTab() {
+  const getCodes = useServerFn(listRedeemCodes);
+  const createCode = useServerFn(createRedeemCode);
+  const removeCode = useServerFn(deleteRedeemCode);
+  const [codes, setCodes] = useState<AdminRedeemCode[]>([]);
+  const [code, setCode] = useState("");
+  const [codeType, setCodeType] = useState<AdminRedeemCode["code_type"]>("pro");
+  const [maxUses, setMaxUses] = useState("1");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  const load = useCallback(async () => {
+    try {
+      setCodes(await getCodes());
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Codes konnten nicht geladen werden.");
+    } finally {
+      setLoading(false);
+    }
+  }, [getCodes]);
+
+  useEffect(() => { void load(); }, [load]);
+
+  async function submit(event: React.FormEvent) {
+    event.preventDefault();
+    setSaving(true);
+    try {
+      const created = await createCode({
+        data: { code, codeType, maxUses: maxUses === "unlimited" ? null : Number(maxUses) },
+      });
+      setCode("");
+      toast.success(`Code ${created.code} erstellt.`);
+      await load();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Code konnte nicht erstellt werden.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      <form onSubmit={submit} className="space-y-3 rounded-2xl border border-border p-3">
+        <h3 className="font-bold text-brand-ink">Einlöse-Code erstellen</h3>
+        <label className="block text-xs font-semibold text-muted-foreground">
+          Code-Name <span className="font-normal">(leer lassen für Zufallscode)</span>
+          <input
+            value={code}
+            onChange={(event) => setCode(event.target.value.toUpperCase())}
+            maxLength={40}
+            pattern="[A-Z0-9-]{3,40}"
+            placeholder="CREAHQ-ABC123"
+            className="mt-1 min-h-11 w-full rounded-xl border border-border bg-background px-3 font-mono text-sm text-brand-ink"
+          />
+        </label>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label className="text-xs font-semibold text-muted-foreground">
+            Typ
+            <select value={codeType} onChange={(event) => setCodeType(event.target.value as AdminRedeemCode["code_type"])} className="mt-1 min-h-11 w-full rounded-xl border border-border bg-background px-3 text-sm text-brand-ink">
+              <option value="founder">Founder</option>
+              <option value="pro">Pro</option>
+              <option value="beta_tester">Beta-Tester</option>
+            </select>
+          </label>
+          <label className="text-xs font-semibold text-muted-foreground">
+            Maximale Einlösungen
+            <select value={maxUses} onChange={(event) => setMaxUses(event.target.value)} className="mt-1 min-h-11 w-full rounded-xl border border-border bg-background px-3 text-sm text-brand-ink">
+              <option value="1">1 Einlösung</option>
+              <option value="5">5 Einlösungen</option>
+              <option value="10">10 Einlösungen</option>
+              <option value="unlimited">Unbegrenzt</option>
+            </select>
+          </label>
+        </div>
+        <button type="submit" disabled={saving} className="min-h-11 rounded-full bg-brand px-5 text-sm font-bold text-primary-foreground disabled:opacity-60">
+          {saving ? "Wird erstellt …" : "Code erstellen"}
+        </button>
+      </form>
+
+      <div className="overflow-x-auto rounded-2xl border border-border">
+        <table className="w-full min-w-[35rem] text-left text-xs">
+          <thead className="bg-brand-soft/50 text-muted-foreground">
+            <tr><th className="p-3">Code</th><th className="p-3">Typ</th><th className="p-3">Einlösungen</th><th className="p-3">Status</th><th className="p-3">Aktion</th></tr>
+          </thead>
+          <tbody>
+            {codes.map((item) => {
+              const exhausted = item.max_uses !== null && item.used_count >= item.max_uses;
+              return (
+                <tr key={item.id} className="border-t border-border">
+                  <td className="p-3 font-mono font-bold text-brand-ink">{item.code}</td>
+                  <td className="p-3">{item.code_type === "beta_tester" ? "Beta-Tester" : item.code_type === "founder" ? "Founder" : "Pro"}</td>
+                  <td className="p-3">{item.used_count} / {item.max_uses ?? "∞"}</td>
+                  <td className="p-3"><span className={exhausted ? "font-bold text-muted-foreground" : "font-bold text-emerald-700"}>{exhausted ? "Eingelöst" : "Aktiv"}</span></td>
+                  <td className="p-3"><Action variant="ghost" label="Löschen" onClick={async () => { await removeCode({ data: { id: item.id } }); toast.success("Code gelöscht."); await load(); }} /></td>
+                </tr>
+              );
+            })}
+            {!loading && codes.length === 0 && <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">Noch keine Codes vorhanden.</td></tr>}
+            {loading && <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">Codes werden geladen …</td></tr>}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function AiConsoleTab() {
+  const [command, setCommand] = useState("");
+  const [logs, setLogs] = useState<string[]>([
+    "KI-Konsole bereit.",
+    "Die spätere eigene KI-Anbindung ist noch nicht verbunden. Befehle werden hier nicht ausgeführt.",
+  ]);
+
+  function run(event: React.FormEvent) {
+    event.preventDefault();
+    const trimmed = command.trim();
+    if (!trimmed) return;
+    setLogs((current) => [
+      ...current,
+      `> ${trimmed}`,
+      "Platzhalter: Für diese Konsole ist noch keine KI- oder Datenintegration konfiguriert.",
+    ]);
+    setCommand("");
+  }
+
+  return (
+    <section className="space-y-3 rounded-2xl border border-border p-3">
+      <div>
+        <h3 className="font-bold text-brand-ink">Administrative KI-Konsole</h3>
+        <p className="mt-1 text-xs text-muted-foreground">Nur die Oberfläche ist vorbereitet. Es werden keine externen KI-Schlüssel oder Datenquellen verwendet.</p>
+      </div>
+      <form onSubmit={run} className="flex flex-col gap-2 sm:flex-row">
+        <input value={command} onChange={(event) => setCommand(event.target.value)} placeholder="z. B. Alle inaktiven Produkte auflisten" className="min-h-11 min-w-0 flex-1 rounded-xl border border-border bg-background px-3 text-sm" />
+        <button type="submit" disabled={!command.trim()} className="min-h-11 rounded-full bg-brand px-5 text-sm font-bold text-primary-foreground disabled:opacity-50">Ausführen</button>
+      </form>
+      <pre aria-live="polite" className="min-h-36 whitespace-pre-wrap rounded-xl bg-slate-950 p-3 font-mono text-xs leading-relaxed text-emerald-300">{logs.join("\n\n")}</pre>
+    </section>
+  );
 }
 
 function Action({

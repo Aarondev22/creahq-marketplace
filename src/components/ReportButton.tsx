@@ -24,7 +24,7 @@ export function ReportButton({
     setSending(true);
     try {
       await createReport({ targetType, targetId, reason, note });
-      toast.success("Danke! Unser Team schaut sich das an. 🙏");
+      toast.success("Danke. Unser Team schaut sich das an.");
       setOpen(false);
       setNote("");
     } catch (err) {
@@ -50,7 +50,7 @@ export function ReportButton({
             onSubmit={submit}
             className="w-full max-w-md space-y-4 rounded-3xl border border-border bg-card p-6 shadow-2xl"
           >
-            <h2 className="font-display text-2xl font-black text-brand-ink">Inhalt melden 🚩</h2>
+            <h2 className="inline-flex items-center gap-2 font-display text-2xl font-black text-brand-ink"><Flag className="h-5 w-5 text-brand" /> Inhalt melden</h2>
             <p className="text-sm text-muted-foreground">
               Sag uns kurz, was hier nicht stimmt. Missbrauch von Meldungen kann zur Sperre führen.
             </p>

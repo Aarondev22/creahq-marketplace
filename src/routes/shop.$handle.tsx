@@ -1,6 +1,6 @@
 import { createFileRoute, notFound, Link } from "@tanstack/react-router";
 import { useSuspenseQuery, queryOptions } from "@tanstack/react-query";
-import { Store, Sparkles, Star, MessageCircle, Truck, Crown } from "lucide-react";
+import { Store, Sparkles, Star, MessageCircle, Truck, Crown, BadgeCheck, Search, Palette } from "lucide-react";
 import { motion } from "motion/react";
 import { parseTheme, parseBadges } from "@/lib/shopTheme";
 import { ShopCustomContent } from "@/components/ShopCustomContent";
@@ -42,7 +42,7 @@ export const Route = createFileRoute("/shop/$handle")({
   errorComponent: ({ error }) => <div className="p-10 text-center text-sm">{(error as Error).message}</div>,
   notFoundComponent: () => (
     <div className="mx-auto max-w-md px-6 py-24 text-center">
-      <div className="text-6xl">🔍</div>
+      <Search className="mx-auto h-10 w-10 text-brand" />
       <h1 className="mt-4 font-display text-2xl font-black text-brand-ink">Diesen Shop gibt's (noch) nicht.</h1>
       <p className="mt-2 text-sm text-muted-foreground">Vielleicht ein Tippfehler im Handle?</p>
     </div>
@@ -79,10 +79,10 @@ function ShopPage() {
 
   const listingsBlock = (
     <section key="listings">
-      <h2 className="mt-10 font-display text-2xl font-black text-brand-ink">Im Schaufenster 🪟</h2>
+      <h2 className="mt-10 inline-flex items-center gap-2 font-display text-2xl font-black text-brand-ink"><Store className="h-5 w-5 text-brand" /> Im Schaufenster</h2>
       {rest.length === 0 ? (
         <div className="mt-4 grid place-items-center rounded-[2rem] border-2 border-dashed border-brand/30 bg-brand-soft/20 p-12 text-center">
-          <div className="text-5xl">🪟</div>
+          <Store className="h-9 w-9 text-brand" />
           <p className="mt-3 font-display text-lg font-bold text-brand-ink">Noch nichts im Schaufenster.</p>
           <p className="mt-1 text-sm text-muted-foreground">Dieser Shop hat aktuell keine veröffentlichten Produkte.</p>
           <Link
@@ -107,7 +107,7 @@ function ShopPage() {
 
   const highlightBlock = highlight ? (
     <section key="highlight" className="mt-10">
-      <h2 className="font-display text-2xl font-black text-brand-ink">Highlight ⭐</h2>
+      <h2 className="inline-flex items-center gap-2 font-display text-2xl font-black text-brand-ink"><Star className="h-5 w-5 text-brand" /> Highlight</h2>
       <Link
         to="/listing/$id"
         params={{ id: highlight.id }}
@@ -117,7 +117,7 @@ function ShopPage() {
           {highlight.cover_url ? (
             <img src={highlight.cover_url} alt={highlight.title} className="h-full w-full object-cover" />
           ) : (
-            <span className="text-5xl">🎨</span>
+            <Palette className="h-9 w-9 text-brand" />
           )}
         </div>
         <div className="min-w-0">
@@ -182,6 +182,11 @@ function ShopPage() {
               {isPro && (
                 <div className="inline-flex items-center gap-1.5 rounded-full bg-brand px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-primary-foreground">
                   <Crown className="h-3 w-3" /> Pro Creator
+                </div>
+              )}
+              {profile.is_verified && (
+                <div className="inline-flex items-center gap-1.5 rounded-full bg-brand-soft px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-brand">
+                  <BadgeCheck className="h-3 w-3" /> Geprüfter Creator
                 </div>
               )}
             </div>

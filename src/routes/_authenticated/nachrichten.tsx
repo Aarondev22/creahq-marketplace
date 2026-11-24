@@ -120,7 +120,7 @@ function MessagesPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-10">
-      <h1 className="mb-4 font-display text-3xl font-black text-brand-ink">Nachrichten 💬</h1>
+      <h1 className="mb-4 font-display text-3xl font-black text-brand-ink">Nachrichten</h1>
 
       <div className="grid gap-4 md:grid-cols-[20rem_1fr]">
         {/* Chatliste */}
@@ -230,7 +230,7 @@ function MessagesPage() {
                     params={{ id: active.listing_id }}
                     className="block truncate text-xs font-semibold text-muted-foreground hover:text-brand"
                   >
-                    📦 {active.listing_title ?? "Produkt"}
+                    {active.listing_title ?? "Produkt"}
                   </Link>
                 ) : (
                   <div className="text-xs text-muted-foreground">Allgemeiner Chat</div>
@@ -250,7 +250,7 @@ function MessagesPage() {
                 </div>
               ) : messages.length === 0 ? (
                 <div className="py-10 text-center text-sm text-muted-foreground">
-                  Sag Hallo 👋 – noch keine Nachrichten.
+                  Noch keine Nachrichten.
                 </div>
               ) : (
                 messages.map((m) => {

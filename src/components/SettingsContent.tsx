@@ -1,14 +1,14 @@
 import { Button } from "@/components/ui/button";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
-import { ArrowLeft, Check, Settings as SettingsIcon } from "lucide-react";
+import { ArrowLeft, Check, ExternalLink, Palette } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { ShopEditor } from "@/components/ShopEditor";
 import { ShopDesignEditor } from "@/components/ShopDesignEditor";
 
-const HANDLE_RE = /^[a-z0-9_]{3,30}$/;
+const HANDLE_RE = /^[a-z0-9_-]{3,30}$/;
 
 export function SettingsContent({ section = "profile" }: { section?: "profile" | "shop" | "studio" }) {
   const qc = useQueryClient();
@@ -180,7 +180,7 @@ export function SettingsContent({ section = "profile" }: { section?: "profile" |
     <div className="w-full min-w-0">
       {loading ? (
         <p className="mt-8 text-sm text-muted-foreground">Lade …</p>
-      ) : section === "profile" ? (
+      ) : section === "profile" || section === "shop" ? (
         <form onSubmit={save} className="space-y-5">
           <div>
             <label htmlFor="display_name" className="mb-1.5 block text-xs font-bold uppercase tracking-widest text-muted-foreground">
@@ -204,10 +204,11 @@ export function SettingsContent({ section = "profile" }: { section?: "profile" |
               <input
                 id="handle"
                 value={handle}
-                onChange={(e) => setHandle(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))}
+                onChange={(e) => setHandle(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ""))}
                 className="min-w-0 min-h-12 flex-1 rounded-full border border-border bg-background px-4 font-mono text-sm focus:border-brand focus:outline-none"
               />
             </div>
+            <p className="mt-1 text-xs text-muted-foreground">Dein Shop ist unter creahq.com/shop/{handle || "dein-name"} erreichbar.</p>
             {statusText && (
               <p
                 className={`mt-1.5 text-xs font-semibold ${
@@ -256,6 +257,14 @@ export function SettingsContent({ section = "profile" }: { section?: "profile" |
       ) : null}
 
       {!loading && userId && section === "shop" && <ShopEditor userId={userId} />}
+      {!loading && section === "shop" && (
+        <Button asChild className="mt-5 min-h-12 w-full justify-between rounded-full">
+          <Link to="/einstellungen" search={{ section: "studio" }}>
+            <span className="inline-flex items-center gap-2"><Palette className="h-4 w-4" /> Shop-Studio (Design &amp; Code)</span>
+            <ExternalLink className="h-4 w-4" />
+          </Link>
+        </Button>
+      )}
       {!loading && userId && section === "studio" && <ShopDesignEditor userId={userId} />}
     </div>
   );

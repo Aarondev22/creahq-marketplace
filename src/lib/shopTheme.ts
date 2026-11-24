@@ -33,18 +33,18 @@ export const DEFAULT_THEME: ShopTheme = {
 export const BG_OPTIONS: { key: ShopBg; label: string; pro: boolean }[] = [
   { key: "none", label: "Schlicht", pro: false },
   { key: "image", label: "Eigenes Bild", pro: false },
-  { key: "bubbles", label: "Seifenblasen 🫧", pro: false },
-  { key: "confetti", label: "Farbkleckse 🎨", pro: false },
-  { key: "waves", label: "Wellen 🌊", pro: false },
-  { key: "stars", label: "Sternenstaub ✨", pro: true },
-  { key: "blobs", label: "Liquid Blobs 🫠", pro: true },
+  { key: "bubbles", label: "Seifenblasen", pro: false },
+  { key: "confetti", label: "Farbkleckse", pro: false },
+  { key: "waves", label: "Wellen", pro: false },
+  { key: "stars", label: "Sternenstaub", pro: true },
+  { key: "blobs", label: "Liquid Blobs", pro: true },
 ];
 
 export const CARD_FX_OPTIONS: { key: CardFx; label: string; pro: boolean }[] = [
   { key: "none", label: "Ruhig", pro: false },
-  { key: "zoom", label: "Smooth Zoom 🔍", pro: false },
-  { key: "pop", label: "Feder-Pop 🪀", pro: false },
-  { key: "tilt", label: "3D-Kippen 🧊", pro: true },
+  { key: "zoom", label: "Smooth Zoom", pro: false },
+  { key: "pop", label: "Feder-Pop", pro: false },
+  { key: "tilt", label: "3D-Kippen", pro: true },
 ];
 
 export const ENTRANCE_OPTIONS: { key: Entrance; label: string }[] = [
@@ -61,10 +61,10 @@ export const BADGE_STYLES: { key: BadgeStyle; label: string }[] = [
 ];
 
 export const TEMPLATES: { key: string; label: string; theme: Omit<ShopTheme, "template" | "bgImage" | "marquee">; marquee: string }[] = [
-  { key: "neon", label: "Cyber Neon", theme: { accent: "#22d3ee", bg: "stars", cardFx: "tilt", entrance: "slide" }, marquee: "⚡ Neue Drops jede Woche · Digital first ⚡" },
-  { key: "pastel", label: "Pastel Dream", theme: { accent: "#f472b6", bg: "bubbles", cardFx: "pop", entrance: "pop" }, marquee: "🍬 Handgemacht mit Liebe · Jedes Stück ein Unikat 🍬" },
-  { key: "cozy", label: "Cozy Studio", theme: { accent: "#d97706", bg: "waves", cardFx: "zoom", entrance: "rise" }, marquee: "☕ Kleine Werkstatt · Große Liebe zum Detail ☕" },
-  { key: "splash", label: "Artistic Splash", theme: { accent: "#8b5cf6", bg: "blobs", cardFx: "tilt", entrance: "pop" }, marquee: "🎨 Kunst zum Anfassen · Versand mit Herz 🎨" },
+  { key: "neon", label: "Cyber Neon", theme: { accent: "#22d3ee", bg: "stars", cardFx: "tilt", entrance: "slide" }, marquee: "Neue Produkte jede Woche · Digital first" },
+  { key: "pastel", label: "Pastel Dream", theme: { accent: "#f472b6", bg: "bubbles", cardFx: "pop", entrance: "pop" }, marquee: "Handgemacht mit Liebe · Jedes Stück ein Unikat" },
+  { key: "cozy", label: "Cozy Studio", theme: { accent: "#d97706", bg: "waves", cardFx: "zoom", entrance: "rise" }, marquee: "Kleine Werkstatt · Große Liebe zum Detail" },
+  { key: "splash", label: "Artistic Splash", theme: { accent: "#8b5cf6", bg: "blobs", cardFx: "tilt", entrance: "pop" }, marquee: "Kunst zum Anfassen · Versand mit Herz" },
 ];
 
 const HEX = /^#[0-9a-fA-F]{6}$/;
@@ -100,12 +100,16 @@ export function parseBadges(raw: unknown, isPro: boolean): ShopBadge[] {
     .map((b) => {
       const o = (b && typeof b === "object" ? b : {}) as Record<string, unknown>;
       return {
-        emoji: typeof o.emoji === "string" ? o.emoji.slice(0, 4) : "✨",
+        emoji: "",
         text: typeof o.text === "string" ? o.text.slice(0, 32) : "",
         style: pick(o.style, BADGE_STYLES.map((s) => s.key), "pill"),
       };
     })
-    .filter((b) => b.text.trim().length > 0)
+    .filter(
+      (b) =>
+        b.text.trim().length > 0 &&
+        !/^(?:creahq\s*)?(?:pro(?:\s+creator)?|geprüfter creator|verified creator)$/i.test(b.text.trim()),
+    )
     .slice(0, isPro ? PRO_BADGES : FREE_BADGES);
 }
 

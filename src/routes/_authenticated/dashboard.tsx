@@ -263,7 +263,7 @@ function Dashboard() {
           </h2>
           {favorites.filter((f) => f.listing).length === 0 ? (
             <div className="rounded-[2rem] border-2 border-dashed border-brand/30 bg-card/40 p-10 text-center">
-              <div className="text-5xl">💜</div>
+              <Heart className="mx-auto h-10 w-10 text-brand/60" />
               <p className="mt-3 font-display text-lg font-bold text-brand-ink">Noch nichts favorisiert.</p>
               <p className="mt-1 text-sm text-muted-foreground">Klick auf das Herz bei einem Produkt, dann landet es hier.</p>
             </div>
@@ -340,7 +340,7 @@ function OrderItemsExtras({ orderId }: { orderId: string }) {
     setSaving(true);
     try {
       await createReview({ orderId, listingId: it.listing_id, sellerId: it.seller_id, rating, body });
-      toast.success("Danke für deine Bewertung ⭐");
+      toast.success("Danke für deine Bewertung.");
       setOpenFor(null); setBody(""); setRating(5);
       load();
     } catch (err) { toast.error(err instanceof Error ? err.message : "Fehler"); }
@@ -363,7 +363,7 @@ function OrderItemsExtras({ orderId }: { orderId: string }) {
               <span className="text-xs text-muted-foreground">Datei folgt – frag den Verkäufer im Chat.</span>
             )}
             {reviewed.has(it.listing_id) ? (
-              <span className="inline-flex min-h-11 items-center gap-1 rounded-full bg-brand-soft px-4 text-xs font-bold text-brand">⭐ Bewertet</span>
+              <span className="inline-flex min-h-11 items-center gap-1 rounded-full bg-brand-soft px-4 text-xs font-bold text-brand"><Star className="h-3.5 w-3.5" /> Bewertet</span>
             ) : openFor !== it.listing_id ? (
               <button onClick={() => setOpenFor(it.listing_id)} className="inline-flex min-h-11 items-center gap-2 rounded-full border-2 border-border px-4 text-xs font-bold text-brand-ink hover:border-brand">
                 <Star className="h-4 w-4" /> Bewertung abgeben
@@ -443,7 +443,7 @@ function OrdersTab({ orders }: { orders: MyOrder[] }) {
                     <div className="font-mono text-xs text-muted-foreground">#{o.id.slice(0, 8)} · {new Date(o.created_at).toLocaleDateString("de-DE")}</div>
                     <div className="font-display text-lg font-black text-brand-ink">{(o.total_cents / 100).toFixed(2)} €</div>
                   </div>
-                  <span className="rounded-full bg-brand/10 px-3 py-1 text-xs font-bold text-brand">{sh ? "Versendet 🚚" : o.status}</span>
+                  <span className="rounded-full bg-brand/10 px-3 py-1 text-xs font-bold text-brand">{sh ? "Versendet" : o.status}</span>
                 </div>
                 {sh ? (
                   <a href={trackingUrl(sh.carrier, sh.tracking_number)} target="_blank" rel="noreferrer" className="mt-3 flex min-h-12 items-center justify-between gap-3 rounded-2xl bg-brand-soft/50 px-4 py-2.5 hover:bg-brand-soft">
@@ -453,7 +453,7 @@ function OrdersTab({ orders }: { orders: MyOrder[] }) {
                 ) : <p className="mt-3 text-xs text-muted-foreground">Noch keine Versandnummer – der Verkäufer trägt sie nach dem Versand ein.</p>}
                 <div className="mt-3">
                   {rp ? (
-                    <div className="rounded-2xl border border-border bg-surface px-4 py-2.5 text-sm">⚠️ Gemeldet: {rp.reason} – {rp.status === "open" ? "Prüfung läuft" : "Erledigt"}</div>
+                    <div className="rounded-2xl border border-border bg-surface px-4 py-2.5 text-sm">Gemeldet: {rp.reason} – {rp.status === "open" ? "Prüfung läuft" : "Erledigt"}</div>
                   ) : openFor === o.id ? (
                     <div className="grid gap-2 border-t border-border pt-3">
                       <select value={reason} onChange={(e) => setReason(e.target.value)} className="min-h-12 rounded-2xl border border-border bg-surface px-4 text-sm">
@@ -515,9 +515,9 @@ function SalesTab({ sales, onUpdated }: { sales: MySale[]; onUpdated: () => void
   return (
     <section className="mt-8">
       <div className="mb-6 grid gap-3 sm:grid-cols-3">
-        <div className="rounded-3xl border border-border bg-card p-5"><div className="text-xs font-bold uppercase tracking-widest text-muted-foreground">🔒 In Treuhand (10 Tage)</div><div className="mt-1 font-display text-2xl font-black text-brand-ink">{eur(sums.held)}</div></div>
-        <div className="rounded-3xl border border-border bg-card p-5"><div className="text-xs font-bold uppercase tracking-widest text-muted-foreground">❄️ Eingefroren (Meldung)</div><div className="mt-1 font-display text-2xl font-black text-destructive">{eur(sums.frozen)}</div></div>
-        <div className="rounded-3xl border border-border bg-card p-5"><div className="text-xs font-bold uppercase tracking-widest text-muted-foreground">✅ Freigegeben</div><div className="mt-1 font-display text-2xl font-black text-brand">{eur(sums.released)}</div></div>
+        <div className="rounded-3xl border border-border bg-card p-5"><div className="text-xs font-bold uppercase tracking-widest text-muted-foreground">In Treuhand (10 Tage)</div><div className="mt-1 font-display text-2xl font-black text-brand-ink">{eur(sums.held)}</div></div>
+        <div className="rounded-3xl border border-border bg-card p-5"><div className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Eingefroren (Meldung)</div><div className="mt-1 font-display text-2xl font-black text-destructive">{eur(sums.frozen)}</div></div>
+        <div className="rounded-3xl border border-border bg-card p-5"><div className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Freigegeben</div><div className="mt-1 font-display text-2xl font-black text-brand">{eur(sums.released)}</div></div>
       </div>
       <h2 className="mb-4 inline-flex items-center gap-2 font-display text-2xl font-black text-brand-ink">
         <Truck className="h-5 w-5" /> Deine Verkäufe
@@ -530,7 +530,7 @@ function SalesTab({ sales, onUpdated }: { sales: MySale[]; onUpdated: () => void
                 <div className="truncate font-display text-base font-bold text-brand-ink">{s.listing_title}</div>
                 <div className="text-xs text-muted-foreground">{s.qty}× · {(s.unit_price_cents / 100).toFixed(2)} €</div>
                 {(() => { const e = escrowState(s.created_at, s.report?.status === "open"); return (
-                  <div className="mt-1 text-xs font-bold text-brand">{e.state === "held" ? `🔒 Treuhand – frei in ${e.daysLeft} Tag${e.daysLeft === 1 ? "" : "en"}` : e.state === "frozen" ? "❄️ Eingefroren bis zur Klärung" : "✅ Auszahlung freigegeben"}</div>
+                  <div className="mt-1 text-xs font-bold text-brand">{e.state === "held" ? `Treuhand – frei in ${e.daysLeft} Tag${e.daysLeft === 1 ? "" : "en"}` : e.state === "frozen" ? "Eingefroren bis zur Klärung" : "Auszahlung freigegeben"}</div>
                 ); })()}
               </div>
               {s.shipment ? (
@@ -549,7 +549,7 @@ function SalesTab({ sales, onUpdated }: { sales: MySale[]; onUpdated: () => void
             </div>
             {s.report && (
               <div className="mt-4 rounded-2xl border-2 border-destructive/40 bg-destructive/5 px-4 py-3 text-sm">
-                <div className="font-bold text-destructive">⚠️ Käufer meldet: {s.report.reason}</div>
+                <div className="font-bold text-destructive">Käufer meldet: {s.report.reason}</div>
                 {s.report.note && <p className="mt-1 text-brand-ink">„{s.report.note}“</p>}
                 <p className="mt-1 text-xs text-muted-foreground">
                   {s.report.status === "open" ? "Wird von CreaHQ geprüft – bitte kläre es mit dem Käufer im Chat." : "Fall abgeschlossen."}
@@ -595,7 +595,7 @@ function TabBtn({ label, active, onClick }: { label: string; active: boolean; on
 function EmptyListings() {
   return (
     <div className="rounded-[2rem] border-2 border-dashed border-brand/30 bg-card/40 p-10 text-center">
-      <div className="text-5xl">📭</div>
+      <Package className="mx-auto h-10 w-10 text-brand/60" />
       <p className="mt-3 font-display text-lg font-bold text-brand-ink">Noch nix online.</p>
       <p className="mt-1 text-sm text-muted-foreground">Klick "Neues Listing" und leg los.</p>
     </div>

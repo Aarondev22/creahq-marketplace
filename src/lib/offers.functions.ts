@@ -90,8 +90,8 @@ export async function respondToOffer(offerId: string, accept: boolean): Promise<
       sender_id: u.user.id,
       kind: "text",
       body: accept
-        ? `✅ Angebot angenommen: ${offer.qty}× für ${(offer.price_cents / 100).toFixed(2)} €`
-        : "❌ Angebot abgelehnt",
+        ? `Angebot angenommen: ${offer.qty}× für ${(offer.price_cents / 100).toFixed(2)} €`
+        : "Angebot abgelehnt",
     });
   }
   return offer;

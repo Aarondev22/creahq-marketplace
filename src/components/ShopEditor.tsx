@@ -7,8 +7,8 @@ const SIGNED_TTL = 60 * 60 * 24 * 365;
 
 type SectionKey = "highlight" | "listings";
 const SECTION_LABEL: Record<SectionKey, string> = {
-  highlight: "⭐ Highlight-Produkt",
-  listings: "🪟 Schaufenster (alle Produkte)",
+  highlight: "Highlight-Produkt",
+  listings: "Schaufenster (alle Produkte)",
 };
 
 type MyListing = { id: string; title: string };
@@ -71,7 +71,7 @@ export function ShopEditor({ userId }: { userId: string }) {
       if (!signed?.signedUrl) throw new Error("Bild-URL konnte nicht erstellt werden.");
       if (kind === "avatar") setAvatarUrl(signed.signedUrl);
       else setBannerUrl(signed.signedUrl);
-      toast.success(kind === "avatar" ? "Profilbild geladen 🎉" : "Banner geladen 🎉");
+      toast.success(kind === "avatar" ? "Profilbild geladen." : "Banner geladen.");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Upload fehlgeschlagen");
     } finally {
@@ -102,7 +102,7 @@ export function ShopEditor({ userId }: { userId: string }) {
         .eq("id", userId);
       if (error) throw error;
       window.dispatchEvent(new CustomEvent("creahq:profile-updated", { detail: { avatar_url: avatarUrl } }));
-      toast.success("Shop gespeichert! 🛍️");
+      toast.success("Shop gespeichert.");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Speichern fehlgeschlagen");
     } finally {

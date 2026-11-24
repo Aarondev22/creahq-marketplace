@@ -8,7 +8,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { User, LogIn, UserPlus, LayoutDashboard, LogOut, ShoppingCart, Settings } from "lucide-react";
+import { User, LogIn, UserPlus, LayoutDashboard, LogOut, ShoppingCart, Settings, Store, Crown } from "lucide-react";
 import { Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,6 +24,7 @@ export function ProfileMenu() {
   const { totalCount } = useCart();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [displayName, setDisplayName] = useState<string | null>(null);
+  const [shopHandle, setShopHandle] = useState<string | null>(null);
 
   useEffect(() => {
   let active = true;
@@ -31,21 +32,26 @@ export function ProfileMenu() {
   async function load() {
     if (!user) {
       setDisplayName(null);
+      setShopHandle(null);
       return;
     }
     const { data } = await supabase
       .from("profiles")
-      .select("display_name")
+      .select("display_name,handle")
       .eq("id", user.id)
       .maybeSingle();
-    if (active) setDisplayName(data?.display_name ?? null);
+    if (active) {
+      setDisplayName(data?.display_name ?? null);
+      setShopHandle(data?.handle ?? null);
+    }
   }
 
   void load();
 
   function onProfileUpdated(e: Event) {
-    const detail = (e as CustomEvent<{ display_name?: string }>).detail;
+    const detail = (e as CustomEvent<{ display_name?: string; handle?: string }>).detail;
     if (detail?.display_name) setDisplayName(detail.display_name);
+    if (detail?.handle) setShopHandle(detail.handle);
     else void load();
   }
 
@@ -80,7 +86,7 @@ export function ProfileMenu() {
           className={`relative grid h-10 w-10 shrink-0 place-items-center rounded-full text-sm font-black text-primary-foreground transition-transform hover:scale-105 ${isFounder ? "bg-gradient-to-br from-brand to-fuchsia-600 ring-2 ring-amber-300" : "bg-gradient-to-br from-brand to-brand-ink"}`}
         >
           {user ? initial : <User className="h-5 w-5" />}
-          {isFounder && <span className="absolute -bottom-1 -right-1 grid h-4 w-4 place-items-center rounded-full bg-amber-300 text-[8px]">👑</span>}
+          {isFounder && <span className="absolute -bottom-1 -right-1 grid h-4 w-4 place-items-center rounded-full bg-amber-300"><Crown className="h-2.5 w-2.5 text-amber-950" /></span>}
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-60">
@@ -95,6 +101,11 @@ export function ProfileMenu() {
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
               <Link to="/dashboard" search={{ tab: "overview" as const }}><LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard</Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link to="/shop/$handle" params={{ handle: shopHandle || user.id }}>
+                <Store className="mr-2 h-4 w-4" /> Mein Shop
+              </Link>
             </DropdownMenuItem>
             <DropdownMenuItem onSelect={() => setSettingsOpen(true)}><Settings className="mr-2 h-4 w-4" /> Einstellungen</DropdownMenuItem>
 
