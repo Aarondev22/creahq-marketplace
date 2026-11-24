@@ -61,7 +61,7 @@ function CartPage() {
         <div className="mx-auto grid h-20 w-20 place-items-center rounded-[1.75rem] bg-brand-soft text-brand">
           <ShoppingBag className="h-9 w-9" />
         </div>
-        <h1 className="mt-6 font-display text-3xl font-black text-brand-ink">Dein Warenkorb ist leer. 🛒</h1>
+        <h1 className="mt-6 font-display text-3xl font-black text-brand-ink">Dein Warenkorb ist leer.</h1>
         <p className="mt-2 text-sm text-muted-foreground">Stöbere durch die Listings und leg was rein.</p>
         <Link
           to="/browse"
@@ -76,7 +76,7 @@ function CartPage() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
-      <h1 className="font-display text-4xl font-black text-brand-ink">Dein Warenkorb 🛍️</h1>
+      <h1 className="font-display text-4xl font-black text-brand-ink">Dein Warenkorb</h1>
 
       <ul className="mt-8 space-y-3">
         {items.map((item) => (

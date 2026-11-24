@@ -41,7 +41,7 @@ function SuccessPage() {
       <div className="mx-auto grid h-20 w-20 place-items-center rounded-[1.75rem] bg-emerald-100 text-emerald-600">
         <CheckCircle2 className="h-10 w-10" />
       </div>
-      <h1 className="mt-6 font-display text-4xl font-black text-brand-ink">Danke! 🎉</h1>
+      <h1 className="mt-6 font-display text-4xl font-black text-brand-ink">Danke!</h1>
       <p className="mt-2 text-muted-foreground">
         Deine Zahlung ist durch. Wir haben die Bestellung an den Shop weitergegeben.
       </p>

@@ -2,10 +2,12 @@ import { feeCents, sellerPayoutCents } from "@/lib/fees";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "motion/react";
-import { ArrowLeft, ChevronLeft, ChevronRight, Check, ImagePlus, X, Download, Truck, Star, MoveLeft, MoveRight } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Check, ImagePlus, X, Download, Truck, Star, MoveLeft, MoveRight, FileDown, Palette } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { createListing, fetchSellerStatus, resendConfirmationEmail } from "@/lib/seller.functions";
+import { fetchMarketplaceSettings } from "@/lib/listings.functions";
+import { CARRIERS, PROCESSING_TIMES } from "@/lib/shipping";
 
 export const Route = createFileRoute("/_authenticated/verkaufen/neu")({
   head: () => ({
@@ -35,7 +37,8 @@ type WizardData = {
   stock: string;
   files: File[];
   downloadFile: File | null;
-  proofFile: File | null;
+  shippingCarrier: (typeof CARRIERS)[number];
+  processingTime: (typeof PROCESSING_TIMES)[number];
   acceptedRules: boolean;
 };
 
@@ -51,20 +54,23 @@ function NewListingPage() {
   const [data, setData] = useState<WizardData>({
     title: "", description: "", category: "", price: "9.00", kind: "digital",
     shippingMode: "digital", shippingPrice: "0",
-    location: "", condition: "neu", stock: "", files: [], downloadFile: null, proofFile: null, acceptedRules: false,
+    location: "", condition: "neu", stock: "", files: [], downloadFile: null,
+    shippingCarrier: CARRIERS[0], processingTime: PROCESSING_TIMES[0], acceptedRules: false,
   });
+  const [physicalEnabled, setPhysicalEnabled] = useState(false);
   const [sellerStatus, setSellerStatus] = useState<{ email: string | null; emailConfirmed: boolean; todayCount: number } | null>(null);
   const [resending, setResending] = useState(false);
 
   useEffect(() => {
     fetchSellerStatus().then(setSellerStatus).catch(() => undefined);
+    fetchMarketplaceSettings().then((settings) => setPhysicalEnabled(settings.physicalEnabled)).catch(() => undefined);
   }, []);
 
   async function resendMail() {
     setResending(true);
     try {
       const r = await resendConfirmationEmail();
-      toast.success(r.already ? "Deine E-Mail ist schon bestätigt \u2705" : "Bestätigungsmail verschickt \u2709\ufe0f");
+      toast.success(r.already ? "Deine E-Mail ist schon bestätigt." : "Bestätigungsmail verschickt.");
       if (r.already) setSellerStatus((s) => (s ? { ...s, emailConfirmed: true } : s));
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Konnte Mail nicht senden");
@@ -91,8 +97,8 @@ function NewListingPage() {
     if (target > 3) {
       const p = parseFloat(data.price.replace(",", "."));
       if (!(p > 0)) e.price = "Bitte einen Preis größer als 0 € angeben.";
-      if (!data.downloadFile) e.file = "Bitte die Datei hochladen, die Käufer herunterladen.";
-      else if (data.downloadFile.size === 0) e.file = "Die Datei ist leer (0 KB) – bitte eine gültige Datei hochladen.";
+      if (data.kind === "digital" && !data.downloadFile) e.file = "Bitte die Datei hochladen, die Käufer herunterladen.";
+      else if (data.kind === "digital" && data.downloadFile?.size === 0) e.file = "Die Datei ist leer (0 KB) – bitte eine gültige Datei hochladen.";
     }
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -152,6 +158,8 @@ function NewListingPage() {
           stock,
           images: urls,
           acceptedRules: data.acceptedRules,
+          shippingCarrier: data.shippingCarrier,
+          processingTime: data.processingTime,
         },
       });
       if (data.kind === "digital" && data.downloadFile) {
@@ -161,17 +169,10 @@ function NewListingPage() {
         if (fErr) toast.error("Datei konnte nicht hochgeladen werden: " + fErr.message);
         else await supabase.from("listing_files").insert({ listing_id: result.id, seller_id: u.user.id, file_path: path, file_name: f.name });
       }
-      if (data.proofFile) {
-        const pf = data.proofFile;
-        const vpath = `${u.user.id}/${result.id}/${crypto.randomUUID()}-${pf.name.replace(/[^\w.-]/g, "_")}`;
-        const { error: vErr } = await supabase.storage.from("listing-verifications").upload(vpath, pf);
-        if (vErr) toast.error("Echtheits-Foto konnte nicht hochgeladen werden: " + vErr.message);
-        else await supabase.from("listings").update({ verification_path: vpath }).eq("id", result.id);
-      }
       if (result.moderation === "pending") {
         toast.warning("Dein Listing wird kurz von uns geprüft \u2014 danach ist es öffentlich sichtbar.");
       } else {
-        toast.success("Veröffentlicht! \ud83c\udf89");
+        toast.success("Veröffentlicht!");
       }
       navigate({ to: "/dashboard", search: { tab: "listings" } });
     } catch (err) {
@@ -209,7 +210,7 @@ function NewListingPage() {
           {step === 1 && (
             <div>
               <h2 className="font-display text-2xl font-black text-brand-ink">Was verkaufst du?</h2>
-              <p className="mt-1 text-sm text-muted-foreground">CreaHQ startet mit rein digitalen Produkten — kein Versand, sofortiger Download.</p>
+              <p className="mt-1 text-sm text-muted-foreground">Wähle die passende Produktart für dein Angebot.</p>
               <div className="mt-5 grid gap-4">
                 <KindCard
                   active={data.kind === "digital"}
@@ -218,6 +219,15 @@ function NewListingPage() {
                   title="Digital"
                   desc="Downloads, Templates, Presets, 3D-Dateien, Fonts, Code. Käufer laden sofort nach der Zahlung herunter."
                 />
+                {physicalEnabled && (
+                  <KindCard
+                    active={data.kind === "service"}
+                    onClick={() => { update("kind", "service"); update("shippingMode", "included"); }}
+                    icon={<Truck className="h-6 w-6" />}
+                    title="Physisch"
+                    desc="Versende handgemachte oder andere physische Produkte an deine Käufer."
+                  />
+                )}
               </div>
             </div>
           )}
@@ -272,7 +282,7 @@ function NewListingPage() {
                   </p>
                   <Field label="Datei zum Herunterladen (PDF, ZIP, Bild …)" required error={errors.file}>
                     <label className="flex min-h-14 cursor-pointer items-center justify-center rounded-2xl border-2 border-dashed border-brand/40 bg-surface px-4 text-sm font-bold text-brand hover:bg-brand-soft/40">
-                      {data.downloadFile ? `📎 ${data.downloadFile.name}` : "📥 Datei auswählen"}
+                      {data.downloadFile ? data.downloadFile.name : <><FileDown className="mr-2 inline h-4 w-4" /> Datei auswählen</>}
                       <input type="file" className="hidden" onChange={(e) => {
                         const f = e.target.files?.[0] ?? null;
                         if (f && f.size === 0) { toast.error("Die Datei ist leer (0 KB) – bitte eine gültige Datei hochladen."); return; }
@@ -294,6 +304,18 @@ function NewListingPage() {
                       <input type="number" step="0.01" min="0" value={data.shippingPrice} onChange={(e) => update("shippingPrice", e.target.value)} className={inputCls(false)} />
                     </Field>
                   )}
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <Field label="Versanddienstleister" required>
+                      <select value={data.shippingCarrier} onChange={(e) => update("shippingCarrier", e.target.value as WizardData["shippingCarrier"])} className={inputCls(false)}>
+                        {CARRIERS.map((carrier) => <option key={carrier} value={carrier}>{carrier}</option>)}
+                      </select>
+                    </Field>
+                    <Field label="Bearbeitungszeit" required>
+                      <select value={data.processingTime} onChange={(e) => update("processingTime", e.target.value as WizardData["processingTime"])} className={inputCls(false)}>
+                        {PROCESSING_TIMES.map((time) => <option key={time} value={time}>{time}</option>)}
+                      </select>
+                    </Field>
+                  </div>
                   <div className="grid gap-4 sm:grid-cols-3">
                     <Field label="Ort / Stadt">
                       <input value={data.location} onChange={(e) => update("location", e.target.value)} placeholder="optional" className={inputCls(false)} />
@@ -372,7 +394,7 @@ function NewListingPage() {
 
               {sellerStatus && !sellerStatus.emailConfirmed && (
                 <div className="rounded-3xl border-2 border-amber-400/60 bg-amber-50/60 p-5 text-sm dark:bg-amber-500/10">
-                  <p className="font-display text-lg font-black text-brand-ink">E-Mail bestätigen \u2709\ufe0f</p>
+                  <p className="font-display text-lg font-black text-brand-ink">E-Mail bestätigen</p>
                   <p className="mt-1 text-muted-foreground">
                     Bevor du verkaufen kannst, musst du deine E-Mail-Adresse{sellerStatus.email ? ` (${sellerStatus.email})` : ""} bestätigen.
                   </p>
@@ -386,22 +408,6 @@ function NewListingPage() {
                   </button>
                 </div>
               )}
-
-              <div className="rounded-3xl border border-border bg-surface p-5">
-                <div className="font-bold text-brand-ink">🛡️ Echtheits-Nachweis (Zettel-Probe)</div>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Lade ein Foto hoch: dein Werk (z. B. Bildschirm mit der Datei) plus ein handgeschriebener Zettel mit „CreaHQ + dein Name + heutiges Datum". Nur du und das CreaHQ-Team sehen das Foto. Geprüfte Angebote bekommen ein Echtheits-Häkchen.
-                </p>
-                <label className="mt-3 inline-flex min-h-11 cursor-pointer items-center rounded-full bg-brand-soft px-5 text-sm font-bold text-brand-ink hover:bg-brand hover:text-primary-foreground">
-                  {data.proofFile ? `📎 ${data.proofFile.name}` : "📸 Foto auswählen"}
-                  <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={(e) => {
-                    const f = e.target.files?.[0] ?? null;
-                    if (f && f.size === 0) { toast.error("Das Foto ist leer (0 KB) – bitte ein gültiges Foto hochladen."); return; }
-                    if (f && f.size > 10 * 1024 * 1024) { toast.error("Foto ist größer als 10 MB."); return; }
-                    update("proofFile", f);
-                  }} />
-                </label>
-              </div>
 
               <label className="flex items-start gap-3 rounded-3xl border border-border bg-surface p-5">
                 <input
@@ -451,7 +457,7 @@ function NewListingPage() {
           <div className="text-xs font-bold uppercase tracking-widest text-muted-foreground">So könnte es aussehen</div>
           <div className="mt-2 overflow-hidden rounded-3xl border border-border bg-card">
             <div className="aspect-[4/3] bg-gradient-to-br from-brand-soft to-amber-100/40">
-              {previews[0] ? <img src={previews[0]} alt="Vorschau" className="h-full w-full object-cover" /> : <div className="grid h-full place-items-center text-4xl">🎨</div>}
+              {previews[0] ? <img src={previews[0]} alt="Vorschau" className="h-full w-full object-cover" /> : <div className="grid h-full place-items-center text-brand/50"><Palette className="h-8 w-8" /></div>}
             </div>
             <div className="p-4">
               <div className="text-[10px] font-bold uppercase tracking-widest text-brand/70">{data.category || (data.kind === "digital" ? "Digital" : "Physisch")}</div>

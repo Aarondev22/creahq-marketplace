@@ -158,7 +158,6 @@ export const fetchCategories = createServerFn({ method: "GET" }).handler(async (
 
 
 export type ListingDetail = ListingCard & {
-  verification_status?: string | null;
   description: string | null;
   tags: string[];
   images: string[];
@@ -175,12 +174,13 @@ export type ListingDetail = ListingCard & {
     display_name: string | null;
     avatar_url: string | null;
     is_pro: boolean;
+    is_verified: boolean;
     shop_badges: Json;
     shop_theme: Json;
   } | null;
 };
 
-const DETAIL_COLS = `${SAFE_COLS},description,tags,images,shipping_mode,shipping_price_cents,shipping_carrier,processing_time,location,condition,stock,verification_status`;
+const DETAIL_COLS = `${SAFE_COLS},description,tags,images,shipping_mode,shipping_price_cents,shipping_carrier,processing_time,location,condition,stock`;
 
 export const fetchListingById = createServerFn({ method: "GET" })
   .inputValidator((d: { id: string }) => ({ id: String(d.id) }))
@@ -195,7 +195,7 @@ export const fetchListingById = createServerFn({ method: "GET" })
     if (!row) return null;
     const { data: seller } = await supa
       .from("profiles")
-      .select("id,handle,display_name,avatar_url,is_pro,shop_badges,shop_theme")
+      .select("id,handle,display_name,avatar_url,is_pro,is_verified,shop_badges,shop_theme")
       .eq("id", row.seller_id)
       .maybeSingle();
     return { ...(row as unknown as Omit<ListingDetail, "seller">), seller: seller ?? null };
@@ -216,7 +216,7 @@ export const fetchRelatedListings = createServerFn({ method: "GET" })
       .eq("status", "published").eq("moderation_status", "approved")
       .neq("id", data.id)
       .order("created_at", { ascending: false })
-      .limit(4);
+      .limit(5);
 
     const { data: me } = await supa.from("listings").select("title,category,tags").eq("id", data.id).maybeSingle();
     const { data: pool } = await supa
@@ -240,7 +240,6 @@ export const fetchRelatedListings = createServerFn({ method: "GET" })
       })
       .filter((x) => x.s > 0)
       .sort((a, b) => b.s - a.s)
-      .slice(0, 8)
       .map(({ l: { tags: _t, ...c } }) => c as ListingCard);
 
     return { fromShop: (fromShop ?? []) as ListingCard[], similar: scored };
@@ -251,12 +250,30 @@ export const fetchShopByHandle = createServerFn({ method: "GET" })
   .inputValidator((d: { handle: string }) => ({ handle: String(d.handle) }))
   .handler(async ({ data }) => {
     const supa = serverPublic();
-    const cols = "id,handle,display_name,bio,avatar_url,theme_color,banner_url,shop_sections,highlight_listing_id,is_pro,shop_badges,shop_theme,shop_shipping_default";
-    const h = decodeURIComponent(data.handle).trim().replace(/^@/, "").slice(0, 64);
-    const safe = h.replace(/[%_\\]/g, "");
-    let { data: profile } = await supa.from("profiles").select(cols).ilike("handle", safe).limit(1).maybeSingle();
+    const cols = "id,handle,display_name,bio,avatar_url,theme_color,banner_url,shop_sections,highlight_listing_id,is_pro,is_verified,shop_badges,shop_theme,shop_shipping_default";
+    const h = decodeURIComponent(data.handle).trim().replace(/^@/, "").toLowerCase().slice(0, 64);
+    const safe = h.replace(/[^a-z0-9-]/gi, "");
+    let { data: profile } = await supa.from("profiles").select(cols).eq("handle", h).maybeSingle();
     if (!profile && /^[0-9a-f-]{36}$/i.test(h)) {
       ({ data: profile } = await supa.from("profiles").select(cols).eq("id", h).maybeSingle());
+    }
+    if (!profile && safe) {
+      const { data: nameMatch } = await supa
+        .from("profiles")
+        .select(cols)
+        .ilike("display_name", `%${safe}%`)
+        .limit(1)
+        .maybeSingle();
+      profile = nameMatch;
+    }
+    if (!profile && safe) {
+      const { data: handleMatch } = await supa
+        .from("profiles")
+        .select(cols)
+        .ilike("handle", `${safe}-%`)
+        .limit(1)
+        .maybeSingle();
+      profile = handleMatch;
     }
     if (!profile) return null;
     const { data: listings } = await supa

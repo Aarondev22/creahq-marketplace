@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
+import { Leaf, Palette, Sparkles, Sun, Waves, type LucideIcon } from "lucide-react";
 
 /**
  * Ein Theme tauscht nur ein paar globale CSS-Variablen. Nur Farb-Themes —
@@ -7,7 +8,7 @@ import { useEffect, useState, useCallback } from "react";
 export type HeroTheme = {
   id: string;
   label: string;
-  emoji: string;
+  icon: LucideIcon;
   kind: "color";
   brandLight: string;
   brandDark: string;
@@ -16,19 +17,19 @@ export type HeroTheme = {
 };
 
 export const COLOR_THEMES: HeroTheme[] = [
-  { id: "candy",  label: "Candy",  emoji: "🍭", kind: "color",
+  { id: "candy",  label: "Candy",  icon: Palette, kind: "color",
     brandLight: "oklch(0.62 0.24 340)", brandDark: "oklch(0.74 0.2 340)",
     softLight:  "oklch(0.93 0.06 340)", softDark:  "oklch(0.3 0.1 340)" },
-  { id: "sun",    label: "Sun",    emoji: "🌞", kind: "color",
+  { id: "sun",    label: "Sun",    icon: Sun, kind: "color",
     brandLight: "oklch(0.7 0.18 55)",   brandDark: "oklch(0.78 0.16 60)",
     softLight:  "oklch(0.94 0.07 70)",  softDark:  "oklch(0.32 0.09 55)" },
-  { id: "forest", label: "Forest", emoji: "🌿", kind: "color",
+  { id: "forest", label: "Forest", icon: Leaf, kind: "color",
     brandLight: "oklch(0.55 0.16 150)", brandDark: "oklch(0.72 0.16 150)",
     softLight:  "oklch(0.93 0.06 150)", softDark:  "oklch(0.3 0.09 150)" },
-  { id: "ocean",  label: "Ocean",  emoji: "🌊", kind: "color",
+  { id: "ocean",  label: "Ocean",  icon: Waves, kind: "color",
     brandLight: "oklch(0.58 0.16 230)", brandDark: "oklch(0.72 0.16 230)",
     softLight:  "oklch(0.93 0.06 230)", softDark:  "oklch(0.3 0.1 230)" },
-  { id: "violet", label: "Violet", emoji: "🪻", kind: "color",
+  { id: "violet", label: "Violet", icon: Sparkles, kind: "color",
     brandLight: "oklch(0.52 0.22 295)", brandDark: "oklch(0.7 0.2 295)",
     softLight:  "oklch(0.92 0.06 295)", softDark:  "oklch(0.3 0.1 295)" },
 ];

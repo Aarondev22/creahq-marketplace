@@ -93,7 +93,7 @@ async function notifyRecipient(conversationId: string, senderId: string) {
     await supabase.from("notifications").insert({
       user_id: recipient,
       category: "message",
-      title: "Neue Nachricht 💬",
+      title: "Neue Nachricht",
       body: "Du hast eine neue Nachricht erhalten.",
       link: `/nachrichten?c=${conversationId}`,
     });
@@ -126,7 +126,7 @@ export async function sendMessage(conversationId: string, body: string): Promise
 /** Chat immer pro Produkt: findet oder erstellt die Konversation zu einem Listing. */
 export async function startConversation(listingId: string, sellerId: string): Promise<string> {
   const me = await myId();
-  if (me === sellerId) throw new Error("Das ist dein eigenes Produkt 🙂");
+  if (me === sellerId) throw new Error("Das ist dein eigenes Produkt.");
 
   const { data: existing } = await supabase
     .from("conversations")

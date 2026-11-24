@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import type { ListingCard } from "@/lib/listings.functions";
+import { Download, Package, Sparkles } from "lucide-react";
 
 export function ListingGridCard({ listing, showKind = true }: { listing: ListingCard; showKind?: boolean }) {
   const isDigital = listing.kind === "digital";
@@ -18,16 +19,16 @@ export function ListingGridCard({ listing, showKind = true }: { listing: Listing
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
-          <div className="grid h-full w-full place-items-center text-4xl opacity-60">{isDigital ? "💾" : "📦"}</div>
+          <div className="grid h-full w-full place-items-center text-brand/50">{isDigital ? <Download className="h-9 w-9" /> : <Package className="h-9 w-9" />}</div>
         )}
         {listing.spotlight && (
           <span className="absolute right-3 top-3 rounded-lg bg-brand px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-primary-foreground shadow">
-            ✦ Pro Spotlight
+            <Sparkles className="mr-1 inline h-3 w-3" /> Pro Spotlight
           </span>
         )}
         {showKind && (
           <span className="absolute left-3 top-3 rounded-lg bg-card/90 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-brand-ink backdrop-blur">
-            {isDigital ? "💾 Digital" : "📦 Physisch"}
+            {isDigital ? "Digital" : "Physisch"}
           </span>
         )}
       </div>

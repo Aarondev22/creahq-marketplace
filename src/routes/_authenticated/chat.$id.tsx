@@ -83,7 +83,7 @@ function ChatRoute() {
   async function answer(o: Offer, accept: boolean) {
     try {
       await respondToOffer(o.id, accept);
-      toast.success(accept ? "Angebot angenommen 🎉" : "Angebot abgelehnt");
+      toast.success(accept ? "Angebot angenommen" : "Angebot abgelehnt");
       const [msgs] = await Promise.all([fetchMessages(id), reloadOffers()]);
       setMessages(msgs);
     } catch (err) { toast.error(err instanceof Error ? err.message : "Fehler"); }
@@ -113,7 +113,7 @@ function ChatRoute() {
         (payload) => {
           const incoming = payload.new as ChatMessage;
           setMessages((prev) => (prev.some((m) => m.id === incoming.id) ? prev : [...prev, incoming]));
-          if (incoming.kind === "offer" || incoming.body?.startsWith("✅") || incoming.body?.startsWith("❌")) {
+          if (incoming.kind === "offer" || incoming.body?.startsWith("Angebot angenommen") || incoming.body?.startsWith("Angebot abgelehnt") || incoming.body?.startsWith("\u2705") || incoming.body?.startsWith("\u274c")) {
             fetchOffers(id).then(setOffers).catch(() => {});
           }
         },
@@ -138,7 +138,7 @@ function ChatRoute() {
     if (!draft.trim() || sending) return;
     const text = draft.trim();
     const risk = detectChatRisk(text);
-    if (risk && !confirm(`⚠️ Achtung: Deine Nachricht enthält eine ${risk.label}.\n\nZahle und verkaufe nur über CreaHQ – sonst gilt kein Käuferschutz und die Nachricht kann blockiert werden.\n\nTrotzdem senden?`)) return;
+    if (risk && !confirm(`Achtung: Deine Nachricht enthält eine ${risk.label}.\n\nZahle und verkaufe nur über CreaHQ – sonst gilt kein Käuferschutz und die Nachricht kann blockiert werden.\n\nTrotzdem senden?`)) return;
     setDraft("");
     setSending(true);
     try {
@@ -189,7 +189,7 @@ function ChatRoute() {
                 params={{ id: conv.listing_id }}
                 className="block truncate text-xs font-semibold text-muted-foreground hover:text-brand"
               >
-                📦 {conv.listing_title ?? "Produkt"}
+                {conv.listing_title ?? "Produkt"}
               </Link>
             ) : (
               <div className="text-xs text-muted-foreground">Allgemeiner Chat</div>
@@ -208,14 +208,14 @@ function ChatRoute() {
               ))}
             </div>
           ) : messages.length === 0 ? (
-            <div className="py-10 text-center text-sm text-muted-foreground">Sag Hallo 👋 – noch keine Nachrichten.</div>
+            <div className="py-10 text-center text-sm text-muted-foreground">Noch keine Nachrichten.</div>
           ) : (
             messages.map((m) => {
               const mine = m.sender_id === myId;
               const offer = m.offer_id ? offers.find((o) => o.id === m.offer_id) : undefined;
               if (offer) {
                 const expired = new Date(offer.expires_at) < new Date();
-                const state = offer.accepted_at ? "Angenommen ✅" : offer.declined_at ? "Abgelehnt" : expired ? "Abgelaufen" : "Offen";
+                const state = offer.accepted_at ? "Angenommen" : offer.declined_at ? "Abgelehnt" : expired ? "Abgelaufen" : "Offen";
                 const canAnswer = !mine && !offer.accepted_at && !offer.declined_at && !expired;
                 return (
                   <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
@@ -238,7 +238,7 @@ function ChatRoute() {
                         <button
                           onClick={() => {
                             addOfferItem({ id: offer.listing_id, title: conv.listing_title ?? "Produkt", cover_url: conv.listing_cover, price_cents: offer.price_cents, qty: offer.qty, offer_id: offer.id });
-                            toast.success("Zum Angebotspreis im Warenkorb 🛒");
+                            toast.success("Zum Angebotspreis in den Warenkorb gelegt.");
                             nav({ to: "/warenkorb" });
                           }}
                           className="mt-3 min-h-11 w-full rounded-2xl bg-brand text-sm font-bold text-primary-foreground"
@@ -285,7 +285,7 @@ function ChatRoute() {
         )}
 
         {detectChatRisk(draft) && (
-          <p className="border-t border-destructive/30 bg-destructive/5 px-4 py-2 text-xs font-bold text-destructive">⚠️ {detectChatRisk(draft)?.label} erkannt – bitte nur über CreaHQ handeln.</p>
+          <p className="border-t border-destructive/30 bg-destructive/5 px-4 py-2 text-xs font-bold text-destructive">{detectChatRisk(draft)?.label} erkannt – bitte nur über CreaHQ handeln.</p>
         )}
         <form onSubmit={submit} className="flex gap-2 border-t border-border p-3">
           {conv?.listing_id && (

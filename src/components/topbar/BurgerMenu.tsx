@@ -1,5 +1,5 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Menu, Palette, Moon, Sun, FileText, Tag, Shield, Store, Gamepad2, Ticket, Languages } from "lucide-react";
+import { Menu, Palette, Moon, Sun, FileText, Tag, Shield, Store, Ticket, Languages, Wrench, Crown } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
@@ -76,7 +76,7 @@ export function BurgerMenu() {
           </Link>
         </Section>
 
-        <Section icon={<Gamepad2 className="h-4 w-4" />} title="Codes">
+        <Section icon={<Ticket className="h-4 w-4" />} title="Codes">
           <ul className="space-y-1.5">
             <li>
               <button
@@ -87,6 +87,11 @@ export function BurgerMenu() {
               </button>
             </li>
           </ul>
+        </Section>
+        <Section icon={<Crown className="h-4 w-4" />} title="CreaHQ Pro">
+          <Link to="/pro" onClick={close} className="flex items-center justify-between rounded-xl px-3 py-2 text-sm font-medium text-brand-ink transition-colors hover:bg-brand-soft">
+            Tarife vergleichen <span aria-hidden>→</span>
+          </Link>
         </Section>
 
         <Section icon={<Palette className="h-4 w-4" />} title="Themenwelten">
@@ -127,7 +132,7 @@ export function BurgerMenu() {
               onClick={() => { setAdminOpen(true); close(); }}
               className="w-full rounded-xl bg-gradient-to-r from-brand to-fuchsia-600 px-4 py-3 text-left text-sm font-bold text-white shadow-sm transition-transform hover:scale-[1.02]"
             >
-              🛠️ Admin-Panel öffnen
+              <span className="inline-flex items-center gap-2"><Wrench className="h-4 w-4" /> Admin-Panel öffnen</span>
             </button>
           </Section>
         )}

@@ -212,7 +212,7 @@ function TiltBadge({ badge, accent, index, size }: { badge: ShopBadge; accent: s
       style={{ ...styleMap[badge.style], rotateX: srx, rotateY: sry, transformPerspective: 400 }}
       className={`inline-flex select-none items-center gap-1.5 rounded-full font-bold ${pad}`}
     >
-      <span>{badge.emoji}</span>
+
       {badge.text}
     </motion.span>
   );

@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useSuspenseQuery, useQuery, queryOptions } from "@tanstack/react-query";
-import { Search, SlidersHorizontal, X } from "lucide-react";
+import { Search, SlidersHorizontal, X, Package } from "lucide-react";
 import { searchListings, fetchCategories, fetchMarketplaceSettings, type SearchInput } from "@/lib/listings.functions";
 import { ListingGridCard } from "@/components/ListingGridCard";
 
@@ -73,7 +73,7 @@ function BrowsePage() {
         <Search className="h-3.5 w-3.5" /> Stöbern
       </div>
       <h1 className="font-display text-3xl font-extrabold text-brand-ink sm:text-5xl">
-        {search.q ? <>Ergebnisse für „<span className="text-brand">{search.q}</span>"</> : <>Alles auf einen Blick ✨</>}
+        {search.q ? <>Ergebnisse für „<span className="text-brand">{search.q}</span>"</> : "Alles auf einen Blick"}
       </h1>
       <p className="mt-2 max-w-xl text-muted-foreground">
         {items.length} {items.length === 1 ? "Treffer" : "Treffer"}.
@@ -95,8 +95,8 @@ function BrowsePage() {
 
         <div className="no-scrollbar flex touch-pan-x gap-2 overflow-x-auto">
           <Chip label="Alles" active={search.kind === ""} onClick={() => set({ kind: "" })} />
-          <Chip label="💾 Digital" active={search.kind === "digital"} onClick={() => set({ kind: "digital" })} />
-          <Chip label={settings?.physicalEnabled ? "📦 Physisch" : "📦 Physisch · Noch nicht freigeschaltet"} active={search.kind === "service"} onClick={() => set({ kind: "service" })} />
+          <Chip label="Digital" active={search.kind === "digital"} onClick={() => set({ kind: "digital" })} />
+          <Chip label={settings?.physicalEnabled ? "Physisch" : "Physisch · Noch nicht freigeschaltet"} active={search.kind === "service"} onClick={() => set({ kind: "service" })} />
         </div>
 
         <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto_auto_auto]">
@@ -142,7 +142,7 @@ function BrowsePage() {
 
       {items.length === 0 ? (
          <div className="mt-12 grid place-items-center rounded-2xl border-2 border-dashed border-brand/30 bg-card/60 p-12 text-center">
-          <div className="text-6xl">🪺</div>
+          <Package className="h-10 w-10 text-brand" />
           <p className="mt-4 font-display text-xl font-bold text-brand-ink">Hier ist gerade nichts zu holen.</p>
           <p className="mt-1 max-w-md text-sm text-muted-foreground">
             Probier weniger Filter oder ein anderes Wort. Oder lad selbst was hoch —{" "}

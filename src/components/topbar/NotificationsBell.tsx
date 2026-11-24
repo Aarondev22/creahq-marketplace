@@ -95,7 +95,7 @@ export function NotificationsBell() {
                 </li>
               ) : shown.length === 0 ? (
                 <li className="px-4 py-10 text-center text-sm text-muted-foreground">
-                  Hier ist noch nichts los. ✨
+                  Hier ist noch nichts los.
                 </li>
               ) : (
                 shown.map((n) => (

@@ -266,27 +266,36 @@ export type Database = {
       founder_redeem_codes: {
         Row: {
           code: string
+          code_type: string
           created_at: string
           grants_role: Database["public"]["Enums"]["app_role"]
           id: string
+          max_uses: number | null
           used_at: string | null
           used_by: string | null
+          used_count: number
         }
         Insert: {
           code: string
+          code_type?: string
           created_at?: string
           grants_role?: Database["public"]["Enums"]["app_role"]
           id?: string
+          max_uses?: number | null
           used_at?: string | null
           used_by?: string | null
+          used_count?: number
         }
         Update: {
           code?: string
+          code_type?: string
           created_at?: string
           grants_role?: Database["public"]["Enums"]["app_role"]
           id?: string
+          max_uses?: number | null
           used_at?: string | null
           used_by?: string | null
+          used_count?: number
         }
         Relationships: []
       }
@@ -672,6 +681,7 @@ export type Database = {
           highlight_listing_id: string | null
           id: string
           is_pro: boolean
+          is_verified: boolean
           onboarding_completed: boolean
           shop_badges: Json
           shop_sections: string[]
@@ -691,6 +701,7 @@ export type Database = {
           highlight_listing_id?: string | null
           id: string
           is_pro?: boolean
+          is_verified?: boolean
           onboarding_completed?: boolean
           shop_badges?: Json
           shop_sections?: string[]
@@ -710,6 +721,7 @@ export type Database = {
           highlight_listing_id?: string | null
           id?: string
           is_pro?: boolean
+          is_verified?: boolean
           onboarding_completed?: boolean
           shop_badges?: Json
           shop_sections?: string[]
@@ -933,7 +945,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "buyer" | "seller" | "admin" | "founder"
+      app_role: "buyer" | "seller" | "admin" | "founder" | "beta_tester"
       listing_kind: "digital" | "service"
       listing_status: "draft" | "published" | "archived"
       order_status: "pending" | "paid" | "fulfilled" | "cancelled" | "refunded"

@@ -31,11 +31,26 @@ export function parseShopCode(raw: unknown, isPro: boolean): ShopCode {
   return { mode, html: s(r.customHtml, 20000), css: s(r.customCss, 20000), blocks: isPro ? parseBlocks(r.blocks) : [] };
 }
 
-/** Baut ein komplett abgeschottetes Dokument (keine Skripte, keine externen Requests außer Bildern). */
+/** Baut ein isoliertes Dokument ohne Skripte, Formulare, Eingabefelder oder Navigation. */
 export function buildSandboxDoc(html: string, css: string): string {
-  const cleanHtml = html.replace(/<\s*script[\s\S]*?<\s*\/\s*script\s*>/gi, "").replace(/\son\w+\s*=/gi, " data-x=");
-  const cleanCss = css.replace(/@import[^;]*;?/gi, "").replace(/<\/style/gi, "");
-  return `<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src https: data:; style-src 'unsafe-inline'; font-src data:"><style>body{margin:0;padding:16px;font-family:system-ui,sans-serif}${cleanCss}</style></head><body>${cleanHtml}</body></html>`;
+  const unsafeLoginMarkup = /<\s*(form|input|button|select|textarea)\b/i.test(html);
+  const fakeBrandLogin = /(?:creahq[\s\S]{0,120}(?:login|anmeld|passwort|password|kennwort)|(?:login|anmeld|passwort|password|kennwort)[\s\S]{0,120}creahq)/i.test(html);
+  const credentialLanguage = /\b(?:login|anmeld(?:ung|en)|passwort|password|kennwort|einloggen|sign[ -]?in)\b/i.test(html);
+  const credentialUi = /\b(?:e-?mail|benutzername|username|zugangsdaten|formular|form|input|field|submit)\b/i.test(html);
+  const fakeCredentialForm = credentialLanguage && credentialUi;
+  const fakeProBadge = /\b(?:creahq\s*pro|pro[-_\s]+(?:creator|badge)|(?:geprüfter|verified)\s+creator)\b/i.test(`${html}\n${css}`);
+  const sourceHtml = unsafeLoginMarkup || fakeBrandLogin || fakeCredentialForm || fakeProBadge
+    ? "<p>Dieser Shop-Inhalt wurde aus Sicherheitsgründen nicht angezeigt.</p>"
+    : html;
+  const cleanHtml = sourceHtml
+    .replace(/<\s*(script|form|iframe|object|embed|input|button|select|textarea)\b[^>]*>[\s\S]*?<\s*\/\s*\1\s*>/gi, "")
+    .replace(/<\s*(script|form|iframe|object|embed|input|button|select|textarea)\b[^>]*\/?\s*>/gi, "")
+    .replace(/\s(?:on[a-z]+|action|formaction|contenteditable|autofocus|srcdoc|href|target)\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, "");
+  const cleanCss = css
+    .replace(/@import[^;]*;?/gi, "")
+    .replace(/<\/style/gi, "")
+    .replace(/url\((?!\s*["']?https:)[^)]*\)/gi, "none");
+  return `<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src https: data:; style-src 'unsafe-inline'; font-src data:; form-action 'none'; base-uri 'none'"><style>body{margin:0;padding:16px;font-family:system-ui,sans-serif}${cleanCss}</style></head><body>${cleanHtml}</body></html>`;
 }
 
 export const CODE_CHEATSHEET = [

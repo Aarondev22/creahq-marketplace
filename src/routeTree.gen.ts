@@ -21,6 +21,7 @@ import { Route as HilfeRouteImport } from './routes/hilfe'
 import { Route as ImpressumRouteImport } from './routes/impressum'
 import { Route as KategorienRouteImport } from './routes/kategorien'
 import { Route as KontaktRouteImport } from './routes/kontakt'
+import { Route as ProRouteImport } from './routes/pro'
 import { Route as RedeemRouteImport } from './routes/redeem'
 import { Route as RegelnRouteImport } from './routes/regeln'
 import { Route as SpielenRouteImport } from './routes/spielen'
@@ -96,6 +97,11 @@ const KategorienRoute = KategorienRouteImport.update({
 const KontaktRoute = KontaktRouteImport.update({
   id: '/kontakt',
   path: '/kontakt',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProRoute = ProRouteImport.update({
+  id: '/pro',
+  path: '/pro',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RedeemRoute = RedeemRouteImport.update({
@@ -199,6 +205,7 @@ export interface FileRoutesByFullPath {
   '/impressum': typeof ImpressumRoute
   '/kategorien': typeof KategorienRoute
   '/kontakt': typeof KontaktRoute
+  '/pro': typeof ProRoute
   '/redeem': typeof RedeemRoute
   '/regeln': typeof RegelnRoute
   '/spielen': typeof SpielenRoute
@@ -229,6 +236,7 @@ export interface FileRoutesByTo {
   '/impressum': typeof ImpressumRoute
   '/kategorien': typeof KategorienRoute
   '/kontakt': typeof KontaktRoute
+  '/pro': typeof ProRoute
   '/redeem': typeof RedeemRoute
   '/regeln': typeof RegelnRoute
   '/spielen': typeof SpielenRoute
@@ -261,6 +269,7 @@ export interface FileRoutesById {
   '/impressum': typeof ImpressumRoute
   '/kategorien': typeof KategorienRoute
   '/kontakt': typeof KontaktRoute
+  '/pro': typeof ProRoute
   '/redeem': typeof RedeemRoute
   '/regeln': typeof RegelnRoute
   '/spielen': typeof SpielenRoute
@@ -293,6 +302,7 @@ export interface FileRouteTypes {
     | '/impressum'
     | '/kategorien'
     | '/kontakt'
+    | '/pro'
     | '/redeem'
     | '/regeln'
     | '/spielen'
@@ -323,6 +333,7 @@ export interface FileRouteTypes {
     | '/impressum'
     | '/kategorien'
     | '/kontakt'
+    | '/pro'
     | '/redeem'
     | '/regeln'
     | '/spielen'
@@ -354,6 +365,7 @@ export interface FileRouteTypes {
     | '/impressum'
     | '/kategorien'
     | '/kontakt'
+    | '/pro'
     | '/redeem'
     | '/regeln'
     | '/spielen'
@@ -386,6 +398,7 @@ export interface RootRouteChildren {
   ImpressumRoute: typeof ImpressumRoute
   KategorienRoute: typeof KategorienRoute
   KontaktRoute: typeof KontaktRoute
+  ProRoute: typeof ProRoute
   RedeemRoute: typeof RedeemRoute
   RegelnRoute: typeof RegelnRoute
   SpielenRoute: typeof SpielenRoute
@@ -484,6 +497,13 @@ declare module '@tanstack/react-router' {
       path: '/kontakt'
       fullPath: '/kontakt'
       preLoaderRoute: typeof KontaktRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pro': {
+      id: '/pro'
+      path: '/pro'
+      fullPath: '/pro'
+      preLoaderRoute: typeof ProRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/redeem': {
@@ -640,6 +660,7 @@ const rootRouteChildren: RootRouteChildren = {
   ImpressumRoute: ImpressumRoute,
   KategorienRoute: KategorienRoute,
   KontaktRoute: KontaktRoute,
+  ProRoute: ProRoute,
   RedeemRoute: RedeemRoute,
   RegelnRoute: RegelnRoute,
   SpielenRoute: SpielenRoute,

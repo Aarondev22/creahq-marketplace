@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageShell } from "@/components/PageShell";
-import { Instagram, Music2, Camera, Package, Truck, Banknote, ShieldCheck, MessageSquare, Sparkles, Scale, Clock } from "lucide-react";
+import { Instagram, Music2, Camera, Package, Truck, Banknote, ShieldCheck, MessageSquare, Sparkles, Scale, Clock, Tag } from "lucide-react";
 import { feeForSale } from "@/lib/fees";
 
 export const Route = createFileRoute("/verkaufen/guide")({
@@ -84,22 +84,25 @@ function GuidePage() {
             </div>
             <div className="grid gap-3 sm:grid-cols-3">
               {[
-                { id: "verpackung-mailerbags", emoji: "📮", title: "Recycelte Mailerbags", note: "z.B. 100er-Pack, verschiedene Größen" },
-                { id: "verpackung-kartons",    emoji: "📦", title: "Doppelwandige Kartons", note: "Faltbar, für zerbrechliche Ware" },
-                { id: "verpackung-etiketten",  emoji: "🏷️", title: "Etiketten &amp; Füllmaterial", note: "Versandlabels, Seidenpapier, Sticker" },
-              ].map((p) => (
+                { id: "verpackung-mailerbags", icon: Package, title: "Recycelte Mailerbags", note: "z.B. 100er-Pack, verschiedene Größen" },
+                { id: "verpackung-kartons", icon: Package, title: "Doppelwandige Kartons", note: "Faltbar, für zerbrechliche Ware" },
+                { id: "verpackung-etiketten", icon: Tag, title: "Etiketten &amp; Füllmaterial", note: "Versandlabels, Seidenpapier, Sticker" },
+              ].map((p) => {
+                const Icon = p.icon;
+                return (
                 <Link
                   key={p.id}
                   to="/listing/$id"
                   params={{ id: `beispiel-${p.id}` }}
                   className="group block rounded-2xl border border-dashed border-brand/30 bg-card/70 p-4 transition-all hover:-translate-y-1 hover:border-brand hover:shadow-md"
                 >
-                  <div className="text-3xl">{p.emoji}</div>
+                  <Icon className="h-7 w-7 text-brand" />
                   <div className="mt-2 text-sm font-bold text-brand-ink group-hover:text-brand" dangerouslySetInnerHTML={{ __html: p.title }} />
                   <div className="mt-1 text-xs text-muted-foreground" dangerouslySetInnerHTML={{ __html: p.note }} />
                   <div className="mt-3 text-xs font-bold text-brand">—,— € · Platzhalter</div>
                 </Link>
-              ))}
+                );
+              })}
             </div>
           </div>
         </Block>
@@ -175,15 +178,15 @@ function GuidePage() {
           </p>
           <div className="mt-4 grid gap-3 md:grid-cols-3">
             <div className="rounded-2xl border-2 border-emerald-300 bg-emerald-50 p-4 text-sm">
-              <strong className="text-emerald-900">✅ Mit Tracking + Schaden</strong>
+              <strong className="text-emerald-900">Mit Tracking + Schaden</strong>
               <p className="mt-1 text-emerald-900/80">Käufer und Verkäufer wenden sich gemeinsam an den Carrier. CreaHQ moderiert. Versicherung des Carriers greift.</p>
             </div>
             <div className="rounded-2xl border-2 border-amber-300 bg-amber-50 p-4 text-sm">
-              <strong className="text-amber-900">⚠️ Tracking offen / verloren</strong>
+              <strong className="text-amber-900">Tracking offen / verloren</strong>
               <p className="mt-1 text-amber-900/80">Käufer bekommt Rückerstattung. Verkäufer zieht Geld beim Carrier ein.</p>
             </div>
             <div className="rounded-2xl border-2 border-rose-300 bg-rose-50 p-4 text-sm">
-              <strong className="text-rose-900">❌ Ohne Tracking + Problem</strong>
+              <strong className="text-rose-900">Ohne Tracking + Problem</strong>
               <p className="mt-1 text-rose-900/80">Verkäufer haftet voll. Käufer bekommt volle Rückerstattung. Deshalb: <em>immer</em> Sendungsnummer eintragen.</p>
             </div>
           </div>

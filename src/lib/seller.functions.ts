@@ -25,39 +25,6 @@ export type CreateListingResult = {
   note: string | null;
 };
 
-type Verdict = { flagged: boolean; reason: string };
-
-async function moderate(title: string, description: string): Promise<Verdict> {
-  const apiKey = process.env["LOVABLE_API_KEY"];
-  if (!apiKey) return { flagged: false, reason: "" };
-  try {
-    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash-lite",
-        messages: [
-          {
-            role: "system",
-            content:
-              "Du bist Moderator eines Marktplatzes. Prüfe Titel und Beschreibung auf: verbotene Ware (Waffen, Drogen, Medikamente, Alkohol, Tabak), Fälschungen/Raubkopien, Accounts/Keys/Fake-Bewertungen, Betrug, Spam, Hass oder Erwachseneninhalte. Antworte NUR mit JSON: {\"flagged\": boolean, \"reason\": \"kurzer deutscher Grund oder leer\"}",
-          },
-          { role: "user", content: `Titel: ${title}\nBeschreibung: ${description}` },
-        ],
-      }),
-    });
-    if (!res.ok) return { flagged: false, reason: "" };
-    const json = (await res.json()) as { choices?: { message?: { content?: string } }[] };
-    const raw = json.choices?.[0]?.message?.content ?? "";
-    const match = raw.match(/\{[\s\S]*\}/);
-    if (!match) return { flagged: false, reason: "" };
-    const parsed = JSON.parse(match[0]) as Verdict;
-    return { flagged: Boolean(parsed.flagged), reason: String(parsed.reason ?? "").slice(0, 300) };
-  } catch {
-    return { flagged: false, reason: "" };
-  }
-}
-
 export const createListing = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: CreateListingInput) => d)
@@ -82,8 +49,7 @@ export const createListing = createServerFn({ method: "POST" })
       if (settingError) throw new Error("Verkaufsfreigabe konnte nicht geprüft werden.");
       shipping = validatePhysicalShipping(setting?.physical_enabled === true, data);
     } else if (data.kind !== "digital") throw new Error("Ungültige Produktart.");
-    const verdict = await moderate(title, description);
-    const moderation_status = verdict.flagged ? "pending" : "approved";
+    const moderation_status = "approved";
 
     await supabase.from("user_roles").insert({ user_id: userId, role: "seller" });
 
@@ -108,7 +74,7 @@ export const createListing = createServerFn({ method: "POST" })
         stock: data.stock == null ? null : Math.max(0, Math.round(data.stock)),
         status: "published",
         moderation_status,
-        moderation_note: verdict.flagged ? verdict.reason : null,
+        moderation_note: null,
       })
       .select("id")
       .single();
@@ -120,7 +86,7 @@ export const createListing = createServerFn({ method: "POST" })
       throw new Error(error.message);
     }
 
-    return { id: row.id, moderation: moderation_status, note: verdict.flagged ? verdict.reason : null };
+    return { id: row.id, moderation: moderation_status, note: null };
   });
 
 export const resendConfirmationEmail = createServerFn({ method: "POST" })

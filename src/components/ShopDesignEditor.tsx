@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Code2, Puzzle, Plus, Trash2, Check, Crown } from "lucide-react";
+import { Code2, Puzzle, Plus, Trash2, Check, Crown, Type, MessageCircle, CircleHelp, Image, Palette, Smartphone, Monitor, type LucideIcon } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -15,7 +15,8 @@ const NEW_BLOCK: Record<ShopBlock["type"], ShopBlock> = {
   faq: { type: "faq", q: "Frage?", a: "" },
   image: { type: "image", url: "" },
 };
-const BLOCK_LABEL: Record<ShopBlock["type"], string> = { text: "📝 Text", quote: "💬 Kundenstimme", faq: "❓ FAQ", image: "🖼️ Bild" };
+const BLOCK_LABEL: Record<ShopBlock["type"], string> = { text: "Text", quote: "Kundenstimme", faq: "FAQ", image: "Bild" };
+const BLOCK_ICON: Record<ShopBlock["type"], LucideIcon> = { text: Type, quote: MessageCircle, faq: CircleHelp, image: Image };
 const STEPS = ["Style & Thema", "Badges & Laufband", "Code / Bausteine", "Vorschau & Live"];
 const field = "w-full rounded-2xl border border-border bg-background px-3 py-2 text-sm text-brand-ink focus:border-brand focus:outline-none";
 
@@ -53,7 +54,7 @@ export function ShopDesignEditor({ userId }: { userId: string }) {
     const shop_theme = { ...raw, ...theme, mode, customHtml: html, customCss: css, blocks: isPro ? blocks : [] };
     const { error } = await supabase.from("profiles").update({ shop_theme, shop_badges: badges.slice(0, maxBadges) }).eq("id", userId);
     setSaving(false);
-    if (error) toast.error(error.message); else toast.success("Design gespeichert ✨");
+    if (error) toast.error(error.message); else toast.success("Design gespeichert.");
   }
 
   const setB = (i: number, b: ShopBlock) => setBlocks(blocks.map((x, j) => (j === i ? b : x)));
@@ -61,7 +62,7 @@ export function ShopDesignEditor({ userId }: { userId: string }) {
   return (
     <section className="mt-6 space-y-5 rounded-3xl border border-border bg-card p-6 sm:p-8">
       <h2 className="inline-flex items-center gap-2 font-display text-2xl font-black text-brand-ink">
-        🎨 Shop-Design {isPro ? <span className="inline-flex items-center gap-1 rounded-full bg-brand px-3 py-1 text-xs text-primary-foreground"><Crown className="h-3 w-3" /> Pro</span> : <span className="rounded-full bg-muted px-3 py-1 text-xs">Standard</span>}
+        <Palette className="h-5 w-5 text-brand" /> Shop-Design {isPro ? <span className="inline-flex items-center gap-1 rounded-full bg-brand px-3 py-1 text-xs text-primary-foreground"><Crown className="h-3 w-3" /> Pro</span> : <span className="rounded-full bg-muted px-3 py-1 text-xs">Standard</span>}
       </h2>
 
       <ol className="flex flex-wrap items-center gap-2">
@@ -107,7 +108,7 @@ export function ShopDesignEditor({ userId }: { userId: string }) {
 
       {step === 2 && (<>
       <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground">Laufband-Text
-        <input value={theme.marquee} maxLength={120} onChange={(e) => setTheme({ ...theme, marquee: e.target.value })} className={`${field} mt-1.5 min-h-12`} placeholder="✨ Neue Drops jeden Freitag ✨" />
+        <input value={theme.marquee} maxLength={120} onChange={(e) => setTheme({ ...theme, marquee: e.target.value })} className={`${field} mt-1.5 min-h-12`} placeholder="Neue Produkte jeden Freitag" />
       </label>
 
       <div>
@@ -115,7 +116,6 @@ export function ShopDesignEditor({ userId }: { userId: string }) {
         <div className="space-y-2">
           {badges.map((b, i) => (
             <div key={i} className="flex gap-2">
-              <input value={b.emoji} maxLength={4} onChange={(e) => setBadges(badges.map((x, j) => j === i ? { ...x, emoji: e.target.value } : x))} className={`${field} w-16`} />
               <input value={b.text} maxLength={32} onChange={(e) => setBadges(badges.map((x, j) => j === i ? { ...x, text: e.target.value } : x))} className={field} />
               <select value={b.style} onChange={(e) => setBadges(badges.map((x, j) => j === i ? { ...x, style: e.target.value as ShopBadge["style"] } : x))} className={`${field} w-32`}>
                 {BADGE_STYLES.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
@@ -124,7 +124,7 @@ export function ShopDesignEditor({ userId }: { userId: string }) {
             </div>
           ))}
           {badges.length < maxBadges && (
-            <button type="button" onClick={() => setBadges([...badges, { emoji: "✨", text: "Handgemacht", style: "pill" }])} className="inline-flex min-h-11 items-center gap-1 rounded-full border border-dashed border-brand/50 px-4 text-sm font-bold text-brand-ink"><Plus className="h-4 w-4" /> Badge</button>
+            <button type="button" onClick={() => setBadges([...badges, { emoji: "", text: "Handgemacht", style: "pill" }])} className="inline-flex min-h-11 items-center gap-1 rounded-full border border-dashed border-brand/50 px-4 text-sm font-bold text-brand-ink"><Plus className="h-4 w-4" /> Badge</button>
           )}
         </div>
       </div>
@@ -133,7 +133,7 @@ export function ShopDesignEditor({ userId }: { userId: string }) {
       {step === 3 && (<>
       <div className="flex gap-2">
         <button type="button" onClick={() => setMode("code")} className={`inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-sm font-bold ${mode === "code" ? "bg-brand text-primary-foreground" : "border border-border"}`}><Code2 className="h-4 w-4" /> Eigener Code</button>
-        <button type="button" onClick={() => isPro ? setMode("blocks") : toast("Bausteine gibt's mit Pro 👑")} className={`inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-sm font-bold ${mode === "blocks" ? "bg-brand text-primary-foreground" : "border border-border"} ${!isPro ? "opacity-60" : ""}`}><Puzzle className="h-4 w-4" /> Bausteine {!isPro && "(Pro)"}</button>
+        <button type="button" onClick={() => isPro ? setMode("blocks") : toast("Bausteine sind mit Pro verfügbar.")} className={`inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-sm font-bold ${mode === "blocks" ? "bg-brand text-primary-foreground" : "border border-border"} ${!isPro ? "opacity-60" : ""}`}><Puzzle className="h-4 w-4" /> Bausteine {!isPro && "(Pro)"}</button>
       </div>
 
       {mode === "code" ? (
@@ -155,7 +155,7 @@ export function ShopDesignEditor({ userId }: { userId: string }) {
           {blocks.map((b, i) => (
             <div key={i} className="space-y-2 rounded-2xl border border-border p-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-bold">{BLOCK_LABEL[b.type]}</span>
+                <span className="inline-flex items-center gap-2 text-sm font-bold"><BlockIcon type={b.type} />{BLOCK_LABEL[b.type]}</span>
                 <button type="button" aria-label="Baustein löschen" onClick={() => setBlocks(blocks.filter((_, j) => j !== i))} className="grid h-10 w-10 place-items-center rounded-xl bg-muted"><Trash2 className="h-4 w-4" /></button>
               </div>
               {b.type === "text" && (<><input value={b.title} onChange={(e) => setB(i, { ...b, title: e.target.value })} className={field} placeholder="Titel" /><textarea value={b.body} onChange={(e) => setB(i, { ...b, body: e.target.value })} className={field} rows={3} placeholder="Text" /></>)}
@@ -167,7 +167,7 @@ export function ShopDesignEditor({ userId }: { userId: string }) {
           {blocks.length < MAX_BLOCKS && (
             <div className="flex flex-wrap gap-2">
               {(Object.keys(NEW_BLOCK) as ShopBlock["type"][]).map((t) => (
-                <button key={t} type="button" onClick={() => setBlocks([...blocks, NEW_BLOCK[t]])} className="inline-flex min-h-11 items-center gap-1 rounded-full border border-dashed border-brand/50 px-4 text-sm font-bold"><Plus className="h-4 w-4" /> {BLOCK_LABEL[t]}</button>
+                <button key={t} type="button" onClick={() => setBlocks([...blocks, NEW_BLOCK[t]])} className="inline-flex min-h-11 items-center gap-1 rounded-full border border-dashed border-brand/50 px-4 text-sm font-bold"><Plus className="h-4 w-4" /><BlockIcon type={t} /> {BLOCK_LABEL[t]}</button>
               ))}
             </div>
           )}
@@ -179,12 +179,12 @@ export function ShopDesignEditor({ userId }: { userId: string }) {
       {step === 4 && (
         <div className="space-y-3">
           <div className="flex gap-2">
-            <button type="button" onClick={() => setDevice("phone")} className={`min-h-11 rounded-full px-4 text-sm font-bold ${device === "phone" ? "bg-brand text-primary-foreground" : "border border-border"}`}>📱 Handy</button>
-            <button type="button" onClick={() => setDevice("desktop")} className={`min-h-11 rounded-full px-4 text-sm font-bold ${device === "desktop" ? "bg-brand text-primary-foreground" : "border border-border"}`}>🖥️ Desktop</button>
+            <button type="button" onClick={() => setDevice("phone")} className={`inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-sm font-bold ${device === "phone" ? "bg-brand text-primary-foreground" : "border border-border"}`}><Smartphone className="h-4 w-4" /> Handy</button>
+            <button type="button" onClick={() => setDevice("desktop")} className={`inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-sm font-bold ${device === "desktop" ? "bg-brand text-primary-foreground" : "border border-border"}`}><Monitor className="h-4 w-4" /> Desktop</button>
           </div>
           <div className={`mx-auto overflow-hidden rounded-3xl border-4 border-border bg-background p-4 ${device === "phone" ? "max-w-[380px]" : "w-full"}`} style={{ borderColor: theme.accent }}>
             {theme.marquee && <div className="mb-3 truncate rounded-full px-4 py-2 text-sm font-bold text-primary-foreground" style={{ background: theme.accent }}>{theme.marquee}</div>}
-            {badges.length > 0 && <div className="mb-3 flex flex-wrap gap-2">{badges.slice(0, maxBadges).map((b, i) => <span key={i} className="rounded-full bg-brand-soft px-3 py-1 text-xs font-bold text-brand-ink">{b.emoji} {b.text}</span>)}</div>}
+            {badges.length > 0 && <div className="mb-3 flex flex-wrap gap-2">{badges.slice(0, maxBadges).map((b, i) => <span key={i} className="rounded-full bg-brand-soft px-3 py-1 text-xs font-bold text-brand-ink">{b.text}</span>)}</div>}
             <ShopCustomContent code={{ mode, html, css, blocks: isPro ? blocks : [] }} />
           </div>
           <p className="text-xs text-muted-foreground">So sehen Käufer deinen Shop. Erst nach „Veröffentlichen" ist es live.</p>
@@ -197,8 +197,13 @@ export function ShopDesignEditor({ userId }: { userId: string }) {
       </div>
 
       {step === 4 && <button type="button" onClick={save} disabled={saving} className="inline-flex min-h-12 items-center gap-2 rounded-full bg-brand px-6 text-sm font-bold text-primary-foreground disabled:opacity-60">
-        <Check className="h-4 w-4" /> {saving ? "Speichere …" : "✨ Shop-Design veröffentlichen"}
+        <Check className="h-4 w-4" /> {saving ? "Speichere …" : "Shop-Design veröffentlichen"}
       </button>}
     </section>
   );
+}
+
+function BlockIcon({ type }: { type: ShopBlock["type"] }) {
+  const Icon = BLOCK_ICON[type];
+  return <Icon className="h-4 w-4 text-brand" />;
 }
