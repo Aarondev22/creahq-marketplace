@@ -7,7 +7,7 @@ export function PageShell({
   children,
 }: {
   eyebrow?: string;
-  title: ReactNode;
+  title: string;
   lead?: string;
   children: ReactNode;
 }) {

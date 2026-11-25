@@ -263,7 +263,6 @@ function Dashboard() {
           </h2>
           {favorites.filter((f) => f.listing).length === 0 ? (
             <div className="rounded-[2rem] border-2 border-dashed border-brand/30 bg-card/40 p-10 text-center">
-              <Heart className="mx-auto h-10 w-10 text-brand/60" />
               <p className="mt-3 font-display text-lg font-bold text-brand-ink">Noch nichts favorisiert.</p>
               <p className="mt-1 text-sm text-muted-foreground">Klick auf das Herz bei einem Produkt, dann landet es hier.</p>
             </div>
@@ -363,7 +362,7 @@ function OrderItemsExtras({ orderId }: { orderId: string }) {
               <span className="text-xs text-muted-foreground">Datei folgt – frag den Verkäufer im Chat.</span>
             )}
             {reviewed.has(it.listing_id) ? (
-              <span className="inline-flex min-h-11 items-center gap-1 rounded-full bg-brand-soft px-4 text-xs font-bold text-brand"><Star className="h-3.5 w-3.5" /> Bewertet</span>
+              <span className="inline-flex min-h-11 items-center rounded-full bg-brand-soft px-4 text-xs font-bold text-brand">Bewertet</span>
             ) : openFor !== it.listing_id ? (
               <button onClick={() => setOpenFor(it.listing_id)} className="inline-flex min-h-11 items-center gap-2 rounded-full border-2 border-border px-4 text-xs font-bold text-brand-ink hover:border-brand">
                 <Star className="h-4 w-4" /> Bewertung abgeben
@@ -595,7 +594,6 @@ function TabBtn({ label, active, onClick }: { label: string; active: boolean; on
 function EmptyListings() {
   return (
     <div className="rounded-[2rem] border-2 border-dashed border-brand/30 bg-card/40 p-10 text-center">
-      <Package className="mx-auto h-10 w-10 text-brand/60" />
       <p className="mt-3 font-display text-lg font-bold text-brand-ink">Noch nix online.</p>
       <p className="mt-1 text-sm text-muted-foreground">Klick "Neues Listing" und leg los.</p>
     </div>

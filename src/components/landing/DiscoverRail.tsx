@@ -1,5 +1,4 @@
-import { motion } from "motion/react";
-import { ArrowRight, type LucideIcon } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import type { ListingCard as TListing } from "@/lib/listings.functions";
 import { ListingCard } from "./ListingCard";
@@ -7,20 +6,18 @@ import { ListingCard } from "./ListingCard";
 type Props = {
   title: string;
   subtitle: string;
-  icon: LucideIcon;
   emptyMessage: string;
   items?: TListing[];
   /** Category slug — the whole title becomes a link to /kategorie/<slug>. */
   slug?: string;
 };
 
-export function DiscoverRail({ title, subtitle, icon: Icon, emptyMessage, items, slug }: Props) {
+export function DiscoverRail({ title, subtitle, emptyMessage, items, slug }: Props) {
   const hasItems = items && items.length > 0;
 
   const Header = (
     <div className="min-w-0">
       <div className="flex items-center gap-2">
-        <Icon className="h-5 w-5 shrink-0 text-brand" aria-hidden />
         <h2 className="truncate font-display text-2xl font-black text-brand-ink transition-colors group-hover/rail:text-brand sm:text-3xl">
           {title}
         </h2>
@@ -81,9 +78,6 @@ function PlaceholderCard({ index, message, slug }: { index: number; message: str
       </div>
       {showMessage ? (
         <div className="my-auto text-center">
-          <motion.div className="mx-auto mb-3 grid h-10 w-10 place-items-center rounded-xl bg-brand-soft text-brand" animate={{ rotate: [-6, 6, -6] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}>
-            <ArrowRight className="h-5 w-5 rotate-45" />
-          </motion.div>
           <p className="text-xs font-medium leading-relaxed text-brand-ink">{message}</p>
         </div>
       ) : (

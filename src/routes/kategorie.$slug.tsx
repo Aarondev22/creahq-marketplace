@@ -1,25 +1,25 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageShell } from "@/components/PageShell";
-import { ArrowLeft, BadgeHelp, Box, Camera, Code2, Compass, Flame, Gem, Home, LayoutTemplate, MessageCircle, Music2, Package, Palette, Sparkles, Type, Users, SlidersHorizontal } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 
 // Same list of "curated" homepage sections + a few real categories.
 // Keeping labels in sync with DiscoverRail slugs on the homepage.
-const KATEGORIEN: Record<string, { title: string; subtitle: string; icon: typeof Package }> = {
-  "top-10":         { title: "Top 10 gerade beliebt", subtitle: "Was die Community diese Woche feiert.", icon: Flame },
-  "perfekt-daheim": { title: "Perfekt für daheim",    subtitle: "Prints, Sounds & Templates, die das Zuhause besser machen.", icon: Home },
-  "frisch":         { title: "Frisch reingekommen",   subtitle: "Die neuesten Drops aus den Werkstätten.", icon: Sparkles },
-  "perlen":         { title: "Versteckte Perlen",     subtitle: "Untern Radar, aber liebenswert.", icon: Gem },
-  "kuratiert":      { title: "Von der Community kuratiert", subtitle: "Handverlesen von Leuten wie dir.", icon: Users },
-  "illustration":   { title: "Illustration",          subtitle: "Zeichnung, Print, digitale Kunst.", icon: Palette },
-  "musik":          { title: "Musik & Sound",         subtitle: "Loops, Samples, Jingles.", icon: Music2 },
-  "3d":             { title: "3D & Modelle",          subtitle: "Meshes, Rigs, Assets.", icon: Box },
-  "templates":      { title: "Templates",             subtitle: "Notion, Figma, Docs & Co.", icon: LayoutTemplate },
-  "presets":        { title: "Presets",               subtitle: "LUTs, Lightroom, Ableton.", icon: SlidersHorizontal },
-  "schrift":        { title: "Schrift",               subtitle: "Fonts & Lettering.", icon: Type },
-  "code":           { title: "Code-Snippets",         subtitle: "Kleine Bausteine, große Wirkung.", icon: Code2 },
-  "fotovideo":      { title: "Foto & Video",          subtitle: "Presets, Overlays, Footage.", icon: Camera },
-  "coaching":       { title: "Coaching",              subtitle: "1:1 Sessions von Creatorn für Creator.", icon: Compass },
-  "beratung":       { title: "Beratung",              subtitle: "Reviews, Feedback, Strategie.", icon: MessageCircle },
+const KATEGORIEN: Record<string, { title: string; subtitle: string }> = {
+  "top-10":         { title: "Top 10 gerade beliebt", subtitle: "Was die Community diese Woche feiert." },
+  "perfekt-daheim": { title: "Perfekt für daheim",    subtitle: "Prints, Sounds & Templates, die das Zuhause besser machen." },
+  "frisch":         { title: "Frisch reingekommen",   subtitle: "Die neuesten Drops aus den Werkstätten." },
+  "perlen":         { title: "Versteckte Perlen",     subtitle: "Untern Radar, aber liebenswert." },
+  "kuratiert":      { title: "Von der Community kuratiert", subtitle: "Handverlesen von Leuten wie dir." },
+  "illustration":   { title: "Illustration",          subtitle: "Zeichnung, Print, digitale Kunst." },
+  "musik":          { title: "Musik & Sound",         subtitle: "Loops, Samples, Jingles." },
+  "3d":             { title: "3D & Modelle",          subtitle: "Meshes, Rigs, Assets." },
+  "templates":      { title: "Templates",             subtitle: "Notion, Figma, Docs & Co." },
+  "presets":        { title: "Presets",               subtitle: "LUTs, Lightroom, Ableton." },
+  "schrift":        { title: "Schrift",               subtitle: "Fonts & Lettering." },
+  "code":           { title: "Code-Snippets",         subtitle: "Kleine Bausteine, große Wirkung." },
+  "fotovideo":      { title: "Foto & Video",          subtitle: "Presets, Overlays, Footage." },
+  "coaching":       { title: "Coaching",              subtitle: "1:1 Sessions von Creatorn für Creator." },
+  "beratung":       { title: "Beratung",              subtitle: "Reviews, Feedback, Strategie." },
 };
 
 export const Route = createFileRoute("/kategorie/$slug")({
@@ -40,11 +40,10 @@ export const Route = createFileRoute("/kategorie/$slug")({
 
 function CategoryPage() {
   const { slug } = Route.useParams();
-  const c = KATEGORIEN[slug] ?? { title: slug, subtitle: "Diese Kategorie füllt sich noch.", icon: BadgeHelp };
-  const Icon = c.icon;
+  const c = KATEGORIEN[slug] ?? { title: slug, subtitle: "Diese Kategorie füllt sich noch." };
 
   return (
-    <PageShell eyebrow="Kategorie" title={<span className="inline-flex items-center gap-3"><Icon className="h-8 w-8 text-brand" />{c.title}</span>} lead={c.subtitle}>
+    <PageShell eyebrow="Kategorie" title={c.title} lead={c.subtitle}>
       <div className="not-prose">
         <div className="mb-6 flex flex-wrap items-center gap-2 text-sm">
           <Link to="/" className="inline-flex items-center gap-1 rounded-full bg-brand-soft px-3 py-1.5 font-bold text-brand-ink hover:bg-brand hover:text-primary-foreground">
@@ -69,7 +68,6 @@ function CategoryPage() {
               </div>
               {i === 0 ? (
                 <div className="my-auto text-center">
-                  <Package className="mx-auto mb-3 h-8 w-8 text-brand" />
                   <p className="text-xs font-medium leading-relaxed text-brand-ink">
                     Noch nichts da. Sobald Creator hier reinstellen, tauchen sie in dieser Ecke auf.
                   </p>

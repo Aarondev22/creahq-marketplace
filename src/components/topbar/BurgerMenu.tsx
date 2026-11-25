@@ -1,5 +1,5 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Menu, Palette, Moon, Sun, FileText, Tag, Shield, Store, Ticket, Languages, Wrench, Crown } from "lucide-react";
+import { Menu, Palette, Moon, Sun, FileText, Tag, Shield, Store, Ticket, Languages, Crown } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
@@ -132,7 +132,7 @@ export function BurgerMenu() {
               onClick={() => { setAdminOpen(true); close(); }}
               className="w-full rounded-xl bg-gradient-to-r from-brand to-fuchsia-600 px-4 py-3 text-left text-sm font-bold text-white shadow-sm transition-transform hover:scale-[1.02]"
             >
-              <span className="inline-flex items-center gap-2"><Wrench className="h-4 w-4" /> Admin-Panel öffnen</span>
+              Admin-Panel öffnen
             </button>
           </Section>
         )}

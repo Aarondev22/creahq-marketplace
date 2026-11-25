@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Code2, Puzzle, Plus, Trash2, Check, Crown, Type, MessageCircle, CircleHelp, Image, Palette, Smartphone, Monitor, type LucideIcon } from "lucide-react";
+import { Code2, Puzzle, Plus, Trash2, Check, Crown } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -16,7 +16,6 @@ const NEW_BLOCK: Record<ShopBlock["type"], ShopBlock> = {
   image: { type: "image", url: "" },
 };
 const BLOCK_LABEL: Record<ShopBlock["type"], string> = { text: "Text", quote: "Kundenstimme", faq: "FAQ", image: "Bild" };
-const BLOCK_ICON: Record<ShopBlock["type"], LucideIcon> = { text: Type, quote: MessageCircle, faq: CircleHelp, image: Image };
 const STEPS = ["Style & Thema", "Badges & Laufband", "Code / Bausteine", "Vorschau & Live"];
 const field = "w-full rounded-2xl border border-border bg-background px-3 py-2 text-sm text-brand-ink focus:border-brand focus:outline-none";
 
@@ -62,7 +61,7 @@ export function ShopDesignEditor({ userId }: { userId: string }) {
   return (
     <section className="mt-6 space-y-5 rounded-3xl border border-border bg-card p-6 sm:p-8">
       <h2 className="inline-flex items-center gap-2 font-display text-2xl font-black text-brand-ink">
-        <Palette className="h-5 w-5 text-brand" /> Shop-Design {isPro ? <span className="inline-flex items-center gap-1 rounded-full bg-brand px-3 py-1 text-xs text-primary-foreground"><Crown className="h-3 w-3" /> Pro</span> : <span className="rounded-full bg-muted px-3 py-1 text-xs">Standard</span>}
+        Shop-Design {isPro ? <span className="inline-flex items-center gap-1 rounded-full bg-brand px-3 py-1 text-xs text-primary-foreground"><Crown className="h-3 w-3" /> Pro</span> : <span className="rounded-full bg-muted px-3 py-1 text-xs">Standard</span>}
       </h2>
 
       <ol className="flex flex-wrap items-center gap-2">
@@ -155,7 +154,7 @@ export function ShopDesignEditor({ userId }: { userId: string }) {
           {blocks.map((b, i) => (
             <div key={i} className="space-y-2 rounded-2xl border border-border p-3">
               <div className="flex items-center justify-between">
-                <span className="inline-flex items-center gap-2 text-sm font-bold"><BlockIcon type={b.type} />{BLOCK_LABEL[b.type]}</span>
+                <span className="text-sm font-bold">{BLOCK_LABEL[b.type]}</span>
                 <button type="button" aria-label="Baustein löschen" onClick={() => setBlocks(blocks.filter((_, j) => j !== i))} className="grid h-10 w-10 place-items-center rounded-xl bg-muted"><Trash2 className="h-4 w-4" /></button>
               </div>
               {b.type === "text" && (<><input value={b.title} onChange={(e) => setB(i, { ...b, title: e.target.value })} className={field} placeholder="Titel" /><textarea value={b.body} onChange={(e) => setB(i, { ...b, body: e.target.value })} className={field} rows={3} placeholder="Text" /></>)}
@@ -167,7 +166,7 @@ export function ShopDesignEditor({ userId }: { userId: string }) {
           {blocks.length < MAX_BLOCKS && (
             <div className="flex flex-wrap gap-2">
               {(Object.keys(NEW_BLOCK) as ShopBlock["type"][]).map((t) => (
-                <button key={t} type="button" onClick={() => setBlocks([...blocks, NEW_BLOCK[t]])} className="inline-flex min-h-11 items-center gap-1 rounded-full border border-dashed border-brand/50 px-4 text-sm font-bold"><Plus className="h-4 w-4" /><BlockIcon type={t} /> {BLOCK_LABEL[t]}</button>
+                <button key={t} type="button" onClick={() => setBlocks([...blocks, NEW_BLOCK[t]])} className="inline-flex min-h-11 items-center gap-1 rounded-full border border-dashed border-brand/50 px-4 text-sm font-bold"><Plus className="h-4 w-4" /> {BLOCK_LABEL[t]}</button>
               ))}
             </div>
           )}
@@ -179,8 +178,8 @@ export function ShopDesignEditor({ userId }: { userId: string }) {
       {step === 4 && (
         <div className="space-y-3">
           <div className="flex gap-2">
-            <button type="button" onClick={() => setDevice("phone")} className={`inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-sm font-bold ${device === "phone" ? "bg-brand text-primary-foreground" : "border border-border"}`}><Smartphone className="h-4 w-4" /> Handy</button>
-            <button type="button" onClick={() => setDevice("desktop")} className={`inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-sm font-bold ${device === "desktop" ? "bg-brand text-primary-foreground" : "border border-border"}`}><Monitor className="h-4 w-4" /> Desktop</button>
+            <button type="button" onClick={() => setDevice("phone")} className={`min-h-11 rounded-full px-4 text-sm font-bold ${device === "phone" ? "bg-brand text-primary-foreground" : "border border-border"}`}>Handy</button>
+            <button type="button" onClick={() => setDevice("desktop")} className={`min-h-11 rounded-full px-4 text-sm font-bold ${device === "desktop" ? "bg-brand text-primary-foreground" : "border border-border"}`}>Desktop</button>
           </div>
           <div className={`mx-auto overflow-hidden rounded-3xl border-4 border-border bg-background p-4 ${device === "phone" ? "max-w-[380px]" : "w-full"}`} style={{ borderColor: theme.accent }}>
             {theme.marquee && <div className="mb-3 truncate rounded-full px-4 py-2 text-sm font-bold text-primary-foreground" style={{ background: theme.accent }}>{theme.marquee}</div>}
@@ -201,9 +200,4 @@ export function ShopDesignEditor({ userId }: { userId: string }) {
       </button>}
     </section>
   );
-}
-
-function BlockIcon({ type }: { type: ShopBlock["type"] }) {
-  const Icon = BLOCK_ICON[type];
-  return <Icon className="h-4 w-4 text-brand" />;
 }
