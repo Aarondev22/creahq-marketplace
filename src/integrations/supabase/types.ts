@@ -124,6 +124,45 @@ export type Database = {
         }
         Relationships: []
       }
+      discount_code_reservations: {
+        Row: {
+          created_at: string
+          discount_code_id: string
+          expires_at: string
+          order_id: string
+          stripe_session_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          discount_code_id: string
+          expires_at?: string
+          order_id: string
+          stripe_session_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          discount_code_id?: string
+          expires_at?: string
+          order_id?: string
+          stripe_session_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discount_code_reservations_discount_code_id_fkey"
+            columns: ["discount_code_id"]
+            isOneToOne: false
+            referencedRelation: "discount_codes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discount_code_reservations_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       disputes: {
         Row: {
           created_at: string
@@ -519,6 +558,7 @@ export type Database = {
           order_id: string
           qty: number
           seller_id: string
+          shipping_cents: number
           unit_price_cents: number
         }
         Insert: {
@@ -529,6 +569,7 @@ export type Database = {
           order_id: string
           qty?: number
           seller_id: string
+          shipping_cents?: number
           unit_price_cents: number
         }
         Update: {
@@ -539,6 +580,7 @@ export type Database = {
           order_id?: string
           qty?: number
           seller_id?: string
+          shipping_cents?: number
           unit_price_cents?: number
         }
         Relationships: [
@@ -565,7 +607,10 @@ export type Database = {
           currency: string
           discount_cents: number
           discount_code_id: string | null
+          discount_usage_recorded: boolean
           id: string
+          shipping_address: Json | null
+          shipping_cents: number
           status: Database["public"]["Enums"]["order_status"]
           stripe_session_id: string | null
           total_cents: number
@@ -577,7 +622,10 @@ export type Database = {
           currency?: string
           discount_cents?: number
           discount_code_id?: string | null
+          discount_usage_recorded?: boolean
           id?: string
+          shipping_address?: Json | null
+          shipping_cents?: number
           status?: Database["public"]["Enums"]["order_status"]
           stripe_session_id?: string | null
           total_cents?: number
@@ -589,7 +637,10 @@ export type Database = {
           currency?: string
           discount_cents?: number
           discount_code_id?: string | null
+          discount_usage_recorded?: boolean
           id?: string
+          shipping_address?: Json | null
+          shipping_cents?: number
           status?: Database["public"]["Enums"]["order_status"]
           stripe_session_id?: string | null
           total_cents?: number
@@ -952,6 +1003,28 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_account_active: {
+        Args: never
+        Returns: boolean
+      }
+      reserve_discount_code: {
+        Args: { _code_id: string; _order_id: string }
+        Returns: boolean
+      }
+      finalize_checkout_order: {
+        Args: {
+          _amount_total: number
+          _currency: string
+          _order_id: string
+          _shipping_address: Json
+          _stripe_session_id: string
+        }
+        Returns: boolean
+      }
+      release_checkout_order: {
+        Args: { _order_id: string; _stripe_session_id: string }
         Returns: boolean
       }
       consume_discount_code: {

@@ -12,6 +12,7 @@ export type MyOrderItem = {
 export type MyOrderDetail = {
   id: string;
   total_cents: number;
+  shipping_cents: number;
   currency: string;
   status: string;
   created_at: string;
@@ -41,7 +42,7 @@ export async function fetchMyOrders(): Promise<MyOrderDetail[]> {
 
   const { data: orders, error } = await supabase
     .from("orders")
-    .select("id,total_cents,currency,status,created_at")
+    .select("id,total_cents,shipping_cents,currency,status,created_at")
     .eq("buyer_id", u.user.id)
     .order("created_at", { ascending: false })
     .limit(50);

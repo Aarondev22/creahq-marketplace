@@ -1,10 +1,11 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Trash2, Minus, Plus, ShoppingBag, CreditCard, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useCart } from "@/lib/cart";
 import { useAuth } from "@/hooks/useAuth";
 import { createCheckoutSession } from "@/lib/checkout.functions";
+import { fetchShippingEstimate } from "@/lib/listings.functions";
 
 export const Route = createFileRoute("/warenkorb")({
   head: () => ({
@@ -27,6 +28,34 @@ function CartPage() {
   const [busy, setBusy] = useState(false);
   const [waiver, setWaiver] = useState(false);
   const [discountCode, setDiscountCode] = useState("");
+  const [shippingCents, setShippingCents] = useState<number | null>(null);
+  const [shippingLoading, setShippingLoading] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    if (!items.length) {
+      setShippingCents(0);
+      return () => { active = false; };
+    }
+
+    setShippingLoading(true);
+    fetchShippingEstimate({
+      data: { items: items.map((item) => ({ listing_id: item.id, qty: item.qty })) },
+    })
+      .then(({ shippingCents: estimate }) => {
+        if (active) setShippingCents(estimate);
+      })
+      .catch((error: unknown) => {
+        if (!active) return;
+        setShippingCents(null);
+        toast.error(error instanceof Error ? error.message : "Versandkosten konnten nicht berechnet werden.");
+      })
+      .finally(() => {
+        if (active) setShippingLoading(false);
+      });
+
+    return () => { active = false; };
+  }, [items]);
 
   async function checkout() {
     if (!user) {
@@ -40,7 +69,6 @@ function CartPage() {
       const res = await createCheckoutSession({
         data: {
           items: items.map((i) => ({ listing_id: i.id, qty: i.qty, offer_id: i.offer_id })),
-          origin: window.location.origin,
           waiverAccepted: waiver,
           discountCode: discountCode.trim().toUpperCase() || undefined,
         },
@@ -112,8 +140,22 @@ function CartPage() {
       </ul>
 
       <div className="mt-8 flex items-center justify-between rounded-[1.75rem] border border-border bg-gradient-to-br from-brand-soft/50 to-card p-6">
-        <div className="font-display text-xl font-bold text-brand-ink">Gesamt</div>
-        <div className="font-display text-3xl font-black text-brand">{(totalCents / 100).toFixed(2)} €</div>
+        <div>
+          <div className="font-display text-xl font-bold text-brand-ink">Gesamt</div>
+          <div className="mt-1 text-xs text-muted-foreground">
+            {shippingLoading
+              ? "Versandkosten werden berechnet …"
+              : shippingCents === null
+                ? "Versandkosten werden im Checkout angezeigt."
+                : `${(shippingCents / 100).toFixed(2)} € Versand`}
+          </div>
+        </div>
+        <div className="text-right">
+          <div className="font-display text-3xl font-black text-brand">
+            {((totalCents + (shippingCents ?? 0)) / 100).toFixed(2)} €
+          </div>
+          <div className="text-[11px] text-muted-foreground">vor Rabattcode</div>
+        </div>
       </div>
 
       <label className="mt-4 block rounded-3xl border border-border bg-card p-5 text-sm font-semibold text-brand-ink">
