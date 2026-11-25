@@ -54,14 +54,14 @@ export function DiscoverRail({ title, subtitle, emptyMessage, items, slug }: Pro
       </div>
 
       <div className="relative">
-        <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
+        <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-4 no-scrollbar">
           {hasItems
             ? items!.map((l) => <ListingCard key={l.id} l={l} />)
             : Array.from({ length: 10 }).map((_, i) => (
                 <PlaceholderCard key={i} index={i} message={emptyMessage} slug={slug} />
               ))}
         </div>
-        <div className="pointer-events-none absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-surface to-transparent" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-12 bg-gradient-to-l from-surface to-transparent sm:block" />
       </div>
     </section>
   );
@@ -95,7 +95,7 @@ function PlaceholderCard({ index, message, slug }: { index: number; message: str
   );
 
   const className =
-     "group relative flex h-60 w-52 shrink-0 flex-col justify-between overflow-hidden rounded-2xl border-2 border-dashed border-brand/25 bg-card/70 p-5 transition-all hover:-translate-y-0.5 hover:border-brand/60 sm:h-64 sm:w-56";
+    "group relative flex h-60 w-full shrink-0 snap-start flex-col justify-between overflow-hidden rounded-2xl border-2 border-dashed border-brand/25 bg-card/70 p-5 transition-all hover:-translate-y-0.5 hover:border-brand/60 sm:h-64 sm:w-56";
 
   // Placeholder cards always link to a placeholder LISTING detail page,
   // never back to the category — a click on a product card should feel
