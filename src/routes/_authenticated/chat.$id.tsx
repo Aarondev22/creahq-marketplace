@@ -1,7 +1,7 @@
 import { detectChatRisk } from "@/lib/chatGuard";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Send, Store, Tag, Check, X, Repeat } from "lucide-react";
+import { ArrowLeft, Send, Store, Tag, Check, X, Repeat, Trash2 } from "lucide-react";
 import { fetchOffers, createOffer, respondToOffer, type Offer } from "@/lib/offers.functions";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,6 +11,7 @@ import {
   fetchConversations,
   fetchMessages,
   sendMessage,
+  deleteOwnMessage,
   type ChatMessage,
   type Conversation,
 } from "@/lib/chat.functions";
@@ -116,6 +117,14 @@ function ChatRoute() {
           if (incoming.kind === "offer" || incoming.body?.startsWith("Angebot angenommen") || incoming.body?.startsWith("Angebot abgelehnt") || incoming.body?.startsWith("\u2705") || incoming.body?.startsWith("\u274c")) {
             fetchOffers(id).then(setOffers).catch(() => {});
           }
+        },
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "messages", filter: `conversation_id=eq.${id}` },
+        (payload) => {
+          const deletedId = String((payload.old as { id?: string }).id ?? "");
+          if (deletedId) setMessages((prev) => prev.filter((message) => message.id !== deletedId));
         },
       )
       .subscribe();
@@ -253,15 +262,26 @@ function ChatRoute() {
               }
               return (
                 <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
-                  <div
-                    className={`max-w-[78%] rounded-2xl px-4 py-2 text-sm shadow-sm ${
+                  <div className={`flex max-w-full items-end gap-1 ${mine ? "flex-row-reverse" : ""}`}>
+                    <div className={`max-w-[78vw] sm:max-w-[78%] rounded-2xl px-4 py-2 text-sm shadow-sm ${
                       mine ? "rounded-br-md bg-brand text-primary-foreground" : "rounded-bl-md bg-surface text-brand-ink"
-                    }`}
-                  >
-                    <p className="whitespace-pre-wrap break-words">{m.body}</p>
-                    <p className={`mt-1 text-[10px] ${mine ? "opacity-75" : "text-muted-foreground"}`}>
-                      {timeShort(m.created_at)}
-                    </p>
+                    }`}>
+                      <p className="whitespace-pre-wrap break-words">{m.body}</p>
+                      <p className={`mt-1 text-[10px] ${mine ? "opacity-75" : "text-muted-foreground"}`}>
+                        {timeShort(m.created_at)}
+                      </p>
+                    </div>
+                    {mine && m.kind === "text" && (
+                      <button
+                        type="button"
+                        aria-label="Nachricht löschen"
+                        title="Nachricht löschen"
+                        onClick={() => void deleteOwnMessage(m.id).then(() => setMessages((prev) => prev.filter((item) => item.id !== m.id))).catch((error: unknown) => toast.error(error instanceof Error ? error.message : "Nachricht konnte nicht gelöscht werden."))}
+                        className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-red-50 hover:text-red-600"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    )}
                   </div>
                 </div>
               );

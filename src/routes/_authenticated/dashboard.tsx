@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { motion } from "motion/react";
-import { Plus, Trash2, Eye, Store, ShoppingBag, TrendingUp, Package, Wallet, Truck, Heart, Pause, Play, Download, Star } from "lucide-react";
+import { Plus, Trash2, Eye, Store, ShoppingBag, TrendingUp, Package, Wallet, Truck, Heart, Pause, Play, Download, Star, Pencil } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -152,6 +152,7 @@ function Dashboard() {
         </div>
         <Link
           to="/verkaufen/neu"
+          search={{ edit: undefined }}
           className="inline-flex items-center gap-2 rounded-full bg-brand px-5 py-3 text-sm font-bold text-primary-foreground brand-glow transition-transform hover:scale-105"
         >
           <Plus className="h-4 w-4" /> Neues Listing
@@ -237,6 +238,9 @@ function Dashboard() {
                       {l.status === "published" ? "Aktiv" : l.status === "draft" ? "Pausiert" : l.status}
                     </p>
                     <div className="mt-3 flex flex-wrap gap-2">
+                      <Link to="/verkaufen/neu" search={{ edit: l.id }} className="inline-flex min-h-11 items-center gap-1 rounded-full border border-border px-4 py-2 text-xs font-semibold text-brand-ink hover:border-brand hover:text-brand">
+                        <Pencil className="h-4 w-4" /> Bearbeiten
+                      </Link>
                       <Link to="/listing/$id" params={{ id: l.id }} className="inline-flex min-h-11 items-center gap-1 rounded-full bg-brand-soft px-4 py-2 text-xs font-semibold text-brand-ink hover:bg-brand hover:text-primary-foreground">
                         <Eye className="h-4 w-4" /> Ansehen
                       </Link>

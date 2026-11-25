@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { createClient } from "@supabase/supabase-js";
 import type { Database, Json } from "@/integrations/supabase/types";
-import { applyProSpotlight } from "@/lib/shopTheme";
+import { applyProSpotlight, isProActive } from "@/lib/shopTheme";
 
 function serverPublic() {
   const key = process.env["SUPABASE_PUBLISHABLE_KEY"]!;
@@ -134,8 +134,11 @@ export const searchListings = createServerFn({ method: "GET" })
     // Pro-Spotlight: relevanteste Pro-Treffer oben, faire Rotation (nur bei Relevanz-Sortierung).
     if (data.sort === "new" && out.length > 0) {
       const sellerIds = [...new Set(out.map((l) => l.seller_id))];
-      const { data: pros } = await supa.from("profiles").select("id").in("id", sellerIds).eq("is_pro", true);
-      out = applyProSpotlight(out, new Set((pros ?? []).map((p) => p.id)));
+      const { data: pros } = await supa.from("profiles").select("id,is_pro,pro_expires_at").in("id", sellerIds).eq("is_pro", true);
+      out = applyProSpotlight(
+        out,
+        new Set((pros ?? []).filter((p) => isProActive(p.is_pro, p.pro_expires_at)).map((p) => p.id)),
+      );
     }
     return out.slice(0, data.limit);
   });
@@ -175,6 +178,7 @@ export type ListingDetail = ListingCard & {
     avatar_url: string | null;
     is_pro: boolean;
     is_verified: boolean;
+    pro_expires_at: string | null;
     shop_badges: Json;
     shop_theme: Json;
   } | null;
@@ -195,10 +199,13 @@ export const fetchListingById = createServerFn({ method: "GET" })
     if (!row) return null;
     const { data: seller } = await supa
       .from("profiles")
-      .select("id,handle,display_name,avatar_url,is_pro,is_verified,shop_badges,shop_theme")
+      .select("id,handle,display_name,avatar_url,is_pro,pro_expires_at,is_verified,shop_badges,shop_theme")
       .eq("id", row.seller_id)
       .maybeSingle();
-    return { ...(row as unknown as Omit<ListingDetail, "seller">), seller: seller ?? null };
+    const activeSeller = seller
+      ? { ...seller, is_pro: isProActive(seller.is_pro, seller.pro_expires_at) }
+      : null;
+    return { ...(row as unknown as Omit<ListingDetail, "seller">), seller: activeSeller };
   });
 
 export const fetchRelatedListings = createServerFn({ method: "GET" })
@@ -250,10 +257,10 @@ export const fetchShopByHandle = createServerFn({ method: "GET" })
   .inputValidator((d: { handle: string }) => ({ handle: String(d.handle) }))
   .handler(async ({ data }) => {
     const supa = serverPublic();
-    const cols = "id,handle,display_name,bio,avatar_url,theme_color,banner_url,shop_sections,highlight_listing_id,is_pro,is_verified,shop_badges,shop_theme,shop_shipping_default";
+    const cols = "id,handle,display_name,bio,avatar_url,theme_color,banner_url,shop_sections,highlight_listing_id,is_pro,pro_expires_at,is_verified,shop_badges,shop_theme,shop_shipping_default";
     const h = decodeURIComponent(data.handle).trim().replace(/^@/, "").toLowerCase().slice(0, 64);
     const safe = h.replace(/[^a-z0-9-]/gi, "");
-    let { data: profile } = await supa.from("profiles").select(cols).eq("handle", h).maybeSingle();
+    let { data: profile } = await supa.from("profiles").select(cols).ilike("handle", h).maybeSingle();
     if (!profile && /^[0-9a-f-]{36}$/i.test(h)) {
       ({ data: profile } = await supa.from("profiles").select(cols).eq("id", h).maybeSingle());
     }
@@ -287,5 +294,9 @@ export const fetchShopByHandle = createServerFn({ method: "GET" })
     const count = reviews?.length ?? 0;
     const avg = count > 0 ? Math.round(((reviews ?? []).reduce((a, r) => a + (r.rating ?? 0), 0) / count) * 10) / 10 : 0;
 
-    return { profile, listings: (listings ?? []) as ListingCard[], rating: { avg, count } };
+    return {
+      profile: { ...profile, is_pro: isProActive(profile.is_pro, profile.pro_expires_at) },
+      listings: (listings ?? []) as ListingCard[],
+      rating: { avg, count },
+    };
   });

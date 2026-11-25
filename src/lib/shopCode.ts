@@ -1,10 +1,15 @@
 // Eigener Shop-Code (Standard + Pro) und Bausteine (nur Pro). Liegen in profiles.shop_theme.
 
 export type ShopBlock =
+  | { type: "heading"; title: string }
   | { type: "text"; title: string; body: string }
+  | { type: "banner"; title: string; body: string }
   | { type: "quote"; text: string; author: string }
   | { type: "faq"; q: string; a: string }
-  | { type: "image"; url: string };
+  | { type: "image"; url: string }
+  | { type: "button"; label: string; url: string }
+  | { type: "divider" }
+  | { type: "spacer"; height: number };
 
 export type ShopCode = { mode: "code" | "blocks"; html: string; css: string; blocks: ShopBlock[] };
 
@@ -17,10 +22,19 @@ export function parseBlocks(raw: unknown): ShopBlock[] {
   const out: ShopBlock[] = [];
   for (const b of raw.slice(0, MAX_BLOCKS)) {
     const o = (b && typeof b === "object" ? b : {}) as Record<string, unknown>;
-    if (o.type === "text") out.push({ type: "text", title: s(o.title, 80), body: s(o.body, 1000) });
+    if (o.type === "heading") out.push({ type: "heading", title: s(o.title, 100) });
+    else if (o.type === "text") out.push({ type: "text", title: s(o.title, 80), body: s(o.body, 1000) });
+    else if (o.type === "banner") out.push({ type: "banner", title: s(o.title, 100), body: s(o.body, 600) });
     else if (o.type === "quote") out.push({ type: "quote", text: s(o.text, 300), author: s(o.author, 60) });
     else if (o.type === "faq") out.push({ type: "faq", q: s(o.q, 160), a: s(o.a, 600) });
     else if (o.type === "image" && /^https:\/\//.test(s(o.url, 2000))) out.push({ type: "image", url: s(o.url, 2000) });
+    else if (o.type === "button" && /^https:\/\//.test(s(o.url, 2000))) {
+      out.push({ type: "button", label: s(o.label, 60), url: s(o.url, 2000) });
+    } else if (o.type === "divider") out.push({ type: "divider" });
+    else if (o.type === "spacer") {
+      const height = Number(o.height);
+      out.push({ type: "spacer", height: Number.isFinite(height) ? Math.min(128, Math.max(8, Math.round(height))) : 32 });
+    }
   }
   return out;
 }

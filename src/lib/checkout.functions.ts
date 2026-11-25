@@ -7,8 +7,9 @@ export type CheckoutResult = { url: string } | { error: string };
 
 export const createCheckoutSession = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { items: CheckoutLine[]; origin: string; waiverAccepted?: boolean }) => ({
+  .inputValidator((d: { items: CheckoutLine[]; origin: string; waiverAccepted?: boolean; discountCode?: string }) => ({
     waiverAccepted: d?.waiverAccepted === true,
+    discountCode: String(d?.discountCode ?? "").trim().toUpperCase().slice(0, 40),
     items: (Array.isArray(d?.items) ? d.items : [])
       .slice(0, 50)
       .map((i) => ({ listing_id: String(i.listing_id), qty: Math.min(Math.max(Number(i.qty) || 1, 1), 99), offer_id: i.offer_id ? String(i.offer_id) : undefined })),
@@ -59,17 +60,52 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
       }
     }
 
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const originalTotalCents = lines.reduce((sum, l) => sum + l.listing.price_cents * l.item.qty, 0);
+    let discountCode: { id: string; amount: number } | null = null;
+    if (data.discountCode) {
+      if (!/^[A-Z0-9-]{3,40}$/.test(data.discountCode)) return { error: "Der Rabattcode ist ungültig." };
+      const { data: foundCode, error: discountError } = await supabaseAdmin
+        .from("discount_codes")
+        .select("id,amount,kind")
+        .eq("code", data.discountCode)
+        .eq("active", true)
+        .is("owner_id", null)
+        .eq("scope", "global")
+        .lte("valid_from", new Date().toISOString())
+        .or(`valid_until.is.null,valid_until.gt.${new Date().toISOString()}`)
+        .maybeSingle();
+      if (discountError) return { error: "Der Rabattcode konnte nicht geprüft werden." };
+      if (!foundCode || foundCode.kind !== "percent" || !Number.isInteger(foundCode.amount) || foundCode.amount < 1 || foundCode.amount > 90) {
+        return { error: "Der Rabattcode ist ungültig oder abgelaufen." };
+      }
+      discountCode = { id: foundCode.id, amount: foundCode.amount };
+      for (const line of lines) {
+        line.listing = {
+          ...line.listing,
+          price_cents: Math.floor(line.listing.price_cents * (100 - discountCode.amount) / 100),
+        };
+      }
+    }
+
     const totalCents = lines.reduce((sum, l) => sum + l.listing.price_cents * l.item.qty, 0);
+    const discountCents = originalTotalCents - totalCents;
     const currency = (lines[0]!.listing.currency || "eur").toLowerCase();
 
     const { data: order, error: orderError } = await supabase
       .from("orders")
-      .insert({ buyer_id: userId, total_cents: totalCents, currency, status: "pending" })
+      .insert({
+        buyer_id: userId,
+        total_cents: totalCents,
+        currency,
+        status: "pending",
+        discount_code_id: discountCode?.id ?? null,
+        discount_cents: discountCents,
+      })
       .select("id")
       .single();
     if (orderError || !order) return { error: orderError?.message ?? "Bestellung konnte nicht angelegt werden." };
 
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await supabaseAdmin.from("order_items").insert(
       lines.map((l) => ({
         order_id: order.id,
@@ -89,7 +125,11 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
       const session = await stripe.checkout.sessions.create({
         mode: "payment",
         client_reference_id: order.id,
-        metadata: { order_id: order.id, buyer_id: userId },
+        metadata: {
+          order_id: order.id,
+          buyer_id: userId,
+          ...(discountCode ? { discount_code_id: discountCode.id } : {}),
+        },
         line_items: lines.map((l) => ({
           quantity: l.item.qty,
           price_data: {
@@ -108,6 +148,18 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
       await supabaseAdmin.from("orders").update({ stripe_session_id: session.id }).eq("id", order.id);
 
       if (!session.url) return { error: "Stripe hat keine Checkout-URL zurückgegeben." };
+      if (discountCode) {
+        const { data: consumed, error: consumeError } = await supabaseAdmin.rpc("consume_discount_code", { _code_id: discountCode.id });
+        if (consumeError || consumed !== true) {
+          try {
+            await stripe.checkout.sessions.expire(session.id);
+          } catch (expireError) {
+            console.error("[stripe] unable to expire checkout after discount rejection", expireError);
+          }
+          await supabaseAdmin.from("orders").update({ status: "cancelled" }).eq("id", order.id);
+          return { error: "Der Rabattcode wurde inzwischen aufgebraucht oder ist abgelaufen. Bitte versuche es erneut." };
+        }
+      }
       return { url: session.url };
     } catch (err) {
       console.error("[stripe] checkout session failed", err);

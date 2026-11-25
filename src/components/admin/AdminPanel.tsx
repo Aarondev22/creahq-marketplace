@@ -12,6 +12,8 @@ import {
   toggleUserRole,
   setUserPro,
   setUserVerified,
+  pauseUser,
+  clearUserPause,
   listAllListings,
   setListingStatus,
   type AdminListingFull,
@@ -51,6 +53,8 @@ export function AdminPanel({ open, onClose }: { open: boolean; onClose: () => vo
   const doRole = useServerFn(toggleUserRole);
   const doPro = useServerFn(setUserPro);
   const doSetVerified = useServerFn(setUserVerified);
+  const doPause = useServerFn(pauseUser);
+  const doClearPause = useServerFn(clearUserPause);
   const getAll = useServerFn(listAllListings);
   const doStatus = useServerFn(setListingStatus);
 
@@ -62,6 +66,20 @@ export function AdminPanel({ open, onClose }: { open: boolean; onClose: () => vo
       /* ignore */
     }
   }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    function keepPanelInViewport() {
+      const width = Math.min(window.innerWidth * 0.94, 512);
+      setPos((current) => ({
+        x: Math.max(8, Math.min(current.x, window.innerWidth - width - 8)),
+        y: Math.max(8, Math.min(current.y, window.innerHeight - Math.min(window.innerHeight * 0.88, 720) - 8)),
+      }));
+    }
+    keepPanelInViewport();
+    window.addEventListener("resize", keepPanelInViewport);
+    return () => window.removeEventListener("resize", keepPanelInViewport);
+  }, [open]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -76,7 +94,7 @@ export function AdminPanel({ open, onClose }: { open: boolean; onClose: () => vo
       setLoading(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab, q, pf]);
+  }, [tab, q, pq, pf]);
 
   useEffect(() => {
     if (open) void load();
@@ -87,9 +105,10 @@ export function AdminPanel({ open, onClose }: { open: boolean; onClose: () => vo
   }
   function moveDrag(clientX: number, clientY: number) {
     if (!drag.current) return;
+    const width = Math.min(window.innerWidth * 0.94, 512);
     const next = {
-      x: Math.max(4, Math.min(clientX - drag.current.dx, window.innerWidth - 80)),
-      y: Math.max(4, Math.min(clientY - drag.current.dy, window.innerHeight - 80)),
+      x: Math.max(8, Math.min(clientX - drag.current.dx, window.innerWidth - width - 8)),
+      y: Math.max(8, Math.min(clientY - drag.current.dy, window.innerHeight - Math.min(window.innerHeight * 0.88, 720) - 8)),
     };
     setPos(next);
   }
@@ -107,7 +126,7 @@ export function AdminPanel({ open, onClose }: { open: boolean; onClose: () => vo
 
   return (
     <div
-      className="fixed z-[90] w-[min(94vw,32rem)] overflow-hidden rounded-3xl border border-border bg-card shadow-2xl"
+      className="fixed z-[90] w-[min(94vw,32rem)] max-w-[calc(100vw-1rem)] overflow-hidden rounded-3xl border border-border bg-card shadow-2xl"
       style={{ left: pos.x, top: pos.y }}
       onMouseMove={(e) => moveDrag(e.clientX, e.clientY)}
       onMouseUp={endDrag}
@@ -307,7 +326,8 @@ export function AdminPanel({ open, onClose }: { open: boolean; onClose: () => vo
                       {u.is_verified && <span className="inline-flex items-center gap-1 rounded-full bg-brand-soft px-2 py-0.5 text-[10px] font-bold text-brand"><BadgeCheck className="h-3 w-3" /> Verifiziert</span>}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      @{u.handle ?? "—"} · {u.roles.join(", ") || "buyer"} {u.banned ? "· gesperrt" : ""}
+                      @                      {u.handle ?? "—"} · {u.roles.join(", ") || "buyer"}
+                      {u.banned ? " · dauerhaft gesperrt" : u.suspended_until && new Date(u.suspended_until) > new Date() ? ` · pausiert bis ${new Date(u.suspended_until).toLocaleDateString("de-DE")}` : ""}
                     </p>
                     <div className="mt-2 flex flex-wrap gap-2">
                       <Action
@@ -319,6 +339,33 @@ export function AdminPanel({ open, onClose }: { open: boolean; onClose: () => vo
                           void load();
                         }}
                       />
+                      {!u.banned && (
+                        <>
+                          {[1, 7, 30].map((days) => (
+                            <Action
+                              key={days}
+                              variant="ghost"
+                              label={`${u.suspended_until && new Date(u.suspended_until) > new Date() ? "Verlängern" : "Pausieren"} · ${days} Tage`}
+                              onClick={async () => {
+                                await doPause({ data: { userId: u.id, days } });
+                                toast.success(`Pause um ${days} Tage verlängert.`);
+                                void load();
+                              }}
+                            />
+                          ))}
+                          {u.suspended_until && new Date(u.suspended_until) > new Date() && (
+                            <Action
+                              variant="ghost"
+                              label="Pause beenden"
+                              onClick={async () => {
+                                await doClearPause({ data: { userId: u.id } });
+                                toast.success("Pause beendet.");
+                                void load();
+                              }}
+                            />
+                          )}
+                        </>
+                      )}
                       <Action
                         label={u.is_pro ? "Pro entziehen" : "Pro vergeben"}
                         variant={u.is_pro ? "gold" : "ghost"}
@@ -376,8 +423,11 @@ function CodesTab() {
   const removeCode = useServerFn(deleteRedeemCode);
   const [codes, setCodes] = useState<AdminRedeemCode[]>([]);
   const [code, setCode] = useState("");
-  const [codeType, setCodeType] = useState<AdminRedeemCode["code_type"]>("pro");
+  const [codeType, setCodeType] = useState<"founder" | "pro" | "discount">("pro");
   const [maxUses, setMaxUses] = useState("1");
+  const [validDays, setValidDays] = useState("unlimited");
+  const [durationDays, setDurationDays] = useState("30");
+  const [discountPercent, setDiscountPercent] = useState("10");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -398,7 +448,14 @@ function CodesTab() {
     setSaving(true);
     try {
       const created = await createCode({
-        data: { code, codeType, maxUses: maxUses === "unlimited" ? null : Number(maxUses) },
+        data: {
+          code,
+          codeType,
+          maxUses: maxUses === "unlimited" ? null : Number(maxUses),
+          validDays: validDays === "unlimited" ? null : Number(validDays),
+          durationDays: codeType === "pro" ? Number(durationDays) : null,
+          discountPercent: codeType === "discount" ? Number(discountPercent) : null,
+        },
       });
       setCode("");
       toast.success(`Code ${created.code} erstellt.`);
@@ -428,10 +485,10 @@ function CodesTab() {
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="text-xs font-semibold text-muted-foreground">
             Typ
-            <select value={codeType} onChange={(event) => setCodeType(event.target.value as AdminRedeemCode["code_type"])} className="mt-1 min-h-11 w-full rounded-xl border border-border bg-background px-3 text-sm text-brand-ink">
+            <select value={codeType} onChange={(event) => setCodeType(event.target.value as "founder" | "pro" | "discount")} className="mt-1 min-h-11 w-full rounded-xl border border-border bg-background px-3 text-sm text-brand-ink">
               <option value="founder">Founder</option>
               <option value="pro">Pro</option>
-              <option value="beta_tester">Beta-Tester</option>
+              <option value="discount">Rabattcode</option>
             </select>
           </label>
           <label className="text-xs font-semibold text-muted-foreground">
@@ -443,6 +500,36 @@ function CodesTab() {
               <option value="unlimited">Unbegrenzt</option>
             </select>
           </label>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label className="text-xs font-semibold text-muted-foreground">
+            Code gültig für
+            <select value={validDays} onChange={(event) => setValidDays(event.target.value)} className="mt-1 min-h-11 w-full rounded-xl border border-border bg-background px-3 text-sm text-brand-ink">
+              <option value="unlimited">Unbegrenzt</option>
+              <option value="7">7 Tage</option>
+              <option value="30">30 Tage</option>
+              <option value="90">90 Tage</option>
+              <option value="365">1 Jahr</option>
+            </select>
+          </label>
+          {codeType === "pro" ? (
+            <label className="text-xs font-semibold text-muted-foreground">
+              Pro-Zugang dauert
+              <select value={durationDays} onChange={(event) => setDurationDays(event.target.value)} className="mt-1 min-h-11 w-full rounded-xl border border-border bg-background px-3 text-sm text-brand-ink">
+                <option value="7">7 Tage</option>
+                <option value="30">30 Tage</option>
+                <option value="90">90 Tage</option>
+                <option value="365">1 Jahr</option>
+              </select>
+            </label>
+          ) : codeType === "discount" ? (
+            <label className="text-xs font-semibold text-muted-foreground">
+              Rabatt
+              <select value={discountPercent} onChange={(event) => setDiscountPercent(event.target.value)} className="mt-1 min-h-11 w-full rounded-xl border border-border bg-background px-3 text-sm text-brand-ink">
+                {[5, 10, 15, 20, 25, 50].map((percent) => <option key={percent} value={percent}>{percent} %</option>)}
+              </select>
+            </label>
+          ) : null}
         </div>
         <button type="submit" disabled={saving} className="min-h-11 rounded-full bg-brand px-5 text-sm font-bold text-primary-foreground disabled:opacity-60">
           {saving ? "Wird erstellt …" : "Code erstellen"}
@@ -460,10 +547,10 @@ function CodesTab() {
               return (
                 <tr key={item.id} className="border-t border-border">
                   <td className="p-3 font-mono font-bold text-brand-ink">{item.code}</td>
-                  <td className="p-3">{item.code_type === "beta_tester" ? "Beta-Tester" : item.code_type === "founder" ? "Founder" : "Pro"}</td>
+                  <td className="p-3">{item.code_type === "beta_tester" ? "Alt-Beta" : item.code_type === "founder" ? "Founder" : item.code_type === "discount" ? `${item.discount_percent}% Rabatt` : `Pro · ${item.duration_days ?? "dauerhaft"} Tage`}</td>
                   <td className="p-3">{item.used_count} / {item.max_uses ?? "∞"}</td>
-                  <td className="p-3"><span className={exhausted ? "font-bold text-muted-foreground" : "font-bold text-emerald-700"}>{exhausted ? "Eingelöst" : "Aktiv"}</span></td>
-                  <td className="p-3"><Action variant="ghost" label="Löschen" onClick={async () => { await removeCode({ data: { id: item.id } }); toast.success("Code gelöscht."); await load(); }} /></td>
+                  <td className="p-3"><span className={exhausted || (item.valid_until !== null && new Date(item.valid_until) <= new Date()) ? "font-bold text-muted-foreground" : "font-bold text-emerald-700"}>{exhausted ? "Eingelöst" : item.valid_until !== null && new Date(item.valid_until) <= new Date() ? "Abgelaufen" : "Aktiv"}</span></td>
+                  <td className="p-3"><Action variant="ghost" label="Löschen" onClick={async () => { await removeCode({ data: { id: item.id, codeType: item.code_type } }); toast.success("Code gelöscht."); await load(); }} /></td>
                 </tr>
               );
             })}

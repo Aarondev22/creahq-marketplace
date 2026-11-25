@@ -123,6 +123,17 @@ export async function sendMessage(conversationId: string, body: string): Promise
   return data as ChatMessage;
 }
 
+export async function deleteOwnMessage(messageId: string): Promise<void> {
+  const me = await myId();
+  const { error } = await supabase
+    .from("messages")
+    .delete()
+    .eq("id", messageId)
+    .eq("sender_id", me)
+    .eq("kind", "text");
+  if (error) throw new Error(error.message);
+}
+
 /** Chat immer pro Produkt: findet oder erstellt die Konversation zu einem Listing. */
 export async function startConversation(listingId: string, sellerId: string): Promise<string> {
   const me = await myId();

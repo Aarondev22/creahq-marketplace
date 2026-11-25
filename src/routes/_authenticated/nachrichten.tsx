@@ -1,11 +1,12 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { MessagesSquare, Send, Store } from "lucide-react";
+import { MessagesSquare, Send, Store, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   fetchConversations,
   fetchMessages,
   sendMessage,
+  deleteOwnMessage,
   type Conversation,
   type ChatMessage,
 } from "@/lib/chat.functions";
@@ -82,6 +83,14 @@ function MessagesPage() {
         (payload) => {
           const incoming = payload.new as ChatMessage;
           setMessages((prev) => (prev.some((m) => m.id === incoming.id) ? prev : [...prev, incoming]));
+        },
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "messages", filter: `conversation_id=eq.${c}` },
+        (payload) => {
+          const deletedId = String((payload.old as { id?: string }).id ?? "");
+          if (deletedId) setMessages((prev) => prev.filter((message) => message.id !== deletedId));
         },
       )
       .subscribe();
@@ -257,17 +266,26 @@ function MessagesPage() {
                   const mine = m.sender_id === myId;
                   return (
                     <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
-                      <div
-                        className={`max-w-[78%] rounded-2xl px-4 py-2 text-sm shadow-sm ${
-                          mine
-                            ? "rounded-br-md bg-brand text-primary-foreground"
-                            : "rounded-bl-md bg-surface text-brand-ink"
-                        }`}
-                      >
-                        <p className="whitespace-pre-wrap break-words">{m.body}</p>
-                        <p className={`mt-1 text-[10px] ${mine ? "opacity-75" : "text-muted-foreground"}`}>
-                          {timeShort(m.created_at)}
-                        </p>
+                      <div className={`flex max-w-full items-end gap-1 ${mine ? "flex-row-reverse" : ""}`}>
+                        <div className={`max-w-[78vw] sm:max-w-[78%] rounded-2xl px-4 py-2 text-sm shadow-sm ${
+                          mine ? "rounded-br-md bg-brand text-primary-foreground" : "rounded-bl-md bg-surface text-brand-ink"
+                        }`}>
+                          <p className="whitespace-pre-wrap break-words">{m.body}</p>
+                          <p className={`mt-1 text-[10px] ${mine ? "opacity-75" : "text-muted-foreground"}`}>
+                            {timeShort(m.created_at)}
+                          </p>
+                        </div>
+                        {mine && m.kind === "text" && (
+                          <button
+                            type="button"
+                            aria-label="Nachricht löschen"
+                            title="Nachricht löschen"
+                            onClick={() => void deleteOwnMessage(m.id).then(() => setMessages((prev) => prev.filter((item) => item.id !== m.id))).catch((error: unknown) => toast.error(error instanceof Error ? error.message : "Nachricht konnte nicht gelöscht werden."))}
+                            className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-red-50 hover:text-red-600"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        )}
                       </div>
                     </div>
                   );

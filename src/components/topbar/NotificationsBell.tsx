@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Bell, MessageCircle, ShoppingBag, Package, Truck } from "lucide-react";
+import { Bell, MessageCircle, ShoppingBag, Package, Truck, Trash2 } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { useNotifications } from "@/hooks/useNotifications";
+import { toast } from "sonner";
 
 const ICONS: Record<string, React.ReactNode> = {
   message: <MessageCircle className="h-4 w-4" />,
@@ -26,7 +27,7 @@ function timeShort(iso: string) {
 export function NotificationsBell() {
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState<string>("all");
-  const { items, unread, loading, markRead, markAllRead, signedIn } = useNotifications();
+  const { items, unread, loading, markRead, markAllRead, deleteNotification, signedIn } = useNotifications();
   const navigate = useNavigate();
 
   if (!signedIn) return null;
@@ -99,7 +100,7 @@ export function NotificationsBell() {
                 </li>
               ) : (
                 shown.map((n) => (
-                  <li key={n.id}>
+                  <li key={n.id} className={`flex min-h-14 items-start gap-2 px-3 py-2 ${n.read_at ? "" : "bg-brand-soft/25"}`}>
                     <button
                       type="button"
                       onClick={() => {
@@ -107,9 +108,7 @@ export function NotificationsBell() {
                         setOpen(false);
                         if (n.link) navigate({ to: n.link as never });
                       }}
-                      className={`flex w-full min-h-14 items-start gap-3 px-4 py-3 text-left transition hover:bg-brand-soft/50 ${
-                        n.read_at ? "" : "bg-brand-soft/25"
-                      }`}
+                      className="flex min-w-0 flex-1 items-start gap-3 py-1 text-left transition hover:bg-brand-soft/50"
                     >
                       <span className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full bg-brand-soft text-brand">
                         {ICONS[n.category] ?? <Bell className="h-4 w-4" />}
@@ -119,6 +118,15 @@ export function NotificationsBell() {
                         {n.body && <span className="block truncate text-xs text-muted-foreground">{n.body}</span>}
                         <span className="mt-0.5 block text-[10px] text-muted-foreground">{timeShort(n.created_at)}</span>
                       </span>
+                    </button>
+                    <button
+                      type="button"
+                      aria-label="Benachrichtigung löschen"
+                      title="Benachrichtigung löschen"
+                      onClick={() => void deleteNotification(n.id).catch((error: unknown) => toast.error(error instanceof Error ? error.message : "Löschen fehlgeschlagen."))}
+                      className="mt-1 grid h-9 w-9 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-red-50 hover:text-red-600"
+                    >
+                      <Trash2 className="h-4 w-4" />
                     </button>
                   </li>
                 ))
