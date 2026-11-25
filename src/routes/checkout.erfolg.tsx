@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { CheckCircle2, Loader2 } from "lucide-react";
 import { fetchOrderStatus } from "@/lib/checkout.functions";
@@ -26,15 +26,24 @@ function SuccessPage() {
   const { order } = Route.useSearch();
   const { clear } = useCart();
   const navigate = useNavigate();
-
-  useEffect(() => { clear(); }, []);
+  const cartCleared = useRef(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ["order-status", order],
     queryFn: () => fetchOrderStatus({ data: { orderId: order } }),
     enabled: Boolean(order),
-    refetchInterval: (q) => (q.state.data?.status === "paid" ? false : 2500),
+    refetchInterval: (q) => (["paid", "fulfilled", "cancelled", "refunded"].includes(q.state.data?.status ?? "") ? false : 2500),
   });
+
+  useEffect(() => {
+    if (!cartCleared.current && (data?.status === "paid" || data?.status === "fulfilled")) {
+      clear();
+      cartCleared.current = true;
+    }
+  }, [clear, data?.status]);
+
+  const paymentConfirmed = data?.status === "paid" || data?.status === "fulfilled";
+  const paymentFailed = data?.status === "cancelled" || data?.status === "refunded";
 
   return (
     <div className="mx-auto max-w-lg px-6 py-24 text-center">
@@ -43,7 +52,11 @@ function SuccessPage() {
       </div>
       <h1 className="mt-6 font-display text-4xl font-black text-brand-ink">Danke!</h1>
       <p className="mt-2 text-muted-foreground">
-        Deine Zahlung ist durch. Wir haben die Bestellung an den Shop weitergegeben.
+        {paymentConfirmed
+          ? "Deine Zahlung wurde bestätigt. Die Bestellung wurde an den Shop weitergegeben."
+          : paymentFailed
+            ? "Die Zahlung wurde nicht abgeschlossen. Deine Artikel bleiben im Warenkorb."
+            : "Wir warten noch auf die Bestätigung deiner Zahlung."}
       </p>
 
       <div className="mt-6 rounded-[1.75rem] border border-border bg-card p-5 text-left">
@@ -55,8 +68,8 @@ function SuccessPage() {
             <div className="mt-1 flex items-center justify-between">
               <span className="font-display text-2xl font-black text-brand">{(data.total_cents / 100).toFixed(2)} €</span>
               <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/10 px-3 py-1 text-xs font-bold text-brand">
-                {data.status !== "paid" && <Loader2 className="h-3 w-3 animate-spin" />}
-                {data.status === "paid" ? "Bezahlt" : "Zahlung wird bestätigt …"}
+                {!paymentConfirmed && !paymentFailed && <Loader2 className="h-3 w-3 animate-spin" />}
+                {paymentConfirmed ? "Bezahlt" : paymentFailed ? "Nicht abgeschlossen" : "Zahlung wird bestätigt …"}
               </span>
             </div>
           </>

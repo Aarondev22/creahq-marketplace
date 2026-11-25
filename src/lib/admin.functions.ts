@@ -7,7 +7,18 @@ import { isProActive } from "@/lib/shopTheme";
 type Ctx = { supabase: SupabaseClient<Database>; userId: string };
 
 async function assertAdmin(context: Ctx) {
-  const { data } = await context.supabase.from("user_roles").select("role").eq("user_id", context.userId);
+  const { data: profile, error: profileError } = await context.supabase
+    .from("profiles")
+    .select("banned,suspended_until")
+    .eq("id", context.userId)
+    .maybeSingle();
+  if (profileError) throw new Error("Dein Kontostatus konnte nicht geprüft werden.");
+  if (!profile || profile.banned || (profile.suspended_until && new Date(profile.suspended_until) > new Date())) {
+    throw new Error("Dein Konto ist derzeit pausiert oder gesperrt.");
+  }
+
+  const { data, error } = await context.supabase.from("user_roles").select("role").eq("user_id", context.userId);
+  if (error) throw new Error("Deine Admin-Berechtigung konnte nicht geprüft werden.");
   const roles = (data ?? []).map((r: { role: string }) => r.role);
   if (!roles.includes("admin") && !roles.includes("founder")) {
     throw new Error("Nur Admins dürfen das.");

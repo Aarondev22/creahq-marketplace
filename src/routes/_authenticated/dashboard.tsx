@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { fetchMySales, addShipment, type MySale } from "@/lib/shipments.functions";
 import { ORDER_PROBLEM_REASONS, createReport } from "@/lib/reports";
 import { createReview } from "@/lib/reviews";
+import { createOrderDownloadUrl, fetchOrderDownloads } from "@/lib/order-downloads.functions";
 import { escrowState } from "@/lib/escrow";
 import { sellerPayoutCents } from "@/lib/fees";
 
@@ -33,7 +34,7 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 
 
 type MyListing = { id: string; title: string; price_cents: number; status: string; cover_url: string | null; created_at: string };
-type MyOrder = { id: string; total_cents: number; status: string; created_at: string };
+type MyOrder = { id: string; total_cents: number; shipping_cents: number; status: string; created_at: string };
 type OrderShipment = { order_id: string; carrier: string; tracking_number: string };
 type OrderReport = { target_id: string; status: string; reason: string };
 
@@ -72,30 +73,32 @@ function Dashboard() {
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) return;
 
-    const [{ data: l }, { data: o }, { data: items }, { data: favs }, mySales] = await Promise.all([
+    const [{ data: l }, { data: o }, { data: favs }, mySales] = await Promise.all([
       supabase.from("listings").select("id,title,price_cents,status,cover_url,created_at").eq("seller_id", u.user.id).order("created_at", { ascending: false }),
-      supabase.from("orders").select("id,total_cents,status,created_at").eq("buyer_id", u.user.id).order("created_at", { ascending: false }).limit(10),
-      supabase.from("order_items").select("unit_price_cents,qty,created_at").eq("seller_id", u.user.id),
+      supabase.from("orders").select("id,total_cents,shipping_cents,status,created_at").eq("buyer_id", u.user.id).order("created_at", { ascending: false }).limit(10),
       supabase.from("favorites").select("id, listing:listings(id,title,price_cents,cover_url)").eq("user_id", u.user.id).not("listing_id", "is", null).order("created_at", { ascending: false }),
-      fetchMySales().catch(() => []),
+      fetchMySales().catch((error: unknown) => {
+        toast.error(error instanceof Error ? error.message : "Verkäufe konnten nicht geladen werden.");
+        return [] as MySale[];
+      }),
     ]);
 
     setListings((l ?? []) as MyListing[]);
     setOrders((o ?? []) as MyOrder[]);
     setFavorites((favs ?? []) as unknown as FavRow[]);
     setSales(mySales);
-    const rev = (items ?? []).reduce((sum, it) => sum + it.unit_price_cents * it.qty, 0);
+    const rev = mySales.reduce((sum, sale) => sum + sale.unit_price_cents * sale.qty + sale.shipping_cents, 0);
     setRevenueCents(rev);
-    setSalesCount((items ?? []).reduce((sum, it) => sum + it.qty, 0));
+    setSalesCount(mySales.reduce((sum, sale) => sum + sale.qty, 0));
 
     const days: { date: string; revenue: number }[] = [];
     for (let i = 13; i >= 0; i--) {
       const d = new Date();
       d.setDate(d.getDate() - i);
       const key = d.toISOString().slice(0, 10);
-      const dayRevenue = (items ?? [])
-        .filter((it: any) => it.created_at?.slice(0, 10) === key)
-        .reduce((sum: number, it: any) => sum + it.unit_price_cents * it.qty, 0);
+      const dayRevenue = mySales
+        .filter((sale) => sale.created_at.slice(0, 10) === key)
+        .reduce((sum, sale) => sum + sale.unit_price_cents * sale.qty + sale.shipping_cents, 0);
       days.push({ date: key.slice(5), revenue: dayRevenue / 100 });
     }
     setChartData(days);
@@ -308,7 +311,7 @@ type ExtraItem = { listing_id: string; seller_id: string; title: string; kind: s
 
 function OrderItemsExtras({ orderId }: { orderId: string }) {
   const [items, setItems] = useState<ExtraItem[]>([]);
-  const [files, setFiles] = useState<{ listing_id: string; file_path: string; file_name: string }[]>([]);
+  const [files, setFiles] = useState<{ id: string; listing_id: string; file_name: string }[]>([]);
   const [reviewed, setReviewed] = useState<Set<string>>(new Set());
   const [openFor, setOpenFor] = useState<string | null>(null);
   const [rating, setRating] = useState(5);
@@ -316,27 +319,39 @@ function OrderItemsExtras({ orderId }: { orderId: string }) {
   const [saving, setSaving] = useState(false);
 
   async function load() {
-    const { data: oi } = await supabase.from("order_items").select("listing_id,seller_id,listings(title,kind)").eq("order_id", orderId);
-    const list = (oi ?? []).map((r) => {
-      const l = r.listings as unknown as { title?: string; kind?: string } | null;
-      return { listing_id: r.listing_id, seller_id: r.seller_id, title: l?.title ?? "Produkt", kind: l?.kind ?? "" };
-    });
-    setItems(list);
-    const ids = list.map((i) => i.listing_id);
-    if (!ids.length) return;
-    const [{ data: f }, { data: rv }] = await Promise.all([
-      supabase.from("listing_files").select("listing_id,file_path,file_name").in("listing_id", ids),
-      supabase.from("reviews").select("listing_id").eq("order_id", orderId),
-    ]);
-    setFiles(f ?? []);
-    setReviewed(new Set((rv ?? []).map((r) => r.listing_id)));
+    try {
+      const { data: oi, error: itemsError } = await supabase
+        .from("order_items")
+        .select("listing_id,seller_id,listings(title,kind)")
+        .eq("order_id", orderId);
+      if (itemsError) throw itemsError;
+      const list = (oi ?? []).map((r) => {
+        const l = r.listings as unknown as { title?: string; kind?: string } | null;
+        return { listing_id: r.listing_id, seller_id: r.seller_id, title: l?.title ?? "Produkt", kind: l?.kind ?? "" };
+      });
+      setItems(list);
+      if (!list.length) return;
+
+      const [downloadFiles, { data: reviews, error: reviewsError }] = await Promise.all([
+        fetchOrderDownloads({ data: { orderId } }),
+        supabase.from("reviews").select("listing_id").eq("order_id", orderId),
+      ]);
+      if (reviewsError) throw reviewsError;
+      setFiles(downloadFiles);
+      setReviewed(new Set((reviews ?? []).map((review) => review.listing_id)));
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Bestelldetails konnten nicht geladen werden.");
+    }
   }
   useEffect(() => { load(); }, [orderId]);
 
-  async function download(path: string) {
-    const { data, error } = await supabase.storage.from("listing-files").createSignedUrl(path, 300, { download: true });
-    if (error || !data) { toast.error("Download nicht möglich"); return; }
-    window.open(data.signedUrl, "_blank");
+  async function download(fileId: string) {
+    try {
+      const { url } = await createOrderDownloadUrl({ data: { orderId, fileId } });
+      window.open(url, "_blank", "noopener,noreferrer");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Download nicht möglich");
+    }
   }
 
   async function sendReview(it: ExtraItem) {
@@ -358,7 +373,7 @@ function OrderItemsExtras({ orderId }: { orderId: string }) {
           <div className="mb-2 truncate text-sm font-bold text-brand-ink">{it.title}</div>
           <div className="flex flex-wrap gap-2">
             {files.filter((f) => f.listing_id === it.listing_id).map((f) => (
-              <button key={f.file_path} onClick={() => download(f.file_path)} className="inline-flex min-h-11 items-center gap-2 rounded-full bg-brand px-4 text-xs font-bold text-primary-foreground">
+              <button key={f.id} onClick={() => download(f.id)} className="inline-flex min-h-11 items-center gap-2 rounded-full bg-brand px-4 text-xs font-bold text-primary-foreground">
                 <Download className="h-4 w-4" /> {f.file_name}
               </button>
             ))}
@@ -445,6 +460,7 @@ function OrdersTab({ orders }: { orders: MyOrder[] }) {
                   <div>
                     <div className="font-mono text-xs text-muted-foreground">#{o.id.slice(0, 8)} · {new Date(o.created_at).toLocaleDateString("de-DE")}</div>
                     <div className="font-display text-lg font-black text-brand-ink">{(o.total_cents / 100).toFixed(2)} €</div>
+                    {o.shipping_cents > 0 && <div className="text-xs text-muted-foreground">davon {(o.shipping_cents / 100).toFixed(2)} € Versand</div>}
                   </div>
                   <span className="rounded-full bg-brand/10 px-3 py-1 text-xs font-bold text-brand">{sh ? "Versendet" : o.status}</span>
                 </div>
@@ -453,7 +469,7 @@ function OrdersTab({ orders }: { orders: MyOrder[] }) {
                     <span><span className="block text-[10px] font-bold uppercase tracking-widest text-brand">Sendung verfolgen · {sh.carrier}</span><span className="font-mono text-sm font-bold text-brand-ink">{sh.tracking_number}</span></span>
                     <Truck className="h-5 w-5 text-brand" />
                   </a>
-                ) : <p className="mt-3 text-xs text-muted-foreground">Noch keine Versandnummer – der Verkäufer trägt sie nach dem Versand ein.</p>}
+                ) : null}
                 <div className="mt-3">
                   {rp ? (
                     <div className="rounded-2xl border border-border bg-surface px-4 py-2.5 text-sm">Gemeldet: {rp.reason} – {rp.status === "open" ? "Prüfung läuft" : "Erledigt"}</div>
@@ -511,7 +527,7 @@ function SalesTab({ sales, onUpdated }: { sales: MySale[]; onUpdated: () => void
   const sums = { held: 0, frozen: 0, released: 0 };
   for (const s of sales) {
     const st = escrowState(s.created_at, s.report?.status === "open").state;
-    sums[st] += sellerPayoutCents(s.unit_price_cents) * s.qty;
+    sums[st] += sellerPayoutCents(s.unit_price_cents) * s.qty + s.shipping_cents;
   }
   const eur = (c: number) => (c / 100).toFixed(2).replace(".", ",") + " €";
 
@@ -532,11 +548,12 @@ function SalesTab({ sales, onUpdated }: { sales: MySale[]; onUpdated: () => void
               <div className="min-w-0">
                 <div className="truncate font-display text-base font-bold text-brand-ink">{s.listing_title}</div>
                 <div className="text-xs text-muted-foreground">{s.qty}× · {(s.unit_price_cents / 100).toFixed(2)} €</div>
+                {s.shipping_cents > 0 && <div className="text-xs text-muted-foreground">Versand: {eur(s.shipping_cents)}</div>}
                 {(() => { const e = escrowState(s.created_at, s.report?.status === "open"); return (
                   <div className="mt-1 text-xs font-bold text-brand">{e.state === "held" ? `Treuhand – frei in ${e.daysLeft} Tag${e.daysLeft === 1 ? "" : "en"}` : e.state === "frozen" ? "Eingefroren bis zur Klärung" : "Auszahlung freigegeben"}</div>
                 ); })()}
               </div>
-              {s.shipment ? (
+              {s.listing_kind !== "service" ? null : s.shipment ? (
                 <div className="rounded-2xl bg-emerald-50 px-4 py-2.5 text-sm">
                   <div className="text-[10px] font-bold uppercase tracking-widest text-emerald-700">Versendet mit {s.shipment.carrier}</div>
                   <div className="font-mono text-sm font-bold text-emerald-800">{s.shipment.tracking_number}</div>
@@ -550,6 +567,21 @@ function SalesTab({ sales, onUpdated }: { sales: MySale[]; onUpdated: () => void
                 </button>
               )}
             </div>
+            {s.listing_kind === "service" && (
+              <div className="mt-4 rounded-2xl bg-surface px-4 py-3 text-sm text-brand-ink">
+                <div className="mb-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Lieferadresse</div>
+                {s.shipping_address ? (
+                  <>
+                    {s.shipping_address.name && <div className="font-semibold">{s.shipping_address.name}</div>}
+                    <div>{s.shipping_address.line1}</div>
+                    {s.shipping_address.line2 && <div>{s.shipping_address.line2}</div>}
+                    <div>{[s.shipping_address.postal_code, s.shipping_address.city].filter(Boolean).join(" ")}</div>
+                    {s.shipping_address.state && <div>{s.shipping_address.state}</div>}
+                    <div>{s.shipping_address.country}</div>
+                  </>
+                ) : <div className="text-muted-foreground">Lieferadresse wird noch bestätigt.</div>}
+              </div>
+            )}
             {s.report && (
               <div className="mt-4 rounded-2xl border-2 border-destructive/40 bg-destructive/5 px-4 py-3 text-sm">
                 <div className="font-bold text-destructive">Käufer meldet: {s.report.reason}</div>

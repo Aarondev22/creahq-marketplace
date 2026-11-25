@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { createClient } from "@supabase/supabase-js";
 import type { Database, Json } from "@/integrations/supabase/types";
 import { applyProSpotlight, isProActive } from "@/lib/shopTheme";
+import { shippingTotalCents } from "@/lib/shipping";
 
 function serverPublic() {
   const key = process.env["SUPABASE_PUBLISHABLE_KEY"]!;
@@ -20,6 +21,40 @@ export const fetchMarketplaceSettings = createServerFn({ method: "GET" }).handle
   if (error) throw new Error("Verkaufsfreigabe konnte nicht geladen werden.");
   return { physicalEnabled: data?.physical_enabled === true };
 });
+
+export const fetchShippingEstimate = createServerFn({ method: "GET" })
+  .inputValidator((d: { items: { listing_id: string; qty: number }[] }) => ({
+    items: (Array.isArray(d?.items) ? d.items : [])
+      .slice(0, 50)
+      .map((item) => ({
+        listing_id: String(item.listing_id),
+        qty: Math.min(Math.max(Number(item.qty) || 1, 1), 99),
+      })),
+  }))
+  .handler(async ({ data }) => {
+    if (!data.items.length) return { shippingCents: 0 };
+    const listingIds = [...new Set(data.items.map((item) => item.listing_id))];
+    const { data: listings, error } = await serverPublic()
+      .from("listings")
+      .select("id,status,kind,shipping_mode,shipping_price_cents")
+      .in("id", listingIds);
+    if (error) throw new Error("Versandkosten konnten nicht berechnet werden.");
+
+    const listingById = new Map((listings ?? []).map((listing) => [listing.id, listing]));
+    const lines = data.items.map((item) => {
+      const listing = listingById.get(item.listing_id);
+      if (!listing || listing.status !== "published") {
+        throw new Error("Mindestens ein Produkt ist nicht mehr verfügbar.");
+      }
+      return {
+        qty: item.qty,
+        kind: listing.kind,
+        shipping_mode: listing.shipping_mode,
+        shipping_price_cents: listing.shipping_price_cents,
+      };
+    });
+    return { shippingCents: shippingTotalCents(lines) };
+  });
 
 export type ListingCard = {
   id: string;
