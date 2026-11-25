@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageShell } from "@/components/PageShell";
-import { Instagram, Music2, Camera, Package, Truck, Banknote, ShieldCheck, MessageSquare, Sparkles, Scale, Clock, Tag } from "lucide-react";
+import { Instagram, Music2, Camera, Package, Truck, Banknote, ShieldCheck, MessageSquare, Sparkles, Scale, Clock } from "lucide-react";
 import { feeForSale } from "@/lib/fees";
 
 export const Route = createFileRoute("/verkaufen/guide")({
@@ -84,25 +84,21 @@ function GuidePage() {
             </div>
             <div className="grid gap-3 sm:grid-cols-3">
               {[
-                { id: "verpackung-mailerbags", icon: Package, title: "Recycelte Mailerbags", note: "z.B. 100er-Pack, verschiedene Größen" },
-                { id: "verpackung-kartons", icon: Package, title: "Doppelwandige Kartons", note: "Faltbar, für zerbrechliche Ware" },
-                { id: "verpackung-etiketten", icon: Tag, title: "Etiketten &amp; Füllmaterial", note: "Versandlabels, Seidenpapier, Sticker" },
-              ].map((p) => {
-                const Icon = p.icon;
-                return (
+                { id: "verpackung-mailerbags", title: "Recycelte Mailerbags", note: "z.B. 100er-Pack, verschiedene Größen" },
+                { id: "verpackung-kartons", title: "Doppelwandige Kartons", note: "Faltbar, für zerbrechliche Ware" },
+                { id: "verpackung-etiketten", title: "Etiketten &amp; Füllmaterial", note: "Versandlabels, Seidenpapier, Sticker" },
+              ].map((p) => (
                 <Link
                   key={p.id}
                   to="/listing/$id"
                   params={{ id: `beispiel-${p.id}` }}
                   className="group block rounded-2xl border border-dashed border-brand/30 bg-card/70 p-4 transition-all hover:-translate-y-1 hover:border-brand hover:shadow-md"
                 >
-                  <Icon className="h-7 w-7 text-brand" />
                   <div className="mt-2 text-sm font-bold text-brand-ink group-hover:text-brand" dangerouslySetInnerHTML={{ __html: p.title }} />
                   <div className="mt-1 text-xs text-muted-foreground" dangerouslySetInnerHTML={{ __html: p.note }} />
                   <div className="mt-3 text-xs font-bold text-brand">—,— € · Platzhalter</div>
                 </Link>
-                );
-              })}
+              ))}
             </div>
           </div>
         </Block>

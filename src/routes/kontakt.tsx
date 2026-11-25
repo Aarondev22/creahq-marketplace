@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { PageShell } from "@/components/PageShell";
-import { Mail } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -38,8 +37,7 @@ function ContactPage() {
     <PageShell eyebrow="Kontakt" title="Sag Hallo." lead="Bug, Idee, Kooperation oder einfach hi sagen — wir antworten.">
       {sent ? (
         <div className="rounded-3xl border border-brand/30 bg-brand-soft/50 p-6 text-center">
-          <Mail className="mx-auto h-10 w-10 text-brand" />
-          <p className="mt-3 font-display text-xl font-black text-brand-ink">Danke, ist angekommen!</p>
+          <p className="font-display text-xl font-black text-brand-ink">Danke, ist angekommen!</p>
           <p className="mt-1 text-sm text-muted-foreground">Wir lesen alle Nachrichten im Admin-Panel und melden uns per E-Mail.</p>
         </div>
       ) : (

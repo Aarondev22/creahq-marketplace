@@ -1,5 +1,5 @@
 import { motion } from "motion/react";
-import { Store, ArrowRight, Palette, Image, Music2, Ruler } from "lucide-react";
+import { Store, ArrowRight } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 
 export function SellerInvite() {
@@ -69,20 +69,15 @@ export function SellerInvite() {
           >
             <div className="rounded-3xl border border-border bg-card p-5 brand-glow">
               <div className="flex items-center gap-3">
-                <div className="grid h-12 w-12 place-items-center rounded-2xl bg-brand text-xl text-primary-foreground">
-                  <Palette className="h-6 w-6" />
-                </div>
                 <div className="min-w-0">
                   <div className="truncate font-display text-lg font-bold text-brand-ink">dein-shop</div>
                   <div className="text-xs text-muted-foreground">creahq.app/dein-shop</div>
                 </div>
               </div>
               <div className="mt-5 grid grid-cols-3 gap-2">
-                {[Image, Music2, Ruler].map((Icon, i) => (
-                  <div key={i} className="grid aspect-square place-items-center rounded-xl bg-surface-warm text-xl">
-                    <Icon className="h-5 w-5 text-brand" />
-                  </div>
-                ))}
+                <div className="aspect-square rounded-xl bg-surface-warm" />
+                <div className="aspect-square rounded-xl bg-brand-soft/60" />
+                <div className="aspect-square rounded-xl bg-surface-warm" />
               </div>
               <div className="mt-4 flex items-center justify-between text-xs">
                 <span className="font-semibold text-brand-ink">3 Produkte</span>

@@ -5,11 +5,14 @@ import { motion } from "motion/react";
 import { ArrowLeft, ChevronLeft, ChevronRight, Check, ImagePlus, X, Download, Truck, Star, MoveLeft, MoveRight, FileDown, Palette } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { createListing, fetchSellerStatus, resendConfirmationEmail } from "@/lib/seller.functions";
+import { createListing, fetchListingForEdit, fetchSellerStatus, resendConfirmationEmail, updateListing } from "@/lib/seller.functions";
 import { fetchMarketplaceSettings } from "@/lib/listings.functions";
 import { CARRIERS, PROCESSING_TIMES } from "@/lib/shipping";
 
 export const Route = createFileRoute("/_authenticated/verkaufen/neu")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    edit: typeof search.edit === "string" ? search.edit : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Neues Listing anlegen — CreaHQ" },
@@ -47,8 +50,9 @@ const TOTAL_STEPS = 4;
 const STEP_LABELS = ["Art", "Basics", "Preis & Datei", "Bilder & Check"];
 
 function NewListingPage() {
+  const { edit: editId } = Route.useSearch();
   const navigate = useNavigate();
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(editId ? 2 : 1);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [data, setData] = useState<WizardData>({
@@ -58,13 +62,50 @@ function NewListingPage() {
     shippingCarrier: CARRIERS[0], processingTime: PROCESSING_TIMES[0], acceptedRules: false,
   });
   const [physicalEnabled, setPhysicalEnabled] = useState(false);
-  const [sellerStatus, setSellerStatus] = useState<{ email: string | null; emailConfirmed: boolean; todayCount: number } | null>(null);
+  const [sellerStatus, setSellerStatus] = useState<{ email: string | null; emailConfirmed: boolean; todayCount: number; dailyLimit: number; isPro: boolean } | null>(null);
   const [resending, setResending] = useState(false);
+  const [existingImages, setExistingImages] = useState<string[]>([]);
+  const [existingDownload, setExistingDownload] = useState(false);
+  const [loadingEdit, setLoadingEdit] = useState(!!editId);
 
   useEffect(() => {
     fetchSellerStatus().then(setSellerStatus).catch(() => undefined);
     fetchMarketplaceSettings().then((settings) => setPhysicalEnabled(settings.physicalEnabled)).catch(() => undefined);
   }, []);
+
+  useEffect(() => {
+    if (!editId) return;
+    let active = true;
+    fetchListingForEdit({ data: { id: editId } })
+      .then((listing) => {
+        if (!active) return;
+        if (!listing) {
+          toast.error("Listing nicht gefunden oder du hast keine Bearbeitungsrechte.");
+          navigate({ to: "/dashboard", search: { tab: "listings" }, replace: true });
+          return;
+        }
+        setData((current) => ({
+          ...current,
+          title: listing.title,
+          description: listing.description ?? "",
+          category: listing.category ?? "",
+          price: (listing.price_cents / 100).toFixed(2),
+          kind: listing.kind,
+          shippingMode: listing.shipping_mode,
+          shippingPrice: (listing.shipping_price_cents / 100).toFixed(2),
+          location: listing.location ?? "",
+          condition: listing.condition ?? "neu",
+          stock: listing.stock === null ? "" : String(listing.stock),
+          shippingCarrier: CARRIERS.includes(listing.shipping_carrier as (typeof CARRIERS)[number]) ? listing.shipping_carrier as WizardData["shippingCarrier"] : CARRIERS[0],
+          processingTime: PROCESSING_TIMES.includes(listing.processing_time as (typeof PROCESSING_TIMES)[number]) ? listing.processing_time as WizardData["processingTime"] : PROCESSING_TIMES[0],
+        }));
+        setExistingImages(listing.images);
+        setExistingDownload(listing.has_download);
+      })
+      .catch((error) => toast.error(error instanceof Error ? error.message : "Listing konnte nicht geladen werden."))
+      .finally(() => active && setLoadingEdit(false));
+    return () => { active = false; };
+  }, [editId, navigate]);
 
   async function resendMail() {
     setResending(true);
@@ -97,7 +138,7 @@ function NewListingPage() {
     if (target > 3) {
       const p = parseFloat(data.price.replace(",", "."));
       if (!(p > 0)) e.price = "Bitte einen Preis größer als 0 € angeben.";
-      if (data.kind === "digital" && !data.downloadFile) e.file = "Bitte die Datei hochladen, die Käufer herunterladen.";
+      if (data.kind === "digital" && !data.downloadFile && !existingDownload) e.file = "Bitte die Datei hochladen, die Käufer herunterladen.";
       else if (data.kind === "digital" && data.downloadFile?.size === 0) e.file = "Die Datei ist leer (0 KB) – bitte eine gültige Datei hochladen.";
     }
     setErrors(e);
@@ -118,7 +159,7 @@ function NewListingPage() {
   }
 
   async function submit() {
-    if (!validate(TOTAL_STEPS + 1)) { setStep(1); return; }
+    if (!validate(TOTAL_STEPS + 1)) { setStep(editId ? 2 : 1); return; }
     if (!data.acceptedRules) { toast.error("Bitte akzeptiere die Verkaufsregeln."); return; }
     if (sellerStatus && !sellerStatus.emailConfirmed) {
       toast.error("Bitte bestätige zuerst deine E-Mail-Adresse.");
@@ -129,10 +170,10 @@ function NewListingPage() {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) throw new Error("Nicht eingeloggt");
 
-      await supabase.from("user_roles").insert({ user_id: u.user.id, role: "seller" }).then(() => {});
+      if (!editId) await supabase.from("user_roles").insert({ user_id: u.user.id, role: "seller" });
 
       const urls: string[] = [];
-      for (const file of data.files.slice(0, 8)) {
+      for (const file of data.files.slice(0, Math.max(0, 8 - existingImages.length))) {
         const path = `${u.user.id}/${crypto.randomUUID()}-${file.name.replace(/[^\w.-]/g, "_")}`;
         const { error: upErr } = await supabase.storage.from("listing-covers").upload(path, file, { upsert: false });
         if (upErr) throw upErr;
@@ -144,8 +185,7 @@ function NewListingPage() {
       const shipping_price_cents = Math.round(parseFloat(data.shippingPrice.replace(",", ".") || "0") * 100);
       const stock = data.stock.trim() ? Math.max(0, parseInt(data.stock, 10)) : null;
 
-      const result = await createListing({
-        data: {
+      const listingData = {
           title: data.title,
           description: data.description,
           category: data.category,
@@ -156,12 +196,14 @@ function NewListingPage() {
           location: data.location,
           condition: data.condition,
           stock,
-          images: urls,
+          images: [...existingImages, ...urls],
           acceptedRules: data.acceptedRules,
           shippingCarrier: data.shippingCarrier,
           processingTime: data.processingTime,
-        },
-      });
+        };
+      const result = editId
+        ? await updateListing({ data: { ...listingData, id: editId } })
+        : await createListing({ data: listingData });
       if (data.kind === "digital" && data.downloadFile) {
         const f = data.downloadFile;
         const path = `${u.user.id}/${result.id}/${crypto.randomUUID()}-${f.name.replace(/[^\w.-]/g, "_")}`;
@@ -190,8 +232,8 @@ function NewListingPage() {
         <ArrowLeft className="h-4 w-4" /> Zum Dashboard
       </Link>
 
-      <h1 className="mt-5 font-display text-4xl font-black text-brand-ink sm:text-5xl">Neues Listing</h1>
-      <p className="mt-1 text-sm text-muted-foreground">In vier Schritten online — du kannst später alles ändern.</p>
+      <h1 className="mt-5 font-display text-4xl font-black text-brand-ink sm:text-5xl">{editId ? "Listing bearbeiten" : "Neues Listing"}</h1>
+      <p className="mt-1 text-sm text-muted-foreground">{editId ? "Aktualisiere die Angaben zu deinem Angebot." : "In vier Schritten online — du kannst später alles ändern."}</p>
 
       <div className="mt-6 flex items-center gap-2">
         {STEP_LABELS.map((label, i) => (
@@ -205,9 +247,9 @@ function NewListingPage() {
         Schritt {step} von {TOTAL_STEPS} · {STEP_LABELS[step - 1]}
       </div>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_320px]">
+      {loadingEdit ? <div className="mt-6 h-96 animate-pulse rounded-3xl bg-brand-soft/50" /> : <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_320px]">
         <motion.div key={step} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="rounded-3xl border border-border bg-card p-6 sm:p-8">
-          {step === 1 && (
+          {step === 1 && !editId && (
             <div>
               <h2 className="font-display text-2xl font-black text-brand-ink">Was verkaufst du?</h2>
               <p className="mt-1 text-sm text-muted-foreground">Wähle die passende Produktart für dein Angebot.</p>
@@ -282,7 +324,7 @@ function NewListingPage() {
                   </p>
                   <Field label="Datei zum Herunterladen (PDF, ZIP, Bild …)" required error={errors.file}>
                     <label className="flex min-h-14 cursor-pointer items-center justify-center rounded-2xl border-2 border-dashed border-brand/40 bg-surface px-4 text-sm font-bold text-brand hover:bg-brand-soft/40">
-                      {data.downloadFile ? data.downloadFile.name : <><FileDown className="mr-2 inline h-4 w-4" /> Datei auswählen</>}
+                      {data.downloadFile ? data.downloadFile.name : existingDownload ? "Vorhandene Datei bleibt erhalten" : <><FileDown className="mr-2 inline h-4 w-4" /> Datei auswählen</>}
                       <input type="file" className="hidden" onChange={(e) => {
                         const f = e.target.files?.[0] ?? null;
                         if (f && f.size === 0) { toast.error("Die Datei ist leer (0 KB) – bitte eine gültige Datei hochladen."); return; }
@@ -340,13 +382,26 @@ function NewListingPage() {
             <div className="space-y-6">
               <div>
                 <h2 className="font-display text-2xl font-black text-brand-ink">Fotos</h2>
-                <p className="mt-1 text-sm text-muted-foreground">Erstes Bild ist das Titelbild. Maximal 8 Bilder.</p>
+                <p className="mt-1 text-sm text-muted-foreground">Erstes Bild ist das Titelbild. Maximal 8 Bilder insgesamt.</p>
+                {existingImages.length > 0 && (
+                  <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                    {existingImages.map((url, i) => (
+                      <div key={url} className="relative overflow-hidden rounded-2xl border border-border bg-surface">
+                        <img src={url} alt={`Vorhandenes Bild ${i + 1}`} className="aspect-square w-full object-cover" />
+                        {i === 0 && data.files.length === 0 && <span className="absolute left-0 top-0 rounded-br-xl bg-brand px-2 py-1 text-[10px] font-bold text-primary-foreground">Titelbild</span>}
+                        <button type="button" aria-label="Bild entfernen" onClick={() => setExistingImages((images) => images.filter((_, j) => j !== i))} className="absolute right-0 top-0 grid h-9 w-9 place-items-center rounded-bl-xl bg-red-500 text-white">
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
                 <label className="mt-4 flex cursor-pointer items-center justify-center gap-3 rounded-3xl border-2 border-dashed border-brand/40 bg-brand-soft/40 px-6 py-8 text-base font-bold text-brand-ink transition-colors hover:border-brand hover:bg-brand-soft">
                   <ImagePlus className="h-6 w-6 text-brand" />
                   Fotos hinzufügen
                   <input
                     type="file" accept="image/*" multiple
-                    onChange={(e) => update("files", [...data.files, ...Array.from(e.target.files ?? [])].slice(0, 8))}
+                    onChange={(e) => update("files", [...data.files, ...Array.from(e.target.files ?? [])].slice(0, Math.max(0, 8 - existingImages.length)))}
                     className="sr-only"
                   />
                 </label>
@@ -384,7 +439,7 @@ function NewListingPage() {
                 <div className="font-display text-lg font-black text-brand-ink">Check</div>
                 <ul className="mt-2 space-y-1 text-muted-foreground">
                   <li><strong className="text-brand-ink">{data.title || "— kein Titel —"}</strong></li>
-                  <li>{data.kind === "digital" ? "Digital" : "Physisch"} · {data.price} € · {data.files.length} Bild{data.files.length === 1 ? "" : "er"}</li>
+                  <li>{data.kind === "digital" ? "Digital" : "Physisch"} · {data.price} € · {existingImages.length + data.files.length} Bild{existingImages.length + data.files.length === 1 ? "" : "er"}</li>
                   {data.kind === "service" && (
                     <li>Versand: {data.shippingMode === "extra" ? `extra (${data.shippingPrice} €)` : "inklusive"}{data.location ? ` · ${data.location}` : ""}</li>
                   )}
@@ -422,7 +477,7 @@ function NewListingPage() {
                   und bestätige, dass mein Angebot echt und erlaubt ist.
                   {sellerStatus && (
                     <span className="mt-1 block text-xs text-muted-foreground">
-                      Heute angelegt: {sellerStatus.todayCount}/3 Listings
+                      Heute angelegt: {sellerStatus.todayCount}/{sellerStatus.dailyLimit} Listings {sellerStatus.isPro ? "(Pro)" : "(Standard)"}
                     </span>
                   )}
                 </span>
@@ -436,7 +491,7 @@ function NewListingPage() {
                 Abbrechen
               </Link>
             ) : (
-              <button type="button" onClick={() => setStep((s) => s - 1)} className="inline-flex items-center gap-1 rounded-full border border-border px-5 py-3 text-sm font-bold text-brand-ink">
+              <button type="button" onClick={() => setStep((s) => Math.max(editId ? 2 : 1, s - 1))} className="inline-flex items-center gap-1 rounded-full border border-border px-5 py-3 text-sm font-bold text-brand-ink">
                 <ChevronLeft className="h-4 w-4" /> Zurück
               </button>
             )}
@@ -445,8 +500,8 @@ function NewListingPage() {
                 Weiter <ChevronRight className="h-4 w-4" />
               </button>
             ) : (
-              <button type="button" disabled={saving || !data.acceptedRules} onClick={submit} className="inline-flex items-center gap-1 rounded-full bg-brand px-6 py-3 text-sm font-bold text-primary-foreground brand-glow disabled:opacity-60">
-                <Check className="h-4 w-4" /> {saving ? "Speichere …" : "Veröffentlichen"}
+              <button type="button" disabled={saving || !data.acceptedRules || (!editId && !!sellerStatus && sellerStatus.todayCount >= sellerStatus.dailyLimit)} onClick={submit} className="inline-flex items-center gap-1 rounded-full bg-brand px-6 py-3 text-sm font-bold text-primary-foreground brand-glow disabled:opacity-60">
+                <Check className="h-4 w-4" /> {saving ? "Speichere …" : editId ? "Änderungen speichern" : "Veröffentlichen"}
               </button>
             )}
           </div>
@@ -457,7 +512,7 @@ function NewListingPage() {
           <div className="text-xs font-bold uppercase tracking-widest text-muted-foreground">So könnte es aussehen</div>
           <div className="mt-2 overflow-hidden rounded-3xl border border-border bg-card">
             <div className="aspect-[4/3] bg-gradient-to-br from-brand-soft to-amber-100/40">
-              {previews[0] ? <img src={previews[0]} alt="Vorschau" className="h-full w-full object-cover" /> : <div className="grid h-full place-items-center text-brand/50"><Palette className="h-8 w-8" /></div>}
+              {previews[0] || existingImages[0] ? <img src={previews[0] ?? existingImages[0]} alt="Vorschau" className="h-full w-full object-cover" /> : <div className="grid h-full place-items-center text-brand/50"><Palette className="h-8 w-8" /></div>}
             </div>
             <div className="p-4">
               <div className="text-[10px] font-bold uppercase tracking-widest text-brand/70">{data.category || (data.kind === "digital" ? "Digital" : "Physisch")}</div>
@@ -469,7 +524,7 @@ function NewListingPage() {
             </div>
           </div>
         </aside>
-      </div>
+      </div>}
     </div>
   );
 }

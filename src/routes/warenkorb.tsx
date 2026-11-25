@@ -26,6 +26,7 @@ function CartPage() {
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
   const [waiver, setWaiver] = useState(false);
+  const [discountCode, setDiscountCode] = useState("");
 
   async function checkout() {
     if (!user) {
@@ -41,6 +42,7 @@ function CartPage() {
           items: items.map((i) => ({ listing_id: i.id, qty: i.qty, offer_id: i.offer_id })),
           origin: window.location.origin,
           waiverAccepted: waiver,
+          discountCode: discountCode.trim().toUpperCase() || undefined,
         },
       });
       if ("url" in res) {
@@ -113,6 +115,18 @@ function CartPage() {
         <div className="font-display text-xl font-bold text-brand-ink">Gesamt</div>
         <div className="font-display text-3xl font-black text-brand">{(totalCents / 100).toFixed(2)} €</div>
       </div>
+
+      <label className="mt-4 block rounded-3xl border border-border bg-card p-5 text-sm font-semibold text-brand-ink">
+        Rabattcode
+        <input
+          value={discountCode}
+          onChange={(event) => setDiscountCode(event.target.value.toUpperCase())}
+          maxLength={40}
+          placeholder="Code eingeben"
+          className="mt-2 min-h-12 w-full rounded-2xl border border-border bg-background px-4 font-mono text-sm"
+        />
+        <span className="mt-1 block text-xs font-normal text-muted-foreground">Der Rabatt wird vor der Zahlung geprüft und im Checkout abgezogen.</span>
+      </label>
 
       <label className="mt-4 flex items-start gap-3 rounded-3xl border border-border bg-surface p-5">
         <input type="checkbox" checked={waiver} onChange={(e) => setWaiver(e.target.checked)} className="mt-0.5 h-6 w-6 shrink-0 accent-[var(--brand,#7c3aed)]" />

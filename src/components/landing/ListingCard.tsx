@@ -1,14 +1,13 @@
 import { Link } from "@tanstack/react-router";
 import { motion } from "motion/react";
 import type { ListingCard as TListing } from "@/lib/listings.functions";
-import { Palette } from "lucide-react";
 
 export function ListingCard({ l }: { l: TListing }) {
   return (
-    <motion.div whileHover={{ y: -4 }} className="shrink-0">
-      <Link to="/listing/$id" params={{ id: l.id }} className="block w-52 overflow-hidden rounded-2xl border border-border/80 bg-card/95 shadow-[0_12px_32px_-28px_color-mix(in_oklab,var(--brand-ink)_45%,transparent)] transition-shadow hover:shadow-lg sm:w-56">
+    <motion.div whileHover={{ y: -4 }} className="w-full shrink-0 snap-start sm:w-56">
+      <Link to="/listing/$id" params={{ id: l.id }} className="block w-full overflow-hidden rounded-2xl border border-border/80 bg-card/95 shadow-[0_12px_32px_-28px_color-mix(in_oklab,var(--brand-ink)_45%,transparent)] transition-shadow hover:shadow-lg">
         <div className="aspect-[4/3] bg-gradient-to-br from-brand-soft via-card to-surface-warm">
-          {l.cover_url ? <img src={l.cover_url} alt={l.title} className="h-full w-full object-cover" loading="lazy" /> : <div className="grid h-full place-items-center text-brand/50"><Palette className="h-8 w-8" /></div>}
+          {l.cover_url && <img src={l.cover_url} alt={l.title} className="h-full w-full object-cover" loading="lazy" />}
         </div>
         <div className="p-3">
           {l.category && <span className="text-[10px] font-bold uppercase tracking-widest text-brand">{l.category}</span>}

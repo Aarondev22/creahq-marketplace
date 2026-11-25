@@ -24,7 +24,6 @@ export function ProfileMenu() {
   const { totalCount } = useCart();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [displayName, setDisplayName] = useState<string | null>(null);
-  const [shopHandle, setShopHandle] = useState<string | null>(null);
 
   useEffect(() => {
   let active = true;
@@ -32,26 +31,23 @@ export function ProfileMenu() {
   async function load() {
     if (!user) {
       setDisplayName(null);
-      setShopHandle(null);
       return;
     }
     const { data } = await supabase
       .from("profiles")
-      .select("display_name,handle")
+      .select("display_name")
       .eq("id", user.id)
       .maybeSingle();
     if (active) {
       setDisplayName(data?.display_name ?? null);
-      setShopHandle(data?.handle ?? null);
     }
   }
 
   void load();
 
   function onProfileUpdated(e: Event) {
-    const detail = (e as CustomEvent<{ display_name?: string; handle?: string }>).detail;
+    const detail = (e as CustomEvent<{ display_name?: string }>).detail;
     if (detail?.display_name) setDisplayName(detail.display_name);
-    if (detail?.handle) setShopHandle(detail.handle);
     else void load();
   }
 
@@ -103,7 +99,7 @@ export function ProfileMenu() {
               <Link to="/dashboard" search={{ tab: "overview" as const }}><LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard</Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <Link to="/shop/$handle" params={{ handle: shopHandle || user.id }}>
+              <Link to="/shop/$handle" params={{ handle: user.id }}>
                 <Store className="mr-2 h-4 w-4" /> Mein Shop
               </Link>
             </DropdownMenuItem>

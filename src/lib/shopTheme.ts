@@ -20,6 +20,10 @@ export type ShopTheme = {
 export const FREE_BADGES = 3;
 export const PRO_BADGES = 5;
 
+export function isProActive(isPro: boolean, expiresAt: string | null | undefined, now = Date.now()) {
+  return isPro && (!expiresAt || new Date(expiresAt).getTime() > now);
+}
+
 export const DEFAULT_THEME: ShopTheme = {
   accent: "#8b5cf6",
   bg: "none",

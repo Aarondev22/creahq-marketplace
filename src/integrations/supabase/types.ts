@@ -268,9 +268,11 @@ export type Database = {
           code: string
           code_type: string
           created_at: string
+          duration_days: number | null
           grants_role: Database["public"]["Enums"]["app_role"]
           id: string
           max_uses: number | null
+          valid_until: string | null
           used_at: string | null
           used_by: string | null
           used_count: number
@@ -279,9 +281,11 @@ export type Database = {
           code: string
           code_type?: string
           created_at?: string
+          duration_days?: number | null
           grants_role?: Database["public"]["Enums"]["app_role"]
           id?: string
           max_uses?: number | null
+          valid_until?: string | null
           used_at?: string | null
           used_by?: string | null
           used_count?: number
@@ -290,9 +294,11 @@ export type Database = {
           code?: string
           code_type?: string
           created_at?: string
+          duration_days?: number | null
           grants_role?: Database["public"]["Enums"]["app_role"]
           id?: string
           max_uses?: number | null
+          valid_until?: string | null
           used_at?: string | null
           used_by?: string | null
           used_count?: number
@@ -557,6 +563,8 @@ export type Database = {
           buyer_id: string
           created_at: string
           currency: string
+          discount_cents: number
+          discount_code_id: string | null
           id: string
           status: Database["public"]["Enums"]["order_status"]
           stripe_session_id: string | null
@@ -567,6 +575,8 @@ export type Database = {
           buyer_id: string
           created_at?: string
           currency?: string
+          discount_cents?: number
+          discount_code_id?: string | null
           id?: string
           status?: Database["public"]["Enums"]["order_status"]
           stripe_session_id?: string | null
@@ -577,6 +587,8 @@ export type Database = {
           buyer_id?: string
           created_at?: string
           currency?: string
+          discount_cents?: number
+          discount_code_id?: string | null
           id?: string
           status?: Database["public"]["Enums"]["order_status"]
           stripe_session_id?: string | null
@@ -681,12 +693,14 @@ export type Database = {
           highlight_listing_id: string | null
           id: string
           is_pro: boolean
+          pro_expires_at: string | null
           is_verified: boolean
           onboarding_completed: boolean
           shop_badges: Json
           shop_sections: string[]
           shop_shipping_default: string | null
           shop_theme: Json
+          suspended_until: string | null
           theme_color: string | null
           updated_at: string
         }
@@ -701,12 +715,14 @@ export type Database = {
           highlight_listing_id?: string | null
           id: string
           is_pro?: boolean
+          pro_expires_at?: string | null
           is_verified?: boolean
           onboarding_completed?: boolean
           shop_badges?: Json
           shop_sections?: string[]
           shop_shipping_default?: string | null
           shop_theme?: Json
+          suspended_until?: string | null
           theme_color?: string | null
           updated_at?: string
         }
@@ -721,12 +737,14 @@ export type Database = {
           highlight_listing_id?: string | null
           id?: string
           is_pro?: boolean
+          pro_expires_at?: string | null
           is_verified?: boolean
           onboarding_completed?: boolean
           shop_badges?: Json
           shop_sections?: string[]
           shop_shipping_default?: string | null
           shop_theme?: Json
+          suspended_until?: string | null
           theme_color?: string | null
           updated_at?: string
         }
@@ -934,6 +952,10 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      consume_discount_code: {
+        Args: { _code_id: string }
         Returns: boolean
       }
       redeem_founder_code: {

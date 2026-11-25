@@ -12,11 +12,8 @@ import {
   MessageCircle,
   Star,
   Package,
-  Store,
-  Sparkles,
   BadgeCheck,
   Crown,
-  Palette,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -190,11 +187,7 @@ function ListingView({
           animate={{ opacity: 1, scale: 1 }}
           className="aspect-square overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-brand-soft via-card to-surface-warm shadow-[0_20px_50px_-38px_color-mix(in_oklab,var(--brand-ink)_55%,transparent)]"
         >
-          {allImages[activeImg] ? (
-            <img src={allImages[activeImg]} alt={l.title} className="h-full w-full object-cover" />
-          ) : (
-            <div className="grid h-full place-items-center text-brand/50"><Palette className="h-9 w-9" /></div>
-          )}
+          {allImages[activeImg] && <img src={allImages[activeImg]} alt={l.title} className="h-full w-full object-cover" />}
         </motion.div>
         {allImages.length > 1 && (
           <div className="grid grid-cols-4 gap-2">
@@ -407,7 +400,6 @@ function RelatedRails({
       <Rail
         title={`Sachen vom Shop · ${sellerName}`}
         subtitle="Weitere Produkte von diesem Creator."
-        icon={<Store className="mr-2 inline h-5 w-5 text-brand" />}
         items={data?.fromShop.slice(0, 4) ?? []}
         empty={`${sellerName} hat aktuell keine weiteren Produkte online.`}
         viewAll={
@@ -423,7 +415,6 @@ function RelatedRails({
       <Rail
         title="Ähnliche Produkte"
         subtitle="Passt vielleicht auch — kuratiert aus CreaHQ."
-        icon={<Sparkles className="mr-2 inline h-5 w-5 text-brand" />}
         items={data?.similar.slice(0, similarVisible) ?? []}
         empty="Noch nichts Ähnliches auf CreaHQ. Schau später nochmal rein."
         viewAll={{ to: "/browse" as const, params: undefined, label: "Alle ähnlichen Produkte ansehen →" }}
@@ -437,7 +428,6 @@ function RelatedRails({
 function Rail({
   title,
   subtitle,
-  icon,
   items,
   empty,
   viewAll,
@@ -446,7 +436,6 @@ function Rail({
 }: {
   title: string;
   subtitle: string;
-  icon: React.ReactNode;
   items: ListingCard[];
   empty: string;
   viewAll:
@@ -460,10 +449,7 @@ function Rail({
     <section>
       <div className="mb-4 flex items-end justify-between gap-4">
         <div>
-          <h2 className="font-display text-2xl font-black text-brand-ink">
-            {icon}
-            {title}
-          </h2>
+          <h2 className="font-display text-2xl font-black text-brand-ink">{title}</h2>
           <p className="text-sm text-muted-foreground">{subtitle}</p>
         </div>
         {viewAll && (
@@ -496,10 +482,8 @@ function Rail({
                className="group overflow-hidden rounded-2xl border border-border/80 bg-card/95 transition-all hover:-translate-y-1 hover:border-brand/50 hover:shadow-lg"
             >
               <div className="flex aspect-square items-center justify-center bg-gradient-to-br from-brand-soft/60 via-transparent to-amber-100/40 text-4xl">
-                {item.cover_url ? (
+                {item.cover_url && (
                   <img src={item.cover_url} alt={item.title} className="h-full w-full object-cover" />
-                ) : (
-                  <Palette className="h-8 w-8 text-brand/60" />
                 )}
               </div>
               <div className="p-3">
@@ -575,7 +559,6 @@ function PlaceholderListing({ id }: { id: string }) {
             className="relative flex aspect-square items-center justify-center overflow-hidden rounded-[2rem] border-2 border-dashed border-brand/30 bg-gradient-to-br from-brand-soft/60 via-transparent to-amber-100/40"
           >
             <div className="text-center">
-              <Package className="h-14 w-14 text-brand/60" />
               <p className="mt-4 text-xs font-bold uppercase tracking-widest text-brand/70">
                 Platzhalter #{String(nr).padStart(2, "0")}
               </p>

@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useSuspenseQuery, useQuery, queryOptions } from "@tanstack/react-query";
-import { Search, SlidersHorizontal, X, Package } from "lucide-react";
+import { Search, SlidersHorizontal, X } from "lucide-react";
 import { searchListings, fetchCategories, fetchMarketplaceSettings, type SearchInput } from "@/lib/listings.functions";
 import { ListingGridCard } from "@/components/ListingGridCard";
 
@@ -142,8 +142,7 @@ function BrowsePage() {
 
       {items.length === 0 ? (
          <div className="mt-12 grid place-items-center rounded-2xl border-2 border-dashed border-brand/30 bg-card/60 p-12 text-center">
-          <Package className="h-10 w-10 text-brand" />
-          <p className="mt-4 font-display text-xl font-bold text-brand-ink">Hier ist gerade nichts zu holen.</p>
+          <p className="font-display text-xl font-bold text-brand-ink">Hier ist gerade nichts zu holen.</p>
           <p className="mt-1 max-w-md text-sm text-muted-foreground">
             Probier weniger Filter oder ein anderes Wort. Oder lad selbst was hoch —{" "}
             <Link to="/verkaufen/guide" className="font-semibold text-brand hover:underline">Shop eröffnen →</Link>

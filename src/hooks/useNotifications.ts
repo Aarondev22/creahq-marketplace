@@ -67,5 +67,15 @@ export function useNotifications() {
     await supabase.from("notifications").update({ read_at: now }).eq("user_id", userId).is("read_at", null);
   }
 
-  return { items, unread, loading, markRead, markAllRead, signedIn: Boolean(userId) };
+  async function deleteNotification(id: string) {
+    const previous = items;
+    setItems((current) => current.filter((item) => item.id !== id));
+    const { error } = await supabase.from("notifications").delete().eq("id", id);
+    if (error) {
+      setItems(previous);
+      throw new Error(error.message);
+    }
+  }
+
+  return { items, unread, loading, markRead, markAllRead, deleteNotification, signedIn: Boolean(userId) };
 }

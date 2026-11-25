@@ -1,7 +1,6 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { motion } from "motion/react";
-import { Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { toast } from "sonner";
@@ -90,7 +89,6 @@ function AuthPage() {
     <div className="mx-auto flex min-h-[80vh] max-w-md flex-col justify-center px-6 py-12">
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="rounded-[2rem] border border-border bg-card p-8 shadow-xl">
         <div className="mb-6 text-center">
-          <div className="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-brand to-brand-ink text-primary-foreground"><Sparkles className="h-7 w-7" /></div>
           <h1 className="font-display text-3xl font-black text-brand-ink">
             {mode === "signup" ? "Werde Teil von CreaHQ" : mode === "reset" ? "Passwort zurücksetzen" : "Willkommen zurück"}
           </h1>

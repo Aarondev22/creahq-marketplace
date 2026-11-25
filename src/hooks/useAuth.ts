@@ -36,8 +36,8 @@ export function useAuth(): AuthState {
 
     async function checkBanned(user: User | null) {
       if (!user) return false;
-      const { data } = await supabase.from("profiles").select("banned").eq("id", user.id).maybeSingle();
-      return data?.banned ?? false;
+      const { data } = await supabase.from("profiles").select("banned,suspended_until").eq("id", user.id).maybeSingle();
+      return Boolean(data?.banned || (data?.suspended_until && new Date(data.suspended_until).getTime() > Date.now()));
     }
 
     function apply(session: Session | null) {
